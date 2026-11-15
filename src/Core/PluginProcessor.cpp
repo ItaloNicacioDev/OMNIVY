@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include <cmath>
+
 OmnivyAudioProcessor::OmnivyAudioProcessor()
     : AudioProcessor (BusesProperties()
 #if ! JucePlugin_IsMidiEffect
@@ -19,8 +21,9 @@ OmnivyAudioProcessor::~OmnivyAudioProcessor()
 
 void OmnivyAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Phase 1: nothing to initialize yet
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    juce::ignoreUnused (samplesPerBlock);
+    testPhase = 0.0f;
+    juce::ignoreUnused (sampleRate);
 }
 
 void OmnivyAudioProcessor::releaseResources()
@@ -56,16 +59,22 @@ void OmnivyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // Phase 1 test audio: generate a silent buffer with a test tone
-    // when testParameter > 0, to prove audio processing is functional.
+    // Fase 1: tom de teste real (senoide a 440 Hz) quando testParameter > 0,
+    // para comprovar que o processamento de audio esta funcional.
     if (testParameter > 0.0f)
     {
-        auto level = testParameter * 0.1f;
+        auto level = testParameter * 0.25f;
+        const double sampleRate = getSampleRate();
+        const double delta = 2.0 * juce::MathConstants<double>::pi * 440.0 / sampleRate;
+
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
         {
             auto* channelData = buffer.getWritePointer (channel);
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-                channelData[sample] = 0.0f; // silence for now, test parameter active
+            {
+                channelData[sample] = (float) (std::sin (testPhase) * level);
+                testPhase += (float) delta;
+            }
         }
     }
 
