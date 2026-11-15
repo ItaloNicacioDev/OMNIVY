@@ -38,5 +38,7 @@ public:
     float testParameter = 0.5f;
 
 private:
+    float testPhase = 0.0f; // continuidade de fase entre blocos de audio
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyAudioProcessor)
 };
