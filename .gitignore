@@ -1,0 +1,46 @@
+# OMNIVY — Professional Multi-Engine Software Synthesizer
+# Licensed under AGPLv3 — see LICENSE file
+
+# Binaries and executables
+*.exe
+*.dll
+*.vst3
+*.app
+*.x86_64
+*.win32
+
+# Build directories
+Builds/
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+CMakePresets.json.user
+Makefile
+ninja.build
+.ninja_deps
+.ninja_log
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.opensdf
+*.sdf
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Temporary
+scratch/
+*.swp
+*.swo
+*~
