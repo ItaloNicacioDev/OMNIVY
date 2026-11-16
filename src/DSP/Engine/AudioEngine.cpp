@@ -21,7 +21,10 @@ void AudioEngine::prepare (double sampleRate, int samplesPerBlock)
     dsp::WavetableGenerator::generateSine (m_wavetable, 0);
 
     m_voiceManager.setSampleRate (sampleRate);
-    m_voiceManager.setPolyphony (m_parameters.getPolyphony());
+    if (m_parameters != nullptr)
+        m_voiceManager.setPolyphony (m_parameters->getPolyphony());
+    else
+        m_voiceManager.setPolyphony (16);
 
     m_testPhase = 0.0f;
     m_prepared = true;
@@ -41,10 +44,8 @@ void AudioEngine::reset()
 
 void AudioEngine::setParameters (const SynthParameters& parameters)
 {
-    m_parameters = parameters; // copies atomic members? atomics are not copyable.
-    // Instead, pull current values into our snapshot atomically:
-    m_parameters.updateFromValueTreeState /* not available */;
-    (void) parameters;
+    m_parameters = &parameters; // engine does not own; plugin guarantees lifetime
+    m_voiceManager.setPolyphony (parameters.getPolyphony());
 }
 
 void AudioEngine::setMasterVolume (float volume)   { m_masterVolume = volume; }
@@ -77,7 +78,8 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     handleMidi (midiMessages);
 
     // Voice parameters (polyphony, per-osc, filter, envelope) applied each block.
-    m_voiceManager.updateParameters (m_parameters);
+    if (m_parameters != nullptr)
+        m_voiceManager.updateParameters (*m_parameters);
 
     // Render voices into output channels 0 and 1.
     renderVoices (buffer);
