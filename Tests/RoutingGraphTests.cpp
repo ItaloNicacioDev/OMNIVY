@@ -959,9 +959,10 @@ static void testAdditiveSinglePartial()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     // Only 1 harmonic at amplitude 1.0
     engine->setHarmonicCount (1);
@@ -991,9 +992,10 @@ static void testAdditiveMultiplePartials()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (3);
     engine->setPartialAmplitude (0, 1.0f);   // fundamental
@@ -1031,9 +1033,10 @@ static void testAdditiveAmplitudeRespected()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (2);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1064,9 +1067,10 @@ static void testAdditivePhaseRespected()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1094,9 +1098,10 @@ static void testAdditiveHarmonicCount()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1127,9 +1132,10 @@ static void testAdditiveMorphABC()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1149,11 +1155,13 @@ static void testAdditiveMorphABC()
 
     // Morph to B (morph = 1.0)
     engine->setSpectralMorph (1.0f);
+    engine->reset ();
     engine->processSample();
     const auto outB = engine->getLastOutput();
 
     // Morph to middle (morph = 0.5)
     engine->setSpectralMorph (0.5f);
+    engine->reset ();
     engine->processSample();
     const auto outMid = engine->getLastOutput();
 
@@ -1177,9 +1185,10 @@ static void testAdditiveAntiAliasing()
     auto engine = std::make_unique<TestEngine>();
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
     engine->reset ();
     engine->setSampleRate (44100.0);
-    engine->setLevel (1.0f);
 
     // High fundamental so that 2nd harmonic is above Nyquist at 44100 Hz
     // Nyquist = 22050 Hz, so fundamental > 11025 Hz means 2nd harmonic > Nyquist

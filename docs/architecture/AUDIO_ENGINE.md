@@ -104,6 +104,38 @@ Cada voz possui seus próprios 6 `OscillatorEngine` instances com estado indepen
 - Todas as operações são real-time safe (zero alocações, zero mutexes)
 - Output é verificado para finitude (não NaN/Inf)
 
+## Additive Engine (P3.4 — Implementado)
+
+O `AdditiveOscillator` implementa síntese aditiva com controle individual de harmônicos, espectro com duas variantes (A/B) para morphing, anti-aliasing e exportação de espectro.
+
+### Arquitetura
+- **Partials**: até `kMaxAdditivePartials` (256) harmônicos pré-alocados em `std::array` fixo (zero alocação no audio thread)
+- **Duplo espectro**: Spectrum A e Spectrum B com morph contínuo entre eles (0 = A, 1 = B)
+- **Cada partial**: amplitude (0..1), fase (0..1), razão de frequência (multiplicador do fundamental)
+- **Renderização por bloco**: `updatePartialsForBlock()` pré-calcula amplitudes, fases e razões renderizadas considerando morph, tilt, odd/even balance e anti-aliasing
+
+### Parâmetros
+| Parâmetro | Range | Descrição |
+|-----------|-------|-----------|
+| harmonicCount | 1..256 | Quantidade de harmônicos ativos |
+| spectralMorph | 0..1 | Interpola entre Spectrum A e B |
+| spectralTilt | -1..1 | Escurece (negativo) ou ilumina (positivo) o espectro |
+| oddEvenBalance | -1..1 | -1 = apenas ímpares, 1 = apenas pares |
+| fundamentalLevel | 0..2 | Ênfase no harmônico 1 |
+| outputLevel | 0..2 | Ganho de saída final |
+
+### Anti-aliasing
+Partials cuja frequência (`fundamental × ratio`) excede `0.49 × sampleRate` são silenciados (não renderizados), evitando aliasing em notas agudas com muitos harmônicos.
+
+### Controle de harmônicos
+- `setPartialAmplitude(index, amplitude)` — amplitude individual
+- `setPartialPhase(index, phase)` — fase individual (0..1)
+- `setPartialFrequencyRatio(index, ratio)` — razão de frequência individual
+- `setSpectrumAPartial / setSpectrumBPartial` — substituir todo o partial em um espectro
+
+### Processamento por voz
+Cada voz possui seu próprio `AdditiveOscillator` com fase e estado independentes. O `phaseIncrement` é calculado a partir da frequência efetiva (considerando octave, semitone, detune, fine-tune). Cada partial soma `amplitude × sin(2π × (phase × ratio + phaseOffset))`.
+
 ## Status da Fase 1
 
 - [x] PluginProcessor implementado (estrutura base)
