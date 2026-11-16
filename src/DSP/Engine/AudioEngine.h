@@ -2,19 +2,15 @@
 
 #include <cstdint>
 #include "DSP/Engine/VoiceManager.h"
+#include "DSP/Engine/OscillatorEngine.h"
+#include "DSP/Routing/RoutingGraph.h"
 #include "DSP/Wavetable/WavetableData.h"
 #include "Parameters/SynthParameters.h"
 
 namespace omnivy {
 
 // -----------------------------------------------------------------------------
-// Top-level DSP engine. Independent of the UI layer. Owns the voice manager,
-// the shared wavetable data and the parameter snapshot. Real-time safe:
-// prepare() allocates once; processBlock() performs no dynamic allocation.
-//
-// Signal flow:
-//   MIDI -> VoiceManager (allocation/stealing) -> 6 oscillators/voice -> sum
-//   -> filter -> amp envelope -> master gain -> output
+// Top-level DSP engine.
 // -----------------------------------------------------------------------------
 class AudioEngine
 {
@@ -22,26 +18,24 @@ public:
     AudioEngine();
     ~AudioEngine() = default;
 
-    // Call once before processing. Allocates the voice pool and wavetables.
     void prepare (double sampleRate, int samplesPerBlock);
     void releaseResources();
     void reset();
 
-    // Process one block. Reads MIDI, allocates/releases voices, renders audio.
-    // No dynamic allocation is performed here.
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages);
 
-    // Parameter / control setters (called from the plugin each block).
     void setParameters (const SynthParameters& parameters);
     void setMasterVolume (float volume);
     void setPitchBendSemitones (float semitones);
     void setPolyphony (int polyphony);
 
+    // --- Routing access (message thread) ----------------------------------
+    RoutingGraph& getRoutingGraph() noexcept { return m_routingGraph; }
+
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;
     double getSampleRate() const noexcept { return m_sampleRate; }
 
-    // Legacy test tone (phase-continuous 440 Hz sine) used by Phase 1.
     void setTestToneLevel (float level);
     float getTestToneLevel() const noexcept { return m_testToneLevel; }
 
@@ -55,6 +49,7 @@ private:
 
     dsp::WavetableData m_wavetable;
     VoiceManager m_voiceManager;
+    RoutingGraph m_routingGraph;
     const SynthParameters* m_parameters = nullptr;
 
     float m_masterVolume = 0.7f;

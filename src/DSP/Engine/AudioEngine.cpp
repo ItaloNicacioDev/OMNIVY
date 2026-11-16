@@ -27,6 +27,12 @@ void AudioEngine::prepare (double sampleRate, int samplesPerBlock)
     else
         m_voiceManager.setPolyphony (16);
 
+    // Bind all voice engines to the routing graph (node = voice*6 + slot).
+    m_voiceManager.visitEngines ([this] (OscillatorEngine* engine, NodeId nodeId)
+    {
+        m_routingGraph.bindEngine (nodeId, engine);
+    });
+
     m_testPhase = 0.0f;
     m_prepared = true;
 }
@@ -81,6 +87,9 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     // Voice parameters (polyphony, per-osc, filter, envelope) applied each block.
     if (m_parameters != nullptr)
         m_voiceManager.updateParameters (*m_parameters);
+
+    // Apply routing modulation before rendering voices.
+    m_routingGraph.applyModulations();
 
     // Render voices into output channels 0 and 1.
     renderVoices (buffer);
