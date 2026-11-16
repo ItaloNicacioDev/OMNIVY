@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <juce_core/juce_core.h>
+
 namespace omnivy {
 namespace dsp {
 
@@ -18,12 +20,12 @@ inline constexpr double InvTwoPi = 0.15915494309189533577;
 // -----------------------------------------------------------------------------
 // MIDI / frequency helpers
 // -----------------------------------------------------------------------------
-inline constexpr double MidiNoteToFrequency (double midiNote) noexcept
+inline double MidiNoteToFrequency (double midiNote) noexcept
 {
     return 440.0 * std::pow (2.0, (midiNote - 69.0) / 12.0);
 }
 
-inline constexpr double FrequencyToMidi (double frequencyHz) noexcept
+inline double FrequencyToMidi (double frequencyHz) noexcept
 {
     return 69.0 + 12.0 * std::log2 (frequencyHz / 440.0);
 }
@@ -45,7 +47,7 @@ inline float wrapPhase (float phase) noexcept
 }
 
 // Cents to ratio (100 cents = 1 semitone)
-inline constexpr float centsToRatio (float cents) noexcept
+inline float centsToRatio (float cents) noexcept
 {
     return static_cast<float> (std::pow (2.0, cents / 1200.0));
 }
