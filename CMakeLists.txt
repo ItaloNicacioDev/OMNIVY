@@ -93,6 +93,10 @@ target_link_libraries(OmnivyPlugin PRIVATE
     juce::juce_dsp
 )
 
+target_include_directories(OmnivyPlugin PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+)
+
 target_link_libraries(OmnivyPlugin PUBLIC
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
