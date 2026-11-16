@@ -137,3 +137,28 @@ set_target_properties(OmnivyStandalone PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
     WIN32_EXECUTABLE TRUE
 )
+
+# ---------------------------------------------------------------------------
+# DSP test harness — standalone executable for routing graph unit tests
+# ---------------------------------------------------------------------------
+add_executable(OmnivyRoutingTests
+    tests/RoutingGraphTests.cpp
+)
+
+target_link_libraries(OmnivyRoutingTests PRIVATE
+    OmnivyPlugin
+    juce::juce_audio_processors
+    juce::juce_gui_basics
+    juce::juce_audio_utils
+    juce::juce_dsp
+)
+
+target_include_directories(OmnivyRoutingTests PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+)
+
+target_compile_definitions(OmnivyRoutingTests PRIVATE
+    JUCE_VST3=1
+    JUCE_STANDALONE=0
+    JUCE_IGNORE_VST3_MISMATCHED_PARAMETER_ID_WARNING=1
+)
