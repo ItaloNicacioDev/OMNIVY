@@ -30,6 +30,7 @@ inline juce::String oscSemitone  (int index) { return oscPrefix (index) + ".semi
 inline juce::String oscDetune    (int index) { return oscPrefix (index) + ".detune"; }
 inline juce::String oscFineTune  (int index) { return oscPrefix (index) + ".fineTune"; }
 inline juce::String oscPhase     (int index) { return oscPrefix (index) + ".phase"; }
+inline juce::String oscEngine    (int index) { return oscPrefix (index) + ".engine"; }
 
 // Total number of independent oscillators.
 inline constexpr int NumOscillators = 6;
