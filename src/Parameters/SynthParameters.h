@@ -3,6 +3,7 @@
 #include <atomic>
 #include <vector>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "DSP/Engine/OscillatorEngine.h"
 #include "ParameterIDs.h"
 
 namespace omnivy {
@@ -49,6 +50,10 @@ public:
 
     const Oscillator& getOscillator (int index) const noexcept { return m_oscillators[index]; }
 
+    // Engine type per oscillator slot. VA by default; FM/Additive/Granular
+    // wired up in later steps without changing this struct.
+    EngineType getOscillatorEngine (int index) const noexcept { return m_oscEngine[index]; }
+
     struct Filter
     {
         bool enabled = true;
@@ -75,6 +80,7 @@ private:
     std::atomic<int>   m_polyphony    { 16 };
 
     Oscillator m_oscillators[params::NumOscillators];
+    EngineType m_oscEngine[params::NumOscillators] = { EngineType::VA };
     Filter     m_filter;
     Envelope   m_envelope;
 };
