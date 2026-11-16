@@ -21,13 +21,17 @@ OmnivyAudioProcessor::~OmnivyAudioProcessor()
 
 void OmnivyAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    juce::ignoreUnused (samplesPerBlock);
-    testPhase = 0.0f;
-    juce::ignoreUnused (sampleRate);
+    // Snapshot current host-automatable parameters into the DSP-friendly
+    // structure, then hand it to the engine.
+    m_synthParameters.updateFromValueTreeState (apvts);
+    m_audioEngine.setParameters (m_synthParameters);
+    m_audioEngine.setTestToneLevel (testParameter);
+    m_audioEngine.prepare (sampleRate, static_cast<int> (samplesPerBlock));
 }
 
 void OmnivyAudioProcessor::releaseResources()
 {
+    m_audioEngine.releaseResources();
 }
 
 bool OmnivyAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -52,33 +56,16 @@ bool OmnivyAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void OmnivyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // Clear any output channels that don't contain input data
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    // Refresh the engine's parameter snapshot from the APVTS each block so
+    // host automation and UI changes are picked up lock-free.
+    m_synthParameters.updateFromValueTreeState (apvts);
+    m_audioEngine.setParameters (m_synthParameters);
+    m_audioEngine.setTestToneLevel (testParameter);
 
-    // Fase 1: tom de teste real (senoide a 440 Hz) quando testParameter > 0,
-    // para comprovar que o processamento de audio esta funcional.
-    if (testParameter > 0.0f)
-    {
-        auto level = testParameter * 0.25f;
-        const double sampleRate = getSampleRate();
-        const double delta = 2.0 * juce::MathConstants<double>::pi * 440.0 / sampleRate;
-
-        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        {
-            auto* channelData = buffer.getWritePointer (channel);
-            for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-            {
-                channelData[sample] = (float) (std::sin (testPhase) * level);
-                testPhase += (float) delta;
-            }
-        }
-    }
-
-    juce::ignoreUnused (midiMessages);
+    // The engine clears outputs, renders voices, handles MIDI and applies the
+    // master gain — no dynamic allocation happens inside this callback.
+    m_audioEngine.processBlock (buffer, midiMessages);
 }
 
 juce::AudioProcessorEditor* OmnivyAudioProcessor::createEditor()
