@@ -108,9 +108,9 @@ private:
     bool hasPathDFS (NodeId from, NodeId to,
                      std::vector<bool>& visited) const;
 
-    // Find an existing connection matching source/destination/type.
-    int findConnectionIndex (NodeId source, NodeId destination,
-                             ConnectionType type) const;
+    // Find an existing connection matching source/destination (type ignored
+    // under the one-connection-per-pair contract).
+    int findConnectionIndex (NodeId source, NodeId destination) const;
 
     // Node bindings (setup only).
     OscillatorEngine* m_engines[MaxNodes] = { nullptr };

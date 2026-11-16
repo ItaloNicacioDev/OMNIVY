@@ -43,9 +43,28 @@ NUNCA executar no callback de áudio (`processBlock`):
 
 44.1 kHz, 48 kHz, 88.2 kHz, 96 kHz, 176.4 kHz, 192 kHz
 
-## Oversampling
+## Roteamento (P3.2 — Implementado)
 
-Planejado para motores que requerem redução de aliasing (wavetable, analog, etc.)
+O sistema de roteamento é baseado em um grafo tipado com seis nós de osciladores (0..5, mapeando OSC 1..6) e nós reservados para mixer/buses (6+).
+
+### Conexões tipadas
+Cada conexão possui tipo próprio com semântica de processamento distinta:
+
+| Tipo | Semântica |
+|------|-----------|
+| Audio | Soma a saída da fonte na entrada de áudio externa do destino |
+| FrequencyModulation | Adiciona à entrada de modulação de frequência do destino |
+| PhaseModulation | Adiciona à entrada de modulação de fase do destino |
+| RingModulation | Multiplica a saída do destino pela saída da fonte |
+| HardSync | Reseta a fase do destino no zero-crossing da fonte |
+
+### Segurança em tempo real
+- Modificações de grafo ocorrem apenas na thread da mensagem
+- Validação de ciclos via DFS executa fora do callback de áudio
+- A thread de áudio lê um snapshot imutável (`shared_ptr<const RoutingConfig>`) publicado atomicamente — zero alocações, zero mutexes, zero buscas em grafo dentro de `processBlock`
+
+### Prevenção de ciclos
+Conexões que criariam ciclos no grafo de áudio são rejeitadas. Auto-loops (fonte == destino) também são rejeitados. Feedback explícito é tratado como recurso controlado, nunca como consequência acidental de um roteamento cíclico.
 
 ## Status da Fase 1
 

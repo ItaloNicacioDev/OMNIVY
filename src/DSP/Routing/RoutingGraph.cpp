@@ -59,7 +59,7 @@ bool RoutingGraph::addConnection (std::shared_ptr<Connection> connection)
 bool RoutingGraph::removeConnection (NodeId source, NodeId destination,
                                      ConnectionType type)
 {
-    const int index = findConnectionIndex (source, destination, type);
+    const int index = findConnectionIndex (source, destination);
     if (index < 0)
         return false;
 
@@ -70,7 +70,8 @@ bool RoutingGraph::removeConnection (NodeId source, NodeId destination,
 void RoutingGraph::setConnectionEnabled (NodeId source, NodeId destination,
                                          ConnectionType type, bool enabled)
 {
-    const int index = findConnectionIndex (source, destination, type);
+    juce::ignoreUnused (type);
+    const int index = findConnectionIndex (source, destination);
     if (index >= 0)
         m_workingConnections[index]->setEnabled (enabled);
 }
@@ -78,7 +79,8 @@ void RoutingGraph::setConnectionEnabled (NodeId source, NodeId destination,
 void RoutingGraph::setConnectionGain (NodeId source, NodeId destination,
                                       ConnectionType type, float gain)
 {
-    const int index = findConnectionIndex (source, destination, type);
+    juce::ignoreUnused (type);
+    const int index = findConnectionIndex (source, destination);
     if (index >= 0)
         m_workingConnections[index]->setGain (gain);
 }
@@ -91,7 +93,8 @@ void RoutingGraph::clearAllConnections()
 bool RoutingGraph::hasConnection (NodeId source, NodeId destination,
                                   ConnectionType type) const noexcept
 {
-    return findConnectionIndex (source, destination, type) >= 0;
+    juce::ignoreUnused (type);
+    return findConnectionIndex (source, destination) >= 0;
 }
 
 std::vector<std::shared_ptr<const Connection>>
@@ -269,15 +272,13 @@ bool RoutingGraph::hasPathDFS (NodeId from, NodeId to,
     return false;
 }
 
-int RoutingGraph::findConnectionIndex (NodeId source, NodeId destination,
-                                       ConnectionType type) const
+int RoutingGraph::findConnectionIndex (NodeId source, NodeId destination) const
 {
+    juce::ignoreUnused (/*type*/);
     for (int i = 0; i < static_cast<int> (m_workingConnections.size()); ++i)
     {
         const auto& conn = m_workingConnections[i];
-        if (conn && conn->getSource() == source
-             && conn->getDestination() == destination
-             && conn->getType() == type)
+        if (conn && conn->getSource() == source && conn->getDestination() == destination)
             return i;
     }
     return -1;

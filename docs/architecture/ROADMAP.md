@@ -24,13 +24,15 @@
 - [x] Filtros iniciais (Low Pass, High Pass)
 - [x] Roteamento básico
 
-## Fase 3 — Engines Avançados (Planejado)
+## Fase 3 — Engines Avançados (Planejado/Em Andamento)
 
-- [ ] FM / PM Engine
-- [ ] Granular Engine
-- [ ] Additive Engine
-- [ ] Sample Engine
-- [ ] Combinação entre engines
+- [x] Arquitetura de engines universais (P3.1)
+- [x] Grafo de roteamento tipado com prevenção de ciclos (P3.2)
+- [ ] FM / PM Engine (P3.3)
+- [ ] Granular Engine (P3.4)
+- [ ] Additive Engine (P3.5)
+- [ ] Sistema de modulação (LFOs, envelopes, matriz) (P3.6)
+- [ ] Mixer e integração completa (P3.7)
 - [ ] Testes DSP automatizados
 
 ## Fase 4 — Modulação (Planejado)

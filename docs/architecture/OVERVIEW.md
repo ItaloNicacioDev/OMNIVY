@@ -17,6 +17,7 @@ O sistema segue uma arquitetura modular com separação clara entre:
 | `src/Core` | PluginProcessor, PluginEditor, ponto de entrada standalone |
 | `src/Audio` | Engine de áudio, gerenciamento de vozes, mixer |
 | `src/DSP` | Motores de síntese (wavetable, granular, analog, FM, additive, sample) |
+| `src/Routing` | Grafo de roteamento tipado, conexões Audio/FM/PM/RingMod/HardSync, prevenção de ciclos, snapshot thread-safe |
 | `src/Modulation` | Envelopes, LFOs, matriz de modulação, macros |
 | `src/Effects` | FX rack, efeitos individuais |
 | `src/Presets` | Formato nativo .omnivy, importadores (Vital, Serum, Pigments) |

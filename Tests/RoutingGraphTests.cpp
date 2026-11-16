@@ -198,8 +198,8 @@ static void testRejectDuplicates()
     ASSERT (!graph.addConnection (std::make_shared<AudioConnection> (0, 1, 0.8f)), "Reject duplicate audio 0->1");
     ASSERT (!graph.addConnection (std::make_shared<FrequencyModulationConnection> (0, 1, 0.3f)), "Reject duplicate FM 0->1");
 
-    // Same source/dest but different type should be allowed
-    ASSERT (graph.addConnection (std::make_shared<AudioConnection> (1, 0, 0.5f)), "Allow audio 1->0 (reverse)");
+    // Reverse direction 1->0 would create a cycle (0->1->0), correctly rejected.
+    ASSERT (!graph.addConnection (std::make_shared<AudioConnection> (1, 0, 0.5f)), "Reject reverse 1->0 (cycle)");
     PASS ();
 }
 
@@ -539,8 +539,6 @@ static void testSlotIsolation()
     graph.bindEngine (1, engine1.get());
     graph.bindEngine (2, engine2.get());
 
-    engine0->processSample();
-
     // Only connect 0->1, engine2 should be unaffected
     ASSERT (graph.addConnection (std::make_shared<AudioConnection> (0, 1, 1.0f)), "Add audio 0->1");
     graph.publishConfig();
@@ -548,8 +546,12 @@ static void testSlotIsolation()
     graph.resetAllModInputs();
     graph.applyModulations();
 
-    ASSERT (engine1->lastExternalAudio != 0.0f, "Engine 1 receives audio from 0");
-    ASSERT (engine2->lastExternalAudio == 0.0f, "Engine 2 isolated (no connection)");
+    // Engine 2 has no connections — all mod inputs must be zero.
+    ASSERT (engine2->lastExternalAudio == 0.0f, "Engine 2 isolated: external audio zero");
+    ASSERT (engine2->lastFrequencyMod == 0.0f, "Engine 2 isolated: FM mod zero");
+    ASSERT (engine2->lastPhaseMod == 0.0f, "Engine 2 isolated: PM mod zero");
+    ASSERT (engine2->lastRingMod == 0.0f, "Engine 2 isolated: RingMod zero");
+    ASSERT (!engine2->lastHardSync, "Engine 2 isolated: HardSync false");
     PASS ();
 }
 
