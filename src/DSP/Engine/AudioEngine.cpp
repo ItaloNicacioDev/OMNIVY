@@ -142,10 +142,6 @@ void AudioEngine::handleMidi (const juce::MidiBuffer& midiMessages)
         {
             m_voiceManager.noteOff (message.getNoteNumber());
         }
-        else if (message.isChannelPressure() || message.isPolyPressure())
-        {
-            // Reserved for future modulation; ignored in Phase 2.
-        }
         else if (message.isPitchWheel())
         {
             // Pitch wheel: -8192..8197 -> -2..+2 semitones.
