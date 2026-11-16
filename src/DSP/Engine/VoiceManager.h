@@ -56,6 +56,7 @@ private:
     int m_polyphony = 16;
     float m_pitchBendSemitones = 0.0f;
     int m_noteOnCounter = 0; // monotonic, for deterministic FIFO stealing
+    double m_sampleRate = 44100.0;
 };
 
 } // namespace omnivy
