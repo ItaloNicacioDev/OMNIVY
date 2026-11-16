@@ -11,6 +11,7 @@ VoiceManager::VoiceManager (dsp::WavetableData* wavetableData)
 
 void VoiceManager::setSampleRate (double sampleRate)
 {
+    m_sampleRate = sampleRate;
     for (auto& voice : m_voices)
         voice.setSampleRate (sampleRate);
 }
@@ -19,25 +20,28 @@ void VoiceManager::setPolyphony (int polyphony)
 {
     polyphony = std::clamp (polyphony, 1, 64);
 
-    if (polyphony == m_polyphony && static_cast<int> (m_voices.size()) == polyphony)
-        return;
-
-    const int previous = static_cast<int> (m_voices.size());
-    m_voices.resize (static_cast<size_t> (polyphony), SynthVoice (m_wavetableData));
-
-    // Newly added voices need the sample rate; voices removed are simply gone.
-    // We cannot know the sample rate here if prepare hasn't run, but voices
-    // will have setSampleRate called in prepare/resize path below.
-    m_polyphony = polyphony;
-
-    // If we shrank the pool, release voices that are now out of range.
-    if (polyphony < previous)
+    const int current = static_cast<int> (m_voices.size());
+    if (polyphony == current)
     {
-        for (int i = polyphony; i < previous; ++i)
+        m_polyphony = polyphony;
+        return;
+    }
+
+    if (polyphony > current)
+    {
+        m_voices.reserve (static_cast<size_t> (polyphony));
+        for (int i = current; i < polyphony; ++i)
         {
-            // Voices beyond the new polyphony were destroyed by resize; nothing
-            // to do (they were already allocated and are now dropped).
+            m_voices.emplace_back (m_wavetableData);
+            m_voices.back().setSampleRate (m_sampleRate);
         }
+    }
+    else
+    {
+        // Release voices being removed, then destroy the excess (no copy needed).
+        for (int i = polyphony; i < current; ++i)
+            m_voices[i].noteOff();
+        m_voices.resize (static_cast<size_t> (polyphony));
     }
 
     m_polyphony = polyphony;
