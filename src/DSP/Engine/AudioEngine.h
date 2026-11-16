@@ -49,7 +49,7 @@ private:
 
     dsp::WavetableData m_wavetable;
     VoiceManager m_voiceManager;
-    RoutingGraph m_routingGraph;
+    dsp::RoutingGraph m_routingGraph;
     const SynthParameters* m_parameters = nullptr;
 
     float m_masterVolume = 0.7f;

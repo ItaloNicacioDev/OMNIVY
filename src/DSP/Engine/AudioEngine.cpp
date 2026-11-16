@@ -28,7 +28,7 @@ void AudioEngine::prepare (double sampleRate, int samplesPerBlock)
         m_voiceManager.setPolyphony (16);
 
     // Bind all voice engines to the routing graph (node = voice*6 + slot).
-    m_voiceManager.visitEngines ([this] (OscillatorEngine* engine, NodeId nodeId)
+    m_voiceManager.visitEngines ([this] (dsp::OscillatorEngine* engine, dsp::NodeId nodeId)
     {
         m_routingGraph.bindEngine (nodeId, engine);
     });
