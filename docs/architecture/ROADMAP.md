@@ -14,15 +14,15 @@
 - [x] Build Standalone x64 funcional
 - [x] Documentação técnica criada
 
-## Fase 2 — Motor de Áudio (Planejado)
+## Fase 2 — Motor de Áudio (CONCLUÍDA)
 
-- [ ] Sistema de vozes com polifonia
-- [ ] Seis osciladores independentes
-- [ ] Motor Virtual Analog (saw, square, pulse, triangle, sine, noise)
-- [ ] Motor Wavetable básico
-- [ ] Mixer de seis osciladores
-- [ ] Filtros iniciais (Low Pass, High Pass)
-- [ ] Roteamento básico
+- [x] Sistema de vozes com polifonia
+- [x] Seis osciladores independentes
+- [x] Motor Virtual Analog (saw, square, pulse, triangle, sine, noise)
+- [x] Motor Wavetable básico
+- [x] Mixer de seis osciladores
+- [x] Filtros iniciais (Low Pass, High Pass)
+- [x] Roteamento básico
 
 ## Fase 3 — Engines Avançados (Planejado)
 
