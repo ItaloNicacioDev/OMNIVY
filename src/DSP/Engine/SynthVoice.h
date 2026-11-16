@@ -2,9 +2,7 @@
 
 #include <memory>
 #include "DSP/Oscillators/OscillatorBase.h"
-#include "DSP/Oscillators/VAOscillator.h"
-#include "DSP/Oscillators/NoiseOscillator.h"
-#include "DSP/Wavetable/WavetableOscillator.h"
+#include "DSP/Engine/OscillatorEngine.h"
 #include "DSP/Wavetable/WavetableData.h"
 #include "DSP/Envelopes/ADSREnvelope.h"
 #include "DSP/Filters/StateVariableFilter.h"
@@ -52,9 +50,10 @@ private:
 
     dsp::WavetableData* m_wavetableData = nullptr;
 
-    // Six independent oscillators. Each can be VA or wavetable based.
-    std::unique_ptr<dsp::OscillatorBase> m_oscillators[SynthParameters::NumOscillators];
-    bool m_oscillatorIsWavetable[SynthParameters::NumOscillators] = { false };
+    // Six independent oscillator engine slots. Each slot hosts its own engine
+    // (VA, Wavetable, FM, Additive, Granular) selected per slot; no slot
+    // depends on any other slot's engine.
+    std::unique_ptr<dsp::OscillatorEngine> m_oscillators[SynthParameters::NumOscillators];
 
     dsp::ADSREnvelope m_ampEnv;
     dsp::StateVariableFilter m_filterLeft;
