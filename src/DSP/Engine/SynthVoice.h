@@ -44,6 +44,13 @@ public:
     void setNoteOnOrder (int order) noexcept { m_noteOnOrder = order; }
     bool isPlayingNote (int midiNote) const noexcept { return m_active && m_note == midiNote; }
 
+    // Access the engine in a given slot (0..5). Used by the routing graph
+    // to bind engine nodes for modulation signal transport.
+    dsp::OscillatorEngine* getOscillatorEngine (int slot) noexcept
+    {
+        return m_oscillators[slot].get();
+    }
+
 private:
     void updateOscillatorFrequencies();
     float noteToFrequency (int midiNote) const noexcept;

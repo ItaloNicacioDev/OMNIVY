@@ -51,6 +51,28 @@ public:
     int getPolyphony() const noexcept { return m_polyphony; }
     bool isVoicePlayingNote (int midiNote) const noexcept;
 
+    // Visit every engine in every voice. Visitor receives (engine, nodeId)
+    // where nodeId = voiceIndex * NumOscillators + slotIndex.
+    template <typename Visitor>
+    void visitEngines (Visitor&& visitor)
+    {
+        int voiceIndex = 0;
+        for (auto& voice : m_voices)
+        {
+            if (!voice)
+            {
+                ++voiceIndex;
+                continue;
+            }
+            for (int slot = 0; slot < SynthParameters::NumOscillators; ++slot)
+            {
+                if (auto* engine = voice->getOscillatorEngine (slot))
+                    visitor (engine, voiceIndex * SynthParameters::NumOscillators + slot);
+            }
+            ++voiceIndex;
+        }
+    }
+
 private:
     SynthVoice* findVoiceForNote (int midiNote) noexcept;
     SynthVoice* findFreeVoice() noexcept;
