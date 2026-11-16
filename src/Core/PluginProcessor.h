@@ -42,7 +42,7 @@ public:
 
     // Host-automatable parameter tree. Layout is defined in SynthParameters.
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters",
-        SynthParameters::createParameterLayout() };
+        omnivy::SynthParameters::createParameterLayout() };
 
 private:
     omnivy::SynthParameters m_synthParameters;
