@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include "DSP/Utilities/DSPUtilities.h"
 
@@ -47,6 +48,16 @@ public:
     // Render one stereo frame. Level and pan are applied internally so each
     // oscillator is fully independent and self-contained.
     virtual StereoFrame processSample() = 0;
+
+    // ---- Modulation input bus (real-time safe, lock-free writes) -----------
+    // Written by the routing/modulation layer, read by derived engines during
+    // processSample(). Default implementations do nothing; FM/PM/Ring/Sync
+    // engines override in later steps to consume these inputs.
+    virtual void setExternalAudioInput (float sample) noexcept {}
+    virtual void setFrequencyModInput (float mod) noexcept {}
+    virtual void setPhaseModInput (float mod) noexcept {}
+    virtual void setRingModInput (float mod) noexcept {}
+    virtual void setHardSyncTrigger (bool trigger) noexcept {}
 
 protected:
     double m_sampleRate = 44100.0;
