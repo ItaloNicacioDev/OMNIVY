@@ -77,6 +77,10 @@ target_sources(OmnivyPlugin PRIVATE
     src/DSP/Engine/AudioEngine.cpp
     src/DSP/Engine/OscillatorEngine.cpp
 
+    # --- DSP: Routing ---
+    src/DSP/Routing/Connection.cpp
+    src/DSP/Routing/RoutingGraph.cpp
+
     # --- Parameters ---
     src/Parameters/SynthParameters.cpp)
 
