@@ -72,11 +72,11 @@ public:
     // Written by the routing/modulation layer, read by the wrapped oscillator
     // during processSample(). Default no-op for engines that don't use a
     // given input; FM/PM/Ring/Sync engines override in later steps.
-    void setExternalAudioInput (float sample) noexcept;
-    void setFrequencyModInput (float mod) noexcept;
-    void setPhaseModInput (float mod) noexcept;
-    void setRingModInput (float mod) noexcept;
-    void setHardSyncTrigger (bool trigger) noexcept;
+    virtual void setExternalAudioInput (float sample) noexcept;
+    virtual void setFrequencyModInput (float mod) noexcept;
+    virtual void setPhaseModInput (float mod) noexcept;
+    virtual void setRingModInput (float mod) noexcept;
+    virtual void setHardSyncTrigger (bool trigger) noexcept;
 
     // Render one stereo frame. Each engine applies its own level/pan.
     StereoFrame processSample();
