@@ -52,7 +52,32 @@ juce_add_plugin(OmnivyPlugin
 target_sources(OmnivyPlugin PRIVATE
     src/Core/PluginProcessor.cpp
     src/Core/PluginEditor.cpp
-)
+
+    # --- DSP: Utilities ---
+    # (header-only)
+
+    # --- DSP: Oscillators ---
+    src/DSP/Oscillators/VAOscillator.cpp
+    src/DSP/Oscillators/NoiseOscillator.cpp
+
+    # --- DSP: Wavetable ---
+    src/DSP/Wavetable/WavetableData.cpp
+    src/DSP/Wavetable/WavetableGenerator.cpp
+    src/DSP/Wavetable/WavetableOscillator.cpp
+
+    # --- DSP: Filters ---
+    src/DSP/Filters/StateVariableFilter.cpp
+
+    # --- DSP: Envelopes ---
+    src/DSP/Envelopes/ADSREnvelope.cpp
+
+    # --- DSP: Engine ---
+    src/DSP/Engine/SynthVoice.cpp
+    src/DSP/Engine/VoiceManager.cpp
+    src/DSP/Engine/AudioEngine.cpp
+
+    # --- Parameters ---
+    src/Parameters/SynthParameters.cpp)
 
 target_compile_definitions(OmnivyPlugin PRIVATE
   JUCE_VST3=1
