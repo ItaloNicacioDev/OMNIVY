@@ -1,8 +1,11 @@
 #include "SynthParameters.h"
+#include "DSP/Utilities/DSPUtilities.h"
 
 #include <algorithm>
 
 namespace omnivy {
+using namespace params;
+using namespace dsp;
 
 SynthParameters::SynthParameters()
 {
