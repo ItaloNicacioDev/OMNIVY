@@ -31,11 +31,11 @@ void WavetableData::setTable (int tableIndex, const float* source, int numSample
     if (m_tables.empty() || source == nullptr)
         return;
 
-    auto& table = getTable (tableIndex);
+    float* table = getTable (tableIndex);
     const int n = std::min (numSamples, m_tableSize);
-    std::copy (source, source + n, table.begin());
+    std::copy (source, source + n, table);
     if (n < m_tableSize)
-        std::fill (table.begin() + n, table.end(), 0.0f);
+        std::fill (table + n, table + m_tableSize, 0.0f);
 }
 
 } // namespace dsp
