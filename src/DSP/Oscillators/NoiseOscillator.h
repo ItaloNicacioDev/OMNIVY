@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DSP/Oscillators/OscillatorBase.h"
+#include "DSP/Utilities/Smoothing.h"
 
 namespace omnivy {
 namespace dsp {
