@@ -168,3 +168,9 @@ void OmnivyAudioProcessor::setStateInformation (const void* data, int sizeInByte
     if (sizeInBytes >= 4)
         testParameter = *reinterpret_cast<const float*> (d);
 }
+
+// JUCE plugin factory entry point
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new OmnivyAudioProcessor();
+}
