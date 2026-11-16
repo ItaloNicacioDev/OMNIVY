@@ -2,6 +2,7 @@
 
 #include "DSP/Oscillators/OscillatorBase.h"
 #include "DSP/Wavetable/WavetableData.h"
+#include "DSP/Utilities/Smoothing.h"
 
 namespace omnivy {
 namespace dsp {

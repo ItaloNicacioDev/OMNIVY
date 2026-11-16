@@ -1,5 +1,6 @@
 #include "DSP/Engine/AudioEngine.h"
 #include "DSP/Utilities/DSPUtilities.h"
+#include "DSP/Wavetable/WavetableGenerator.h"
 
 #include <cmath>
 #include <juce_dsp/juce_dsp.h>
