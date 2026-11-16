@@ -960,6 +960,8 @@ static void testAdditiveSinglePartial()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     // Only 1 harmonic at amplitude 1.0
     engine->setHarmonicCount (1);
@@ -990,6 +992,8 @@ static void testAdditiveMultiplePartials()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (3);
     engine->setPartialAmplitude (0, 1.0f);   // fundamental
@@ -1028,6 +1032,8 @@ static void testAdditiveAmplitudeRespected()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (2);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1059,6 +1065,8 @@ static void testAdditivePhaseRespected()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1087,6 +1095,8 @@ static void testAdditiveHarmonicCount()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1118,6 +1128,8 @@ static void testAdditiveMorphABC()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     engine->setHarmonicCount (1);
     engine->setPartialAmplitude (0, 1.0f);
@@ -1166,6 +1178,8 @@ static void testAdditiveAntiAliasing()
     engine->init (nullptr);
     engine->setEngineType (EngineType::Additive);
     engine->reset ();
+    engine->setSampleRate (44100.0);
+    engine->setLevel (1.0f);
 
     // High fundamental so that 2nd harmonic is above Nyquist at 44100 Hz
     // Nyquist = 22050 Hz, so fundamental > 11025 Hz means 2nd harmonic > Nyquist

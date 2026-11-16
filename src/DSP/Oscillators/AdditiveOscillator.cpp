@@ -299,8 +299,6 @@ StereoFrame AdditiveOscillator::processSample()
     if (!m_active)
         return StereoFrame { 0.0f, 0.0f };
 
-    const float level = m_levelSmoother.getNextValue();
-
     // Advance fundamental phase with base increment + FM modulation.
     m_phase += m_phaseIncrement + m_modFrequency;
 
@@ -338,11 +336,11 @@ StereoFrame AdditiveOscillator::processSample()
     // ---- External audio input ----
     mono += m_modExternalAudio;
 
-    // Apply output level.
-    mono *= m_outputLevel;
-
+    // Apply output level (smoothed).
     const float smoothedLevel = m_levelSmoother.getNextValue();
-    return applyPan (mono * smoothedLevel * m_level, m_pan);
+    mono *= smoothedLevel;
+
+    return applyPan (mono, m_pan);
 }
 
 } // namespace dsp
