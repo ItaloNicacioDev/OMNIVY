@@ -40,7 +40,10 @@ public:
 
     bool isActive() const noexcept { return m_active; }
     bool isIdle() const noexcept { return !m_active && !m_ampEnv.isActive(); }
+    bool isInRelease() const noexcept { return m_ampEnv.isInRelease(); }
     int getNote() const noexcept { return m_note; }
+    int getNoteOnOrder() const noexcept { return m_noteOnOrder; }
+    void setNoteOnOrder (int order) noexcept { m_noteOnOrder = order; }
     bool isPlayingNote (int midiNote) const noexcept { return m_active && m_note == midiNote; }
 
 private:
@@ -62,6 +65,7 @@ private:
     float m_pitchBendSemitones = 0.0f;
     bool m_active = false;
     bool m_triggered = false;
+    int m_noteOnOrder = 0; // monotonic age for deterministic voice stealing
 
     // Filter state (per voice so key tracking can be applied per note).
     bool m_filterEnabled = true;
