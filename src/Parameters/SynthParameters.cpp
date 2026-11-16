@@ -23,6 +23,7 @@ SynthParameters::SynthParameters()
         m_oscillators[i].detune = static_cast<float> (i - (params::NumOscillators - 1) / 2) * 7.0f;
         m_oscillators[i].fineTune = 0.0f;
         m_oscillators[i].phase = 0.0f;
+        m_oscEngine[i] = EngineType::VA;
     }
 }
 
@@ -83,6 +84,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthParameters::createParam
         params.push_back (std::make_unique<AudioParameterFloat> (oscPhase (i),
             "OSC " + num + " Phase",
             NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+
+        params.push_back (std::make_unique<AudioParameterInt> (oscEngine (i),
+            "OSC " + num + " Engine",
+            0, static_cast<int> (EngineType::Count) - 1, 0)); // 0 = VA
     }
 
     // ---- Filter ---------------------------------------------------------------
@@ -133,6 +138,7 @@ void SynthParameters::updateFromValueTreeState (juce::AudioProcessorValueTreeSta
         osc.detune   = *vts.getRawParameterValue (oscDetune (i));
         osc.fineTune = *vts.getRawParameterValue (oscFineTune (i));
         osc.phase    = *vts.getRawParameterValue (oscPhase (i));
+        m_oscEngine[i] = static_cast<EngineType> (*vts.getRawParameterValue (oscEngine (i)));
     }
 
     m_filter.enabled   = *vts.getRawParameterValue (FilterEnabled) > 0.5f;
