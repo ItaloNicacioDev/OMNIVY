@@ -53,11 +53,11 @@ public:
     // Written by the routing/modulation layer, read by derived engines during
     // processSample(). Default implementations do nothing; FM/PM/Ring/Sync
     // engines override in later steps to consume these inputs.
-    virtual void setExternalAudioInput (float sample) noexcept {}
-    virtual void setFrequencyModInput (float mod) noexcept {}
-    virtual void setPhaseModInput (float mod) noexcept {}
-    virtual void setRingModInput (float mod) noexcept {}
-    virtual void setHardSyncTrigger (bool trigger) noexcept {}
+    virtual void setExternalAudioInput (float sample) noexcept { juce::ignoreUnused (sample); }
+    virtual void setFrequencyModInput (float mod) noexcept { juce::ignoreUnused (mod); }
+    virtual void setPhaseModInput (float mod) noexcept { juce::ignoreUnused (mod); }
+    virtual void setRingModInput (float mod) noexcept { juce::ignoreUnused (mod); }
+    virtual void setHardSyncTrigger (bool trigger) noexcept { juce::ignoreUnused (trigger); }
 
 protected:
     double m_sampleRate = 44100.0;

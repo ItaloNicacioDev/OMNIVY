@@ -52,7 +52,7 @@ public:
 
     // Engine type per oscillator slot. VA by default; FM/Additive/Granular
     // wired up in later steps without changing this struct.
-    EngineType getOscillatorEngine (int index) const noexcept { return m_oscEngine[index]; }
+    dsp::EngineType getOscillatorEngine (int index) const noexcept { return m_oscEngine[index]; }
 
     struct Filter
     {
@@ -80,7 +80,7 @@ private:
     std::atomic<int>   m_polyphony    { 16 };
 
     Oscillator m_oscillators[params::NumOscillators];
-    EngineType m_oscEngine[params::NumOscillators] = { EngineType::VA };
+    dsp::EngineType m_oscEngine[params::NumOscillators] = { dsp::EngineType::VA };
     Filter     m_filter;
     Envelope   m_envelope;
 };

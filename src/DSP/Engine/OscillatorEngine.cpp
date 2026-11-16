@@ -1,7 +1,7 @@
 #include "DSP/Engine/OscillatorEngine.h"
 
 #include "DSP/Oscillators/VAOscillator.h"
-#include "DSP/Oscillators/WavetableOscillator.h"
+#include "DSP/Wavetable/WavetableOscillator.h"
 
 #include <cmath>
 
