@@ -155,11 +155,8 @@ void AudioEngine::handleMidi (const juce::MidiBuffer& midiMessages)
         }
         else if (message.isController())
         {
-            const int controller = message.getControllerNumber();
-            const int value = message.getControllerValue();
-
-            // All notes off (CC 123).
-            if (controller == 123)
+            // All notes off (CC 123) - stuck-note prevention.
+            if (message.getControllerNumber() == 123)
                 m_voiceManager.noteOffAll();
         }
     }
