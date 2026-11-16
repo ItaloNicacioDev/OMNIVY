@@ -56,16 +56,35 @@ OMNIVY prioritizes:
 7. Compatibility with projects and presets.
 8. Stability in professional DAWs.
 
-## Development status
+## Development status — Phase 1 (COMPLETED)
 
-Phase 1 — Environment preparation and first functional build:
-- CMake configured.
-- JUCE 9.0.5 available.
-- MSVC x64 toolchain (Visual Studio Build Tools 2026).
-- VST3 plugin compiling and producing audio.
-- Standalone application compiling.
+- [x] Directory structure created under F:\BACKUP\FREELA\PROGRAMS\VST\OMNIVY
+- [x] CMake 3.30.5 installed (portable, F: drive)
+- [x] Ninja 1.12.1 installed (portable, F: drive)
+- [x] JUCE 9.0.5 cloned (F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\JUCE)
+- [x] CMakeLists.txt configured (VST3 + Standalone x64)
+- [x] PluginProcessor implemented (base structure)
+- [x] PluginEditor implemented (initial OMNIVY identity UI)
+- [x] Standalone application compilable
+- [x] Test parameter exposed (audio processing + state save/restore)
+- [x] Build VST3 x64: SUCCESSFUL
+- [x] Build Standalone x64: SUCCESSFUL
+- [x] Technical documentation created (6 docs)
 
-## License
+### Build Output
+
+| Artefact | Path |
+|----------|------|
+| VST3 Plugin | `Builds/Release/VST3/OmnivyPlugin.vst3/Contents/x86_64-win/OmnivyPlugin.vst3` |
+| Standalone | `Builds/Release/OmnivyStandalone.exe` |
+
+### Build commands
+
+```cmd
+call E:\VS_TOOLS\VC\Auxiliary\Build\vcvars64.bat
+F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\cmake\cmake-3.30.5-windows-x86_64\bin\cmake.exe -S . -B Builds -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM="F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\ninja\ninja.exe" -DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe -DJUCE_PATH=F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\JUCE
+F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\ninja\ninja.exe -C Builds
+```
 
 OMNIVY is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -103,14 +122,14 @@ along with OMNIVY. If not, see <https://www.gnu.org/licenses/>.
 
 ```cmd
 call E:\VS_TOOLS\VC\Auxiliary\Build\vcvars64.bat
-cmake -S . -B Builds -G "Visual Studio 17 2022" -A x64
-cmake --build Builds --config Release
+F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\cmake\cmake-3.30.5-windows-x86_64\bin\cmake.exe -S . -B Builds -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM="F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\ninja\ninja.exe" -DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe -DJUCE_PATH=F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\JUCE
+F:\BACKUP\FREELA\PROGRAMS\VST\Dependencies\Tools\ninja\ninja.exe -C Builds
 ```
 
 ### Output
 
-- VST3 plugin: Builds/Release/Omnivy.vst3
-- Standalone: Builds/Release/Omnivy.exe
+- VST3 plugin: `Builds/Release/VST3/OmnivyPlugin.vst3/Contents/x86_64-win/OmnivyPlugin.vst3`
+- Standalone: `Builds/Release/OmnivyStandalone.exe`
 
 ## Documentation
 
