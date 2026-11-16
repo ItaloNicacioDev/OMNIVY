@@ -55,7 +55,7 @@ private:
 
     dsp::WavetableData m_wavetable;
     VoiceManager m_voiceManager;
-    SynthParameters m_parameters;
+    const SynthParameters* m_parameters = nullptr;
 
     float m_masterVolume = 0.7f;
     float m_testToneLevel = 0.0f;
