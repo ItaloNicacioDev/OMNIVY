@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <algorithm>
+#include <memory>
+
 #include "DSP/Engine/SynthVoice.h"
 
 namespace omnivy {
@@ -23,6 +25,9 @@ class VoiceManager
 public:
     VoiceManager (dsp::WavetableData* wavetableData);
     ~VoiceManager() = default;
+
+    VoiceManager (const VoiceManager&) = delete;
+    VoiceManager& operator= (const VoiceManager&) = delete;
 
     void setSampleRate (double sampleRate);
     void setPolyphony (int polyphony);
@@ -52,7 +57,7 @@ private:
     SynthVoice* selectStealVictim() noexcept;
 
     dsp::WavetableData* m_wavetableData = nullptr;
-    std::vector<SynthVoice> m_voices;
+    std::vector<std::unique_ptr<SynthVoice>> m_voices;
     int m_polyphony = 16;
     float m_pitchBendSemitones = 0.0f;
     int m_noteOnCounter = 0; // monotonic, for deterministic FIFO stealing
