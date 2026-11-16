@@ -10,8 +10,9 @@ SynthVoice::SynthVoice (dsp::WavetableData* wavetableData)
 {
     for (int i = 0; i < SynthParameters::NumOscillators; ++i)
     {
-        m_oscillators[i] = std::make_unique<dsp::VAOscillator>();
-        m_oscillatorIsWavetable[i] = false;
+        m_oscillators[i] = std::make_unique<dsp::OscillatorEngine>();
+        m_oscillators[i]->init (m_wavetableData);
+        m_oscillators[i]->setEngineType (dsp::EngineType::VA);
     }
 }
 
