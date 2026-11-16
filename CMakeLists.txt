@@ -54,6 +54,13 @@ target_sources(OmnivyPlugin PRIVATE
     src/Core/PluginEditor.cpp
 )
 
+target_compile_definitions(OmnivyPlugin PRIVATE
+  JUCE_VST3=1
+  JUCE_STANDALONE=0
+  JUCE_IGNORE_VST3_MISMATCHED_PARAMETER_ID_WARNING=1
+  JUCE_VST3_CAN_REPLACE_VST2=0
+)
+
 target_link_libraries(OmnivyPlugin PRIVATE
     juce::juce_audio_processors
     juce::juce_gui_basics
@@ -94,4 +101,5 @@ set_target_properties(OmnivyPlugin PROPERTIES
 
 set_target_properties(OmnivyStandalone PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+    WIN32_EXECUTABLE TRUE
 )
