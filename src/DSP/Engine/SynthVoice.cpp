@@ -112,15 +112,11 @@ void SynthVoice::updateParameters (const SynthParameters& params)
         o->setSemitone (osc.semitone);
         o->setDetuneCents (osc.detune);
         o->setFineTuneCents (osc.fineTune);
+        // Engine type selected per slot. OscillatorEngine handles attaching
+        // shared wavetable data internally when the engine is Wavetable.
+        o->setEngineType (static_cast<dsp::EngineType> (params.getOscillatorEngine (i)));
         if (m_triggered)
             o->setInitialPhase (osc.phase);
-
-        // If a wavetable oscillator, attach shared wavetable data.
-        if (m_oscillatorIsWavetable[i] && m_wavetableData != nullptr)
-        {
-            if (auto* wt = dynamic_cast<dsp::WavetableOscillator*> (o))
-                wt->setWavetableData (m_wavetableData);
-        }
     }
 
     m_triggered = false;
