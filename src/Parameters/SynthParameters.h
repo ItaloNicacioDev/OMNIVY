@@ -1,0 +1,78 @@
+#pragma once
+
+#include <atomic>
+#include <vector>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include "ParameterIDs.h"
+
+namespace omnivy {
+
+// -----------------------------------------------------------------------------
+// Holds the current value of every synth parameter as lock-free atomics so the
+// DSP engine can read them on the audio thread without mutexes. The
+// AudioProcessor owns the juce::AudioProcessorValueTreeState and calls
+// updateFromValueTreeState() at the start of each processBlock.
+// -----------------------------------------------------------------------------
+class SynthParameters
+{
+public:
+    SynthParameters();
+    ~SynthParameters() = default;
+
+    // Builds the APVTS ParameterLayout. Called by the plugin constructor.
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    // Reads values from the APVTS (lock-free atomic loads). Call once per block
+    // on the audio thread before rendering.
+    void updateFromValueTreeState (juce::AudioProcessorValueTreeState& vts);
+
+    // ---- Accessors ------------------------------------------------------------
+    float getMasterVolume() const noexcept { return m_masterVolume; }
+    int   getPolyphony() const noexcept { return m_polyphony; }
+
+    struct Oscillator
+    {
+        bool active  = true;
+        int  waveform = 0;          // Waveform enum value
+        float level  = 0.7f;
+        float pan    = 0.0f;
+        int  octave  = 0;
+        int  semitone = 0;
+        float detune = 0.0f;        // cents
+        float fineTune = 0.0f;      // cents
+        float phase  = 0.0f;        // 0..1 initial phase offset
+    };
+
+    const Oscillator& getOscillator (int index) const noexcept { return m_oscillators[index]; }
+
+    struct Filter
+    {
+        bool enabled = true;
+        int  type = 0;              // 0=LowPass, 1=HighPass, 2=BandPass
+        float cutoff = 2000.0f;     // Hz
+        float resonance = 0.5f;
+        float keyTrack = 0.0f;      // 0..1
+    };
+
+    const Filter& getFilter() const noexcept { return m_filter; }
+
+    struct Envelope
+    {
+        float attack = 0.01f;   // seconds
+        float decay = 0.1f;
+        float sustain = 0.7f;   // 0..1
+        float release = 0.2f;   // seconds
+    };
+
+    const Envelope& getEnvelope() const noexcept { return m_envelope; }
+
+private:
+    std::atomic<float> m_masterVolume { 0.7f };
+    std::atomic<int>   m_polyphony    { 16 };
+
+    Oscillator m_oscillators[params::NumOscillators];
+    Filter     m_filter;
+    Envelope   m_envelope;
+};
+
+} // namespace omnivy
