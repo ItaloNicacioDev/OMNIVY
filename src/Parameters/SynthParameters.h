@@ -95,6 +95,20 @@ private:
     Oscillator m_oscillators[params::NumOscillators];
     dsp::EngineType m_oscEngine[params::NumOscillators] = { dsp::EngineType::VA };
     FmParams m_fmParams[params::NumOscillators];
+
+    // ---- Additive synthesis parameters per oscillator -----------------------
+    struct AdditiveParams
+    {
+        int    harmonicCount = 8;
+        float  spectralMorph = 0.0f;   // 0 = Spectrum A, 1 = Spectrum B
+        float  spectralTilt = 0.0f;    // -1..1
+        float  oddEvenBalance = 0.0f;  // -1..1
+        float  fundamentalLevel = 1.0f;
+        float  outputLevel = 0.7f;
+    };
+
+    AdditiveParams m_addParams[params::NumOscillators];
+    const AdditiveParams& getAdditiveParams (int index) const noexcept { return m_addParams[index]; }
     Filter     m_filter;
     Envelope   m_envelope;
 };

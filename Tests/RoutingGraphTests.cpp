@@ -39,27 +39,22 @@ public:
     void setExternalAudioInput (float sample) noexcept override
     {
         lastExternalAudio = sample;
-        OscillatorEngine::setExternalAudioInput (sample);
     }
     void setFrequencyModInput (float mod) noexcept override
     {
         lastFrequencyMod = mod;
-        OscillatorEngine::setFrequencyModInput (mod);
     }
     void setPhaseModInput (float mod) noexcept override
     {
         lastPhaseMod = mod;
-        OscillatorEngine::setPhaseModInput (mod);
     }
     void setRingModInput (float mod) noexcept override
     {
         lastRingMod = mod;
-        OscillatorEngine::setRingModInput (mod);
     }
     void setHardSyncTrigger (bool trigger) noexcept override
     {
         lastHardSync = trigger;
-        OscillatorEngine::setHardSyncTrigger (trigger);
     }
 };
 
@@ -843,7 +838,6 @@ static void testHardSyncReset()
     source->processSample();
     dest->setFrequency (440.0f);
     dest->processSample();
-    float phaseBefore = dest->getPhase();
 
     ASSERT (graph.addConnection (std::make_shared<HardSyncConnection> (0, 1, 1.0f)), "Add HardSync 0->1");
     graph.publishConfig();
@@ -956,11 +950,301 @@ static void testRegressionAllVa()
 }
 
 // -----------------------------------------------------------------------------
+// Test: Additive — single partial produces sine-like waveform
+// -----------------------------------------------------------------------------
+static void testAdditiveSinglePartial()
+{
+    TEST ("Additive — single partial = sine");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    // Only 1 harmonic at amplitude 1.0
+    engine->setHarmonicCount (1);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setFrequency (440.0f);
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Single partial at fundamental frequency = sine wave
+    // After one sample at 440Hz/44100Hz: phase = 440/44100, sin(2*pi*phase) ≈ 0.0627
+    const float expected = std::sin (static_cast<float> (TwoPi) * 440.0f / 44100.0f);
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "Single partial produces sine at fundamental frequency");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — multiple partials combine
+// -----------------------------------------------------------------------------
+static void testAdditiveMultiplePartials()
+{
+    TEST ("Additive — multiple partials combine");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    engine->setHarmonicCount (3);
+    engine->setPartialAmplitude (0, 1.0f);   // fundamental
+    engine->setPartialAmplitude (1, 0.5f);   // 2nd harmonic
+    engine->setPartialAmplitude (2, 0.25f);  // 3rd harmonic
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialPhase (1, 0.0f);
+    engine->setPartialPhase (2, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setPartialFrequencyRatio (1, 2.0f);
+    engine->setPartialFrequencyRatio (2, 3.0f);
+    engine->setFrequency (100.0f);
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Sum of 3 sine waves at 100, 200, 300 Hz
+    const float fundamental = std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    const float second = 0.5f * std::sin (static_cast<float> (TwoPi) * 200.0f / 44100.0f);
+    const float third = 0.25f * std::sin (static_cast<float> (TwoPi) * 300.0f / 44100.0f);
+    const float expected = fundamental + second + third;
+
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "Multiple partials combine with correct amplitudes");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — harmonic amplitudes respected
+// -----------------------------------------------------------------------------
+static void testAdditiveAmplitudeRespected()
+{
+    TEST ("Additive — harmonic amplitudes respected");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    engine->setHarmonicCount (2);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialAmplitude (1, 0.0f);   // silence 2nd harmonic
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialPhase (1, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setPartialFrequencyRatio (1, 2.0f);
+    engine->setFrequency (100.0f);
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Only fundamental should be present
+    const float expected = std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "Second harmonic with zero amplitude is silent");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — harmonic phases respected
+// -----------------------------------------------------------------------------
+static void testAdditivePhaseRespected()
+{
+    TEST ("Additive — harmonic phases respected");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    engine->setHarmonicCount (1);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialPhase (0, 0.5f);   // half-cycle phase shift = inverted sine
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setFrequency (100.0f);
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Phase 0.5 = 180 degrees = inverted sine
+    const float expected = -std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "Half-cycle phase shift inverts sine wave");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — harmonic count respected
+// -----------------------------------------------------------------------------
+static void testAdditiveHarmonicCount()
+{
+    TEST ("Additive — harmonic count respected");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    engine->setHarmonicCount (1);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialAmplitude (1, 1.0f);   // 2nd harmonic should be silent (count=1)
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialPhase (1, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setPartialFrequencyRatio (1, 2.0f);
+    engine->setFrequency (100.0f);
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Only fundamental should be present
+    const float expected = std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "Harmonic count=1 silences 2nd harmonic");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — spectral morph A->B
+// -----------------------------------------------------------------------------
+static void testAdditiveMorphABC()
+{
+    TEST ("Additive — spectral morph A->B");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    engine->setHarmonicCount (1);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setFrequency (100.0f);
+
+    // Spectrum B: same harmonic at 0.5 amplitude
+    AdditivePartial partialB;
+    partialB.amplitude = 0.5f;
+    partialB.phase = 0.0f;
+    partialB.frequencyRatio = 1.0f;
+    engine->setSpectrumBPartial (0, partialB);
+
+    engine->processSample();
+    const auto outA = engine->getLastOutput();
+
+    // Morph to B (morph = 1.0)
+    engine->setSpectralMorph (1.0f);
+    engine->processSample();
+    const auto outB = engine->getLastOutput();
+
+    // Morph to middle (morph = 0.5)
+    engine->setSpectralMorph (0.5f);
+    engine->processSample();
+    const auto outMid = engine->getLastOutput();
+
+    const float expectedA = std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    const float expectedB = 0.5f * std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+    const float expectedMid = 0.75f * std::sin (static_cast<float> (TwoPi) * 100.0f / 44100.0f);
+
+    ASSERT (std::fabs (outA.left - expectedA) < 0.01f, "Morph=0 reproduces Spectrum A");
+    ASSERT (std::fabs (outB.left - expectedB) < 0.01f, "Morph=1 reproduces Spectrum B");
+    ASSERT (std::fabs (outMid.left - expectedMid) < 0.01f, "Morph=0.5 interpolates correctly");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — anti-aliasing (harmonics above Nyquist suppressed)
+// -----------------------------------------------------------------------------
+static void testAdditiveAntiAliasing()
+{
+    TEST ("Additive — anti-aliasing suppresses harmonics above Nyquist");
+
+    auto engine = std::make_unique<TestEngine>();
+    engine->init (nullptr);
+    engine->setEngineType (EngineType::Additive);
+    engine->reset ();
+
+    // High fundamental so that 2nd harmonic is above Nyquist at 44100 Hz
+    // Nyquist = 22050 Hz, so fundamental > 11025 Hz means 2nd harmonic > Nyquist
+    engine->setHarmonicCount (2);
+    engine->setPartialAmplitude (0, 1.0f);
+    engine->setPartialAmplitude (1, 1.0f);
+    engine->setPartialPhase (0, 0.0f);
+    engine->setPartialPhase (1, 0.0f);
+    engine->setPartialFrequencyRatio (0, 1.0f);
+    engine->setPartialFrequencyRatio (1, 2.0f);
+    engine->setFrequency (20000.0f);  // 2nd harmonic = 40000 Hz > 22050 Hz Nyquist
+
+    engine->processSample();
+    const auto out = engine->getLastOutput();
+
+    // Only fundamental should be present (2nd harmonic suppressed)
+    const float expected = std::sin (static_cast<float> (TwoPi) * 20000.0f / 44100.0f);
+    ASSERT (std::fabs (out.left - expected) < 0.01f,
+            "2nd harmonic above Nyquist is suppressed");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Additive — polyphony (six additive oscillators simultaneously)
+// -----------------------------------------------------------------------------
+static void testAdditivePolyphony()
+{
+    TEST ("Additive — six additive oscillators simultaneously");
+
+    RoutingGraph graph;
+
+    std::unique_ptr<TestEngine> engines[6];
+    for (int i = 0; i < 6; ++i)
+    {
+        engines[i] = std::make_unique<TestEngine>();
+        engines[i]->init (nullptr);
+        engines[i]->setEngineType (EngineType::Additive);
+        engines[i]->reset ();
+        engines[i]->setHarmonicCount (4);
+        engines[i]->setPartialAmplitude (0, 1.0f);
+        engines[i]->setPartialAmplitude (1, 0.5f);
+        engines[i]->setPartialAmplitude (2, 0.25f);
+        engines[i]->setPartialAmplitude (3, 0.125f);
+        engines[i]->setPartialPhase (0, 0.0f);
+        engines[i]->setPartialPhase (1, 0.0f);
+        engines[i]->setPartialPhase (2, 0.0f);
+        engines[i]->setPartialPhase (3, 0.0f);
+        engines[i]->setPartialFrequencyRatio (0, 1.0f);
+        engines[i]->setPartialFrequencyRatio (1, 2.0f);
+        engines[i]->setPartialFrequencyRatio (2, 3.0f);
+        engines[i]->setPartialFrequencyRatio (3, 4.0f);
+        engines[i]->setFrequency (100.0f + i * 50.0f);  // different notes
+        graph.bindEngine (i, engines[i].get());
+    }
+
+    graph.publishConfig();
+
+    graph.resetAllModInputs();
+    graph.applyModulations();
+
+    // All six engines should produce finite, non-zero output
+    for (int i = 0; i < 6; ++i)
+    {
+        engines[i]->processSample();
+        const auto out = engines[i]->getLastOutput();
+        ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+                "Additive oscillator produces finite output");
+        ASSERT (std::fabs (out.left) > 0.001f,
+                "Additive oscillator produces non-zero output");
+    }
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
 int main()
 {
-    printf ("OMNIVY P3.3 FM/PM Synthesis DSP Test Harness\n");
+    printf ("OMNIVY P3.4 Additive Synthesis DSP Test Harness\n");
     printf ("=============================================\n\n");
 
     testConnectionTypeEnum();
@@ -991,6 +1275,14 @@ int main()
     testRingModMultiplication();
     testHardSyncReset();
     testPerVoiceIndependence();
+    testAdditiveSinglePartial();
+    testAdditiveMultiplePartials();
+    testAdditiveAmplitudeRespected();
+    testAdditivePhaseRespected();
+    testAdditiveHarmonicCount();
+    testAdditiveMorphABC();
+    testAdditiveAntiAliasing();
+    testAdditivePolyphony();
 
     printf ("\n=============================================\n");
     printf ("Results: %d passed, %d failed\n", g_testsPassed, g_testsFailed);

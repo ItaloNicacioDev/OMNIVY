@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "DSP/Oscillators/OscillatorBase.h"
+#include "DSP/Oscillators/AdditiveOscillator.h"
 #include "DSP/Wavetable/WavetableData.h"
 
 namespace omnivy {
@@ -94,9 +95,6 @@ public:
     void setWavetableData (dsp::WavetableData* data);
 
     // ---- FM parameter forwarding (no-op for non-FM engines) ---------------
-    // Forwarded to the wrapped FM oscillator when the engine type is FM;
-    // no-op otherwise. This keeps SynthVoice independent of concrete engine
-    // classes while allowing per-slot FM configuration.
     void setFrequencyRatio (float ratio);
     float getFrequencyRatio() const noexcept;
     void setFineRatio (float fineRatio);
@@ -110,7 +108,33 @@ public:
     void setOutputLevel (float level);
     float getOutputLevel() const noexcept;
 
-private:
+    // ---- Additive parameter forwarding (no-op for non-additive engines) ---
+    void setHarmonicCount (int count);
+    int getHarmonicCount() const noexcept;
+    void setSpectralMorph (float morph);
+    float getSpectralMorph() const noexcept;
+    void setSpectralTilt (float tilt);
+    float getSpectralTilt() const noexcept;
+    void setOddEvenBalance (float balance);
+    float getOddEvenBalance() const noexcept;
+    void setFundamentalLevel (float level);
+    float getFundamentalLevel() const noexcept;
+    void setAddOutputLevel (float level);
+    float getAddOutputLevel() const noexcept;
+
+    // ---- Additive partial access (no-op for non-additive engines) ---------
+    void setPartialAmplitude (int index, float amplitude);
+    float getPartialAmplitude (int index) const noexcept;
+    void setPartialPhase (int index, float phase);
+    float getPartialPhase (int index) const noexcept;
+    void setPartialFrequencyRatio (int index, float ratio);
+    float getPartialFrequencyRatio (int index) const noexcept;
+    void setSpectrumAPartial (int index, const AdditivePartial& partial);
+    void setSpectrumBPartial (int index, const AdditivePartial& partial);
+    const AdditivePartial& getSpectrumAPartial (int index) const noexcept;
+    const AdditivePartial& getSpectrumBPartials (int index) const noexcept;
+
+ private:
     void recreateOscillator();
 
     EngineType m_engineType = EngineType::VA;

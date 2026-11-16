@@ -57,6 +57,7 @@ target_sources(OmnivyPlugin PRIVATE
     # (header-only)
 
     # --- DSP: Oscillators ---
+    src/DSP/Oscillators/AdditiveOscillator.cpp
     src/DSP/Oscillators/VAOscillator.cpp
     src/DSP/Oscillators/NoiseOscillator.cpp
     src/DSP/Oscillators/FMOscillator.cpp

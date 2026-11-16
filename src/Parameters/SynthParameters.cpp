@@ -1,5 +1,6 @@
 #include "SynthParameters.h"
 #include "DSP/Utilities/DSPUtilities.h"
+#include "DSP/Oscillators/AdditiveOscillator.h"
 
 #include <algorithm>
 
@@ -24,6 +25,7 @@ SynthParameters::SynthParameters()
         m_oscillators[i].fineTune = 0.0f;
         m_oscillators[i].phase = 0.0f;
         m_oscEngine[i] = dsp::EngineType::VA;
+        m_addParams[i] = AdditiveParams();
     }
 }
 
@@ -108,6 +110,26 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthParameters::createParam
         params.push_back (std::make_unique<AudioParameterFloat> (oscFmOutputLevel (i),
             "OSC " + num + " FM Output Level",
             NormalisableRange<float> (0.0f, 2.0f, 0.01f), 0.7f));
+
+        // ---- Additive synthesis parameters --------------------------------
+        params.push_back (std::make_unique<AudioParameterInt> (oscAddHarmonicCount (i),
+            "OSC " + num + " Add Harmonic Count",
+            1, kMaxAdditivePartials, 8));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscAddMorph (i),
+            "OSC " + num + " Add Morph",
+            NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscAddTilt (i),
+            "OSC " + num + " Add Tilt",
+            NormalisableRange<float> (-1.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscAddOddEven (i),
+            "OSC " + num + " Add Odd/Even",
+            NormalisableRange<float> (-1.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscAddFundLevel (i),
+            "OSC " + num + " Add Fund Level",
+            NormalisableRange<float> (0.0f, 2.0f, 0.01f), 1.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscAddOutputLevel (i),
+            "OSC " + num + " Add Output Level",
+            NormalisableRange<float> (0.0f, 2.0f, 0.01f), 0.7f));
     }
 
     // ---- Filter ---------------------------------------------------------------
@@ -168,6 +190,15 @@ void SynthParameters::updateFromValueTreeState (juce::AudioProcessorValueTreeSta
         fm.pmAmount = *vts.getRawParameterValue (oscPmAmount (i));
         fm.feedback = *vts.getRawParameterValue (oscFmFeedback (i));
         fm.outputLevel = *vts.getRawParameterValue (oscFmOutputLevel (i));
+
+        // ---- Additive synthesis parameters --------------------------------
+        auto& add = m_addParams[i];
+        add.harmonicCount = static_cast<int> (*vts.getRawParameterValue (oscAddHarmonicCount (i)));
+        add.spectralMorph = *vts.getRawParameterValue (oscAddMorph (i));
+        add.spectralTilt = *vts.getRawParameterValue (oscAddTilt (i));
+        add.oddEvenBalance = *vts.getRawParameterValue (oscAddOddEven (i));
+        add.fundamentalLevel = *vts.getRawParameterValue (oscAddFundLevel (i));
+        add.outputLevel = *vts.getRawParameterValue (oscAddOutputLevel (i));
     }
 
     m_filter.enabled   = *vts.getRawParameterValue (FilterEnabled) > 0.5f;

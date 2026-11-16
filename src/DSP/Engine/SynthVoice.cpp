@@ -126,6 +126,15 @@ void SynthVoice::updateParameters (const SynthParameters& params)
         o->setPmAmount (fm.pmAmount);
         o->setFeedback (fm.feedback);
         o->setOutputLevel (fm.outputLevel);
+
+        // Apply additive-specific parameters when the engine is Additive.
+        const auto& add = params.getAdditiveParams (i);
+        o->setHarmonicCount (add.harmonicCount);
+        o->setSpectralMorph (add.spectralMorph);
+        o->setSpectralTilt (add.spectralTilt);
+        o->setOddEvenBalance (add.oddEvenBalance);
+        o->setFundamentalLevel (add.fundamentalLevel);
+        o->setAddOutputLevel (add.outputLevel);
     }
 
     m_triggered = false;

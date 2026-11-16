@@ -40,6 +40,14 @@ inline juce::String oscPmAmount      (int index) { return oscPrefix (index) + ".
 inline juce::String oscFmFeedback    (int index) { return oscPrefix (index) + ".fmFeedback"; }
 inline juce::String oscFmOutputLevel (int index) { return oscPrefix (index) + ".fmOutputLevel"; }
 
+// ---- Additive synthesis parameters (indexed 0..5, maps to OSC 1..6) -------
+inline juce::String oscAddHarmonicCount (int index) { return oscPrefix (index) + ".addHarmonicCount"; }
+inline juce::String oscAddMorph (int index) { return oscPrefix (index) + ".addMorph"; }
+inline juce::String oscAddTilt (int index) { return oscPrefix (index) + ".addTilt"; }
+inline juce::String oscAddOddEven (int index) { return oscPrefix (index) + ".addOddEven"; }
+inline juce::String oscAddFundLevel (int index) { return oscPrefix (index) + ".addFundLevel"; }
+inline juce::String oscAddOutputLevel (int index) { return oscPrefix (index) + ".addOutputLevel"; }
+
 // Total number of independent oscillators.
 inline constexpr int NumOscillators = 6;
 

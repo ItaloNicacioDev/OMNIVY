@@ -34,6 +34,11 @@ public:
             // FM defaults: sine-like operator with moderate modulation index.
             engine->setWaveform (Waveform::Sine);
         }
+        else if (type == EngineType::Additive)
+        {
+            // Additive defaults: harmonic series, 8 partials.
+            engine->setWaveform (Waveform::Sine);
+        }
         return engine;
     }
 };

@@ -1,7 +1,8 @@
 #include "DSP/Engine/OscillatorEngine.h"
 
-#include "DSP/Oscillators/VAOscillator.h"
+#include "DSP/Oscillators/AdditiveOscillator.h"
 #include "DSP/Oscillators/FMOscillator.h"
+#include "DSP/Oscillators/VAOscillator.h"
 #include "DSP/Wavetable/WavetableOscillator.h"
 
 #include <cmath>
@@ -44,6 +45,9 @@ void OscillatorEngine::recreateOscillator()
     {
         case EngineType::Wavetable:
             m_oscillator = std::make_unique<WavetableOscillator>();
+            break;
+        case EngineType::Additive:
+            m_oscillator = std::make_unique<AdditiveOscillator>();
             break;
         case EngineType::VA:
         default:
@@ -224,6 +228,153 @@ float OscillatorEngine::getOutputLevel() const noexcept
     if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
         return fm->getOutputLevel();
     return 0.0f;
+}
+
+// ---- Additive parameter forwarding ----
+void OscillatorEngine::setHarmonicCount (int count)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setHarmonicCount (count);
+}
+
+int OscillatorEngine::getHarmonicCount() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getHarmonicCount();
+    return 0;
+}
+
+void OscillatorEngine::setSpectralMorph (float morph)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setSpectralMorph (morph);
+}
+
+float OscillatorEngine::getSpectralMorph() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getSpectralMorph();
+    return 0.0f;
+}
+
+void OscillatorEngine::setSpectralTilt (float tilt)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setSpectralTilt (tilt);
+}
+
+float OscillatorEngine::getSpectralTilt() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getSpectralTilt();
+    return 0.0f;
+}
+
+void OscillatorEngine::setOddEvenBalance (float balance)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setOddEvenBalance (balance);
+}
+
+float OscillatorEngine::getOddEvenBalance() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getOddEvenBalance();
+    return 0.0f;
+}
+
+void OscillatorEngine::setFundamentalLevel (float level)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setFundamentalLevel (level);
+}
+
+float OscillatorEngine::getFundamentalLevel() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getFundamentalLevel();
+    return 0.0f;
+}
+
+void OscillatorEngine::setAddOutputLevel (float level)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setOutputLevel (level);
+}
+
+float OscillatorEngine::getAddOutputLevel() const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getOutputLevel();
+    return 0.0f;
+}
+
+// ---- Additive partial access forwarding ----
+void OscillatorEngine::setPartialAmplitude (int index, float amplitude)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setPartialAmplitude (index, amplitude);
+}
+
+float OscillatorEngine::getPartialAmplitude (int index) const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getPartialAmplitude (index);
+    return 0.0f;
+}
+
+void OscillatorEngine::setPartialPhase (int index, float phase)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setPartialPhase (index, phase);
+}
+
+float OscillatorEngine::getPartialPhase (int index) const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getPartialPhase (index);
+    return 0.0f;
+}
+
+void OscillatorEngine::setPartialFrequencyRatio (int index, float ratio)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setPartialFrequencyRatio (index, ratio);
+}
+
+float OscillatorEngine::getPartialFrequencyRatio (int index) const noexcept
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getPartialFrequencyRatio (index);
+    return 0.0f;
+}
+
+void OscillatorEngine::setSpectrumAPartial (int index, const AdditivePartial& partial)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setSpectrumAPartial (index, partial);
+}
+
+void OscillatorEngine::setSpectrumBPartial (int index, const AdditivePartial& partial)
+{
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        ad->setSpectrumBPartial (index, partial);
+}
+
+const AdditivePartial& OscillatorEngine::getSpectrumAPartial (int index) const noexcept
+{
+    static const AdditivePartial empty;
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getSpectrumAPartial (index);
+    return empty;
+}
+
+const AdditivePartial& OscillatorEngine::getSpectrumBPartials (int index) const noexcept
+{
+    static const AdditivePartial empty;
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+        return ad->getSpectrumBPartials (index);
+    return empty;
 }
 
 } // namespace dsp
