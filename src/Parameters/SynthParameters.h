@@ -88,14 +88,6 @@ public:
 
     const Envelope& getEnvelope() const noexcept { return m_envelope; }
 
-private:
-    std::atomic<float> m_masterVolume { 0.7f };
-    std::atomic<int>   m_polyphony    { 16 };
-
-    Oscillator m_oscillators[params::NumOscillators];
-    dsp::EngineType m_oscEngine[params::NumOscillators] = { dsp::EngineType::VA };
-    FmParams m_fmParams[params::NumOscillators];
-
     // ---- Additive synthesis parameters per oscillator -----------------------
     struct AdditiveParams
     {
@@ -107,8 +99,17 @@ private:
         float  outputLevel = 0.7f;
     };
 
-    AdditiveParams m_addParams[params::NumOscillators];
     const AdditiveParams& getAdditiveParams (int index) const noexcept { return m_addParams[index]; }
+
+private:
+    std::atomic<float> m_masterVolume { 0.7f };
+    std::atomic<int>   m_polyphony    { 16 };
+
+    Oscillator m_oscillators[params::NumOscillators];
+    dsp::EngineType m_oscEngine[params::NumOscillators] = { dsp::EngineType::VA };
+    FmParams m_fmParams[params::NumOscillators];
+
+    AdditiveParams m_addParams[params::NumOscillators];
     Filter     m_filter;
     Envelope   m_envelope;
 };
