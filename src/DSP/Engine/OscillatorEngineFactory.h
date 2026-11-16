@@ -21,6 +21,21 @@ public:
         engine->setEngineType (type);
         return engine;
     }
+
+    // Create an engine pre-configured for a specific synthesis type with
+    // sensible defaults. Used when the user selects an engine type for an
+    // oscillator slot.
+    static std::unique_ptr<OscillatorEngine> createForType (EngineType type,
+                                                            dsp::WavetableData* wavetableData)
+    {
+        auto engine = create (type, wavetableData);
+        if (type == EngineType::FM)
+        {
+            // FM defaults: sine-like operator with moderate modulation index.
+            engine->setWaveform (Waveform::Sine);
+        }
+        return engine;
+    }
 };
 
 } // namespace dsp

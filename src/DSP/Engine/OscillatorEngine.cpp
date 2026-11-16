@@ -1,6 +1,7 @@
 #include "DSP/Engine/OscillatorEngine.h"
 
 #include "DSP/Oscillators/VAOscillator.h"
+#include "DSP/Oscillators/FMOscillator.h"
 #include "DSP/Wavetable/WavetableOscillator.h"
 
 #include <cmath>
@@ -78,52 +79,62 @@ float OscillatorEngine::getPhase() const                      { return m_oscilla
 
 void OscillatorEngine::setExternalAudioInput (float sample) noexcept
 {
-    if (m_oscillator)
-        m_oscillator->setExternalAudioInput (sample);
+    m_modExternalAudio += sample;
 }
 
 void OscillatorEngine::setFrequencyModInput (float mod) noexcept
 {
-    if (m_oscillator)
-        m_oscillator->setFrequencyModInput (mod);
+    m_modFrequency += mod;
 }
 
 void OscillatorEngine::setPhaseModInput (float mod) noexcept
 {
-    if (m_oscillator)
-        m_oscillator->setPhaseModInput (mod);
+    m_modPhase += mod;
 }
 
 void OscillatorEngine::setRingModInput (float mod) noexcept
 {
-    if (m_oscillator)
-        m_oscillator->setRingModInput (mod);
+    m_modRing += mod;
 }
 
 void OscillatorEngine::setHardSyncTrigger (bool trigger) noexcept
 {
-    if (m_oscillator)
-        m_oscillator->setHardSyncTrigger (trigger);
+    m_modHardSync = m_modHardSync || trigger;
 }
 
 StereoFrame OscillatorEngine::processSample()
 {
     if (!m_oscillator)
         return StereoFrame { 0.0f, 0.0f };
+
+    // Pass accumulated modulation inputs to the wrapped oscillator before
+    // rendering. FM/PM/Ring/Sync engines read these during their own
+    // processSample() call.
+    m_oscillator->setExternalAudioInput (m_modExternalAudio);
+    m_oscillator->setFrequencyModInput (m_modFrequency);
+    m_oscillator->setPhaseModInput (m_modPhase);
+    m_oscillator->setRingModInput (m_modRing);
+    m_oscillator->setHardSyncTrigger (m_modHardSync);
+
     m_lastOutput = m_oscillator->processSample();
+
+    // Reset accumulators after rendering so the next block starts clean.
+    m_modExternalAudio = 0.0f;
+    m_modFrequency = 0.0f;
+    m_modPhase = 0.0f;
+    m_modRing = 0.0f;
+    m_modHardSync = false;
+
     return m_lastOutput;
 }
 
 void OscillatorEngine::resetModInputs() noexcept
 {
-    if (m_oscillator)
-    {
-        m_oscillator->setExternalAudioInput (0.0f);
-        m_oscillator->setFrequencyModInput (0.0f);
-        m_oscillator->setPhaseModInput (0.0f);
-        m_oscillator->setRingModInput (0.0f);
-        m_oscillator->setHardSyncTrigger (false);
-    }
+    m_modExternalAudio = 0.0f;
+    m_modFrequency = 0.0f;
+    m_modPhase = 0.0f;
+    m_modRing = 0.0f;
+    m_modHardSync = false;
 }
 
 void OscillatorEngine::setWavetableData (dsp::WavetableData* data)
@@ -134,6 +145,85 @@ void OscillatorEngine::setWavetableData (dsp::WavetableData* data)
         if (auto* wt = dynamic_cast<WavetableOscillator*> (m_oscillator.get()))
             wt->setWavetableData (data);
     }
+}
+
+// ---- FM parameter forwarding ----
+void OscillatorEngine::setFrequencyRatio (float ratio)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setFrequencyRatio (ratio);
+}
+
+float OscillatorEngine::getFrequencyRatio() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getFrequencyRatio();
+    return 0.0f;
+}
+
+void OscillatorEngine::setFineRatio (float fineRatio)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setFineRatio (fineRatio);
+}
+
+float OscillatorEngine::getFineRatio() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getFineRatio();
+    return 0.0f;
+}
+
+void OscillatorEngine::setFmAmount (float amount)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setFmAmount (amount);
+}
+
+float OscillatorEngine::getFmAmount() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getFmAmount();
+    return 0.0f;
+}
+
+void OscillatorEngine::setPmAmount (float amount)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setPmAmount (amount);
+}
+
+float OscillatorEngine::getPmAmount() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getPmAmount();
+    return 0.0f;
+}
+
+void OscillatorEngine::setFeedback (float amount)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setFeedback (amount);
+}
+
+float OscillatorEngine::getFeedback() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getFeedback();
+    return 0.0f;
+}
+
+void OscillatorEngine::setOutputLevel (float level)
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        fm->setOutputLevel (level);
+}
+
+float OscillatorEngine::getOutputLevel() const noexcept
+{
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+        return fm->getOutputLevel();
+    return 0.0f;
 }
 
 } // namespace dsp

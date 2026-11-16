@@ -117,6 +117,15 @@ void SynthVoice::updateParameters (const SynthParameters& params)
         o->setEngineType (static_cast<dsp::EngineType> (params.getOscillatorEngine (i)));
         if (m_triggered)
             o->setInitialPhase (osc.phase);
+
+        // Apply FM-specific parameters when the engine is FM.
+        const auto& fm = params.getFmParams (i);
+        o->setFrequencyRatio (fm.frequencyRatio);
+        o->setFineRatio (fm.fineRatio);
+        o->setFmAmount (fm.fmAmount);
+        o->setPmAmount (fm.pmAmount);
+        o->setFeedback (fm.feedback);
+        o->setOutputLevel (fm.outputLevel);
     }
 
     m_triggered = false;

@@ -88,6 +88,26 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthParameters::createParam
         params.push_back (std::make_unique<AudioParameterInt> (oscEngine (i),
             "OSC " + num + " Engine",
             0, static_cast<int> (EngineType::Count) - 1, 0)); // 0 = VA
+
+        // ---- FM synthesis parameters (only meaningful for FM engine) -----
+        params.push_back (std::make_unique<AudioParameterFloat> (oscFmRatio (i),
+            "OSC " + num + " FM Ratio",
+            NormalisableRange<float> (0.001f, 32.0f, 0.001f), 1.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscFmFineRatio (i),
+            "OSC " + num + " FM Fine Ratio",
+            NormalisableRange<float> (0.001f, 2.0f, 0.001f), 1.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscFmAmount (i),
+            "OSC " + num + " FM Amount",
+            NormalisableRange<float> (0.0f, 100.0f, 0.1f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscPmAmount (i),
+            "OSC " + num + " PM Amount",
+            NormalisableRange<float> (0.0f, 10.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscFmFeedback (i),
+            "OSC " + num + " FM Feedback",
+            NormalisableRange<float> (-1.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscFmOutputLevel (i),
+            "OSC " + num + " FM Output Level",
+            NormalisableRange<float> (0.0f, 2.0f, 0.01f), 0.7f));
     }
 
     // ---- Filter ---------------------------------------------------------------
@@ -139,6 +159,15 @@ void SynthParameters::updateFromValueTreeState (juce::AudioProcessorValueTreeSta
         osc.fineTune = *vts.getRawParameterValue (oscFineTune (i));
         osc.phase    = *vts.getRawParameterValue (oscPhase (i));
         m_oscEngine[i] = static_cast<dsp::EngineType> (static_cast<int> (*vts.getRawParameterValue (oscEngine (i))));
+
+        // ---- FM synthesis parameters ----------------------------------------
+        auto& fm = m_fmParams[i];
+        fm.frequencyRatio = *vts.getRawParameterValue (oscFmRatio (i));
+        fm.fineRatio = *vts.getRawParameterValue (oscFmFineRatio (i));
+        fm.fmAmount = *vts.getRawParameterValue (oscFmAmount (i));
+        fm.pmAmount = *vts.getRawParameterValue (oscPmAmount (i));
+        fm.feedback = *vts.getRawParameterValue (oscFmFeedback (i));
+        fm.outputLevel = *vts.getRawParameterValue (oscFmOutputLevel (i));
     }
 
     m_filter.enabled   = *vts.getRawParameterValue (FilterEnabled) > 0.5f;

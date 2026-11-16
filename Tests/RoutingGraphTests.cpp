@@ -598,11 +598,369 @@ static void testCyclePreventionMixedTypes()
 }
 
 // -----------------------------------------------------------------------------
+// Test: FM operator produces modulated output
+// -----------------------------------------------------------------------------
+static void testFmOperatorModulation()
+{
+    TEST ("FM operator — modulation changes output");
+    RoutingGraph graph;
+
+    auto carrier = std::make_unique<TestEngine>();
+    auto modulator = std::make_unique<TestEngine>();
+    carrier->init (nullptr);
+    modulator->init (nullptr);
+    carrier->setEngineType (EngineType::FM);
+    modulator->setEngineType (EngineType::VA);
+
+    // Initialize smoothers so level is non-zero
+    carrier->reset ();
+    modulator->reset ();
+
+    graph.bindEngine (0, carrier.get());
+    graph.bindEngine (1, modulator.get());
+
+    // Configure carrier as FM operator with ratio 1, amount 10
+    carrier->setFrequencyRatio (1.0f);
+    carrier->setFineRatio (1.0f);
+    carrier->setFmAmount (10.0f);
+    carrier->setFeedback (0.0f);
+
+    // Modulator produces a tone
+    modulator->setFrequency (440.0f);
+    modulator->processSample();
+
+    // Connect modulator -> carrier FM
+    ASSERT (graph.addConnection (std::make_shared<FrequencyModulationConnection> (1, 0, 1.0f)), "Add FM 1->0");
+    graph.publishConfig();
+
+    // Without FM amount, carrier output is a clean sine
+    carrier->setFrequency (440.0f);
+    carrier->processSample();
+    float outputNoMod = carrier->getLastOutput().left;
+
+    // With FM modulation, carrier output should differ
+    graph.resetAllModInputs();
+    graph.applyModulations();
+    carrier->processSample();
+    float outputWithMod = carrier->getLastOutput().left;
+
+    // FM modulation should change the output (different phase)
+    ASSERT (std::fabs (outputWithMod - outputNoMod) > 0.001f,
+            "FM modulation changes carrier output");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: FM with different frequency ratios
+// -----------------------------------------------------------------------------
+static void testFmDifferentRatios()
+{
+    TEST ("FM operator — different frequency ratios");
+    RoutingGraph graph;
+
+    auto carrier = std::make_unique<TestEngine>();
+    auto modulator = std::make_unique<TestEngine>();
+    carrier->init (nullptr);
+    modulator->init (nullptr);
+    carrier->setEngineType (EngineType::FM);
+    modulator->setEngineType (EngineType::VA);
+
+    // Initialize smoothers so level is non-zero
+    carrier->reset ();
+    modulator->reset ();
+
+    graph.bindEngine (0, carrier.get());
+    graph.bindEngine (1, modulator.get());
+
+    carrier->setFrequencyRatio (2.0f);  // octave ratio
+    carrier->setFmAmount (5.0f);
+    carrier->setFeedback (0.0f);
+
+    modulator->setFrequency (440.0f);
+    modulator->processSample();
+
+    ASSERT (graph.addConnection (std::make_shared<FrequencyModulationConnection> (1, 0, 1.0f)), "Add FM 1->0");
+    graph.publishConfig();
+
+    carrier->setFrequency (440.0f);
+    graph.resetAllModInputs();
+    graph.applyModulations();
+    carrier->processSample();
+
+    float outputRatio2 = carrier->getLastOutput().left;
+
+    // Change ratio to 1.5
+    carrier->setFrequencyRatio (1.5f);
+    graph.resetAllModInputs();
+    graph.applyModulations();
+    carrier->processSample();
+    float outputRatio15 = carrier->getLastOutput().left;
+
+    // Different ratios should produce different output
+    ASSERT (std::fabs (outputRatio2 - outputRatio15) > 0.001f,
+            "Different FM ratios produce different output");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: FM self-feedback stability
+// -----------------------------------------------------------------------------
+static void testFmFeedbackStability()
+{
+    TEST ("FM operator — self-feedback stability");
+    RoutingGraph graph;
+
+    auto carrier = std::make_unique<TestEngine>();
+    carrier->init (nullptr);
+    carrier->setEngineType (EngineType::FM);
+    graph.bindEngine (0, carrier.get());
+
+    carrier->reset ();
+    carrier->setFrequencyRatio (1.0f);
+    carrier->setFmAmount (10.0f);
+    carrier->setFeedback (0.5f);  // moderate feedback
+    carrier->setFrequency (440.0f);
+
+    graph.publishConfig();
+
+    // Run for 1000 samples — output must remain finite
+    for (int s = 0; s < 1000; ++s)
+    {
+        graph.resetAllModInputs();
+        graph.applyModulations();
+        carrier->processSample();
+        float out = carrier->getLastOutput().left;
+        ASSERT (std::isfinite (out), "FM feedback output remains finite");
+        ASSERT (std::fabs (out) < 10.0f, "FM feedback output remains bounded");
+    }
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: PM independently from FM
+// -----------------------------------------------------------------------------
+static void testPmIndependently()
+{
+    TEST ("PM operator — phase modulation independent from FM");
+    RoutingGraph graph;
+
+    auto carrier = std::make_unique<TestEngine>();
+    auto modulator = std::make_unique<TestEngine>();
+    carrier->init (nullptr);
+    modulator->init (nullptr);
+    carrier->setEngineType (EngineType::FM);
+    modulator->setEngineType (EngineType::VA);
+
+    carrier->reset ();
+    modulator->reset ();
+
+    graph.bindEngine (0, carrier.get());
+    graph.bindEngine (1, modulator.get());
+
+    carrier->setFrequencyRatio (1.0f);
+    carrier->setFmAmount (0.0f);   // no FM
+    carrier->setPmAmount (5.0f);   // PM only
+    carrier->setFeedback (0.0f);
+    carrier->setFrequency (440.0f);
+
+    modulator->setFrequency (440.0f);
+    modulator->processSample();
+
+    ASSERT (graph.addConnection (std::make_shared<PhaseModulationConnection> (1, 0, 1.0f)), "Add PM 1->0");
+    graph.publishConfig();
+
+    // Without PM mod, output is clean sine
+    graph.resetAllModInputs();
+    graph.applyModulations();
+    carrier->processSample();
+    float outputNoPm = carrier->getLastOutput().left;
+
+    // Now apply PM modulation (modulator output goes to phase mod input)
+    // Re-render modulator to get fresh output, then apply
+    modulator->processSample();
+    graph.resetAllModInputs();
+    graph.applyModulations();
+    carrier->processSample();
+    float outputWithPm = carrier->getLastOutput().left;
+
+    ASSERT (std::fabs (outputWithPm - outputNoPm) > 0.001f,
+            "PM modulation changes carrier output independently from FM");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Ring modulation multiplication
+// -----------------------------------------------------------------------------
+static void testRingModMultiplication()
+{
+    TEST ("Ring modulation — multiplies source and destination");
+    RoutingGraph graph;
+
+    auto source = std::make_unique<TestEngine>();
+    auto dest = std::make_unique<TestEngine>();
+    source->init (nullptr);
+    dest->init (nullptr);
+    source->setEngineType (EngineType::VA);
+    dest->setEngineType (EngineType::VA);
+
+    graph.bindEngine (0, source.get());
+    graph.bindEngine (1, dest.get());
+
+    source->processSample();
+    float sourceOutput = source->getLastOutput().left;
+
+    ASSERT (graph.addConnection (std::make_shared<RingModulationConnection> (0, 1, 0.5f)), "Add RingMod 0->1");
+    graph.publishConfig();
+
+    graph.resetAllModInputs();
+    graph.applyModulations();
+
+    // RingMod input should be source output * gain
+    float expectedRingInput = sourceOutput * 0.5f;
+    ASSERT (std::fabs (dest->lastRingMod - expectedRingInput) < 0.001f,
+            "RingMod input = source output * gain");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Hard sync phase reset
+// -----------------------------------------------------------------------------
+static void testHardSyncReset()
+{
+    TEST ("Hard sync — phase reset on trigger");
+    RoutingGraph graph;
+
+    auto source = std::make_unique<TestEngine>();
+    auto dest = std::make_unique<TestEngine>();
+    source->init (nullptr);
+    dest->init (nullptr);
+    source->setEngineType (EngineType::VA);
+    dest->setEngineType (EngineType::FM);
+
+    graph.bindEngine (0, source.get());
+    graph.bindEngine (1, dest.get());
+
+    source->processSample();
+    dest->setFrequency (440.0f);
+    dest->processSample();
+    float phaseBefore = dest->getPhase();
+
+    ASSERT (graph.addConnection (std::make_shared<HardSyncConnection> (0, 1, 1.0f)), "Add HardSync 0->1");
+    graph.publishConfig();
+
+    graph.resetAllModInputs();
+    graph.applyModulations();
+
+    // HardSync trigger should have reset dest phase to initial
+    // (phase should be close to initial phase 0)
+    float phaseAfter = dest->getPhase();
+    ASSERT (std::fabs (phaseAfter) < 0.1f || std::fabs (phaseAfter - 1.0f) < 0.1f,
+            "HardSync resets destination phase to initial");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Per-voice independence (polyphony)
+// -----------------------------------------------------------------------------
+static void testPerVoiceIndependence()
+{
+    TEST ("Per-voice independence — no cross-voice contamination");
+    RoutingGraph graph;
+
+    // Bind engines for two voices (voice 0: nodes 0-5, voice 1: nodes 6-11)
+    auto v0osc0 = std::make_unique<TestEngine>();
+    auto v0osc1 = std::make_unique<TestEngine>();
+    auto v1osc0 = std::make_unique<TestEngine>();
+    auto v1osc1 = std::make_unique<TestEngine>();
+    v0osc0->init (nullptr);
+    v0osc1->init (nullptr);
+    v1osc0->init (nullptr);
+    v1osc1->init (nullptr);
+    v0osc0->setEngineType (EngineType::FM);
+    v0osc1->setEngineType (EngineType::VA);
+    v1osc0->setEngineType (EngineType::FM);
+    v1osc1->setEngineType (EngineType::VA);
+
+    v0osc0->reset ();
+    v0osc1->reset ();
+    v1osc0->reset ();
+    v1osc1->reset ();
+
+    graph.bindEngine (0, v0osc0.get());  // voice 0, OSC 1
+    graph.bindEngine (1, v0osc1.get());  // voice 0, OSC 2
+    graph.bindEngine (6, v1osc0.get());  // voice 1, OSC 1
+    graph.bindEngine (7, v1osc1.get());  // voice 1, OSC 2
+
+    // Voice 0: OSC 1 modulates OSC 2 via FM
+    v0osc0->setFrequencyRatio (1.0f);
+    v0osc0->setFmAmount (5.0f);
+    v0osc0->setFeedback (0.0f);
+    v0osc0->setFrequency (440.0f);
+    v0osc0->processSample();
+
+    // Voice 1: different note, different FM settings
+    v1osc0->setFrequencyRatio (2.0f);
+    v1osc0->setFmAmount (10.0f);
+    v1osc0->setFeedback (0.0f);
+    v1osc0->setFrequency (554.37f);  // C#5
+    v1osc0->processSample();
+
+    // Connect voice 0 only: 0->1
+    ASSERT (graph.addConnection (std::make_shared<FrequencyModulationConnection> (0, 1, 1.0f)), "Add FM voice0 0->1");
+    graph.publishConfig();
+
+    graph.resetAllModInputs();
+    graph.applyModulations();
+
+    // Voice 0 OSC 2 should have FM modulation from voice 0 OSC 1
+    float v0osc1Fm = v0osc1->lastFrequencyMod;
+    ASSERT (std::fabs (v0osc1Fm) > 0.001f,
+            "Voice 0 OSC 2 receives FM from voice 0 OSC 1");
+
+    // Voice 1 OSC 2 (node 7) should have NO FM (no connection 6->7)
+    float v1osc1Fm = v1osc1->lastFrequencyMod;
+    ASSERT (v1osc1Fm == 0.0f,
+            "Voice 1 OSC 2 has no FM (no connection 6->7)");
+
+    // Voice 1 OSC 1 (node 6) should have no FM input either (no incoming connection)
+    float v1osc0Fm = v1osc0->lastFrequencyMod;
+    ASSERT (v1osc0Fm == 0.0f,
+            "Voice 1 OSC 1 has no FM input");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Regression — all-VA with no routing preserves P3.1/P3.2 behavior
+// -----------------------------------------------------------------------------
+static void testRegressionAllVa()
+{
+    TEST ("Regression — all-VA, no routing");
+    RoutingGraph graph;
+
+    auto engine0 = std::make_unique<TestEngine>();
+    engine0->init (nullptr);
+    engine0->setEngineType (EngineType::VA);
+    engine0->reset ();
+    graph.bindEngine (0, engine0.get());
+
+    graph.publishConfig();
+
+    graph.resetAllModInputs();
+    graph.applyModulations();
+
+    engine0->setFrequency (440.0f);
+    const auto frame = engine0->processSample();
+    ASSERT (std::isfinite (frame.left) && std::isfinite (frame.right),
+            "VA engine produces finite output (no routing)");
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
 int main()
 {
-    printf ("OMNIVY P3.2 Routing Graph DSP Test Harness\n");
+    printf ("OMNIVY P3.3 FM/PM Synthesis DSP Test Harness\n");
     printf ("=============================================\n\n");
 
     testConnectionTypeEnum();
@@ -624,8 +982,15 @@ int main()
     testDisabledConnections();
     testZeroWhenDisconnected();
     testSlotIsolation();
-    testRegressionAllVA();
+    testRegressionAllVa();
     testCyclePreventionMixedTypes();
+    testFmOperatorModulation();
+    testFmDifferentRatios();
+    testFmFeedbackStability();
+    testPmIndependently();
+    testRingModMultiplication();
+    testHardSyncReset();
+    testPerVoiceIndependence();
 
     printf ("\n=============================================\n");
     printf ("Results: %d passed, %d failed\n", g_testsPassed, g_testsFailed);

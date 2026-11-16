@@ -69,9 +69,10 @@ public:
     float getPhase() const;
 
     // ---- Modulation inputs (real-time safe, lock-free writes) --------------
-    // Written by the routing/modulation layer, read by the wrapped oscillator
-    // during processSample(). Default no-op for engines that don't use a
-    // given input; FM/PM/Ring/Sync engines override in later steps.
+    // Written by the routing/modulation layer. Values accumulate across
+    // multiple connections targeting the same input; reset each block via
+    // resetModInputs(). Default no-op for engines that don't consume a given
+    // input; FM/PM/Ring/Sync engines override in later steps.
     virtual void setExternalAudioInput (float sample) noexcept;
     virtual void setFrequencyModInput (float mod) noexcept;
     virtual void setPhaseModInput (float mod) noexcept;
@@ -92,6 +93,23 @@ public:
     // Attach shared wavetable data (not owned).
     void setWavetableData (dsp::WavetableData* data);
 
+    // ---- FM parameter forwarding (no-op for non-FM engines) ---------------
+    // Forwarded to the wrapped FM oscillator when the engine type is FM;
+    // no-op otherwise. This keeps SynthVoice independent of concrete engine
+    // classes while allowing per-slot FM configuration.
+    void setFrequencyRatio (float ratio);
+    float getFrequencyRatio() const noexcept;
+    void setFineRatio (float fineRatio);
+    float getFineRatio() const noexcept;
+    void setFmAmount (float amount);
+    float getFmAmount() const noexcept;
+    void setPmAmount (float amount);
+    float getPmAmount() const noexcept;
+    void setFeedback (float amount);
+    float getFeedback() const noexcept;
+    void setOutputLevel (float level);
+    float getOutputLevel() const noexcept;
+
 private:
     void recreateOscillator();
 
@@ -100,6 +118,14 @@ private:
     dsp::WavetableData* m_wavetableData = nullptr;
     double m_sampleRate = 44100.0;
     StereoFrame m_lastOutput { 0.0f, 0.0f };
+
+    // Accumulated modulation inputs for this block. Multiple connections
+    // targeting the same engine/input are summed here by the routing graph.
+    float m_modExternalAudio { 0.0f };
+    float m_modFrequency { 0.0f };
+    float m_modPhase { 0.0f };
+    float m_modRing { 0.0f };
+    bool  m_modHardSync { false };
 };
 
 } // namespace dsp

@@ -54,6 +54,19 @@ public:
     // wired up in later steps without changing this struct.
     dsp::EngineType getOscillatorEngine (int index) const noexcept { return m_oscEngine[index]; }
 
+    // ---- FM synthesis parameters per oscillator -----------------------------
+    struct FmParams
+    {
+        float frequencyRatio = 1.0f;   // carrier:modulator ratio
+        float fineRatio = 1.0f;        // fine ratio multiplier
+        float fmAmount = 0.0f;         // FM modulation index (0..100)
+        float pmAmount = 0.0f;         // PM modulation amount (0..10)
+        float feedback = 0.0f;         // self-feedback (-1..1)
+        float outputLevel = 0.7f;      // output gain (0..2)
+    };
+
+    const FmParams& getFmParams (int index) const noexcept { return m_fmParams[index]; }
+
     struct Filter
     {
         bool enabled = true;
@@ -81,6 +94,7 @@ private:
 
     Oscillator m_oscillators[params::NumOscillators];
     dsp::EngineType m_oscEngine[params::NumOscillators] = { dsp::EngineType::VA };
+    FmParams m_fmParams[params::NumOscillators];
     Filter     m_filter;
     Envelope   m_envelope;
 };

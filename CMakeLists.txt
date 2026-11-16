@@ -59,6 +59,7 @@ target_sources(OmnivyPlugin PRIVATE
     # --- DSP: Oscillators ---
     src/DSP/Oscillators/VAOscillator.cpp
     src/DSP/Oscillators/NoiseOscillator.cpp
+    src/DSP/Oscillators/FMOscillator.cpp
 
     # --- DSP: Wavetable ---
     src/DSP/Wavetable/WavetableData.cpp

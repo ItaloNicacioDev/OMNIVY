@@ -32,6 +32,14 @@ inline juce::String oscFineTune  (int index) { return oscPrefix (index) + ".fine
 inline juce::String oscPhase     (int index) { return oscPrefix (index) + ".phase"; }
 inline juce::String oscEngine    (int index) { return oscPrefix (index) + ".engine"; }
 
+// ---- FM synthesis parameters (indexed 0..5, maps to OSC 1..6) ---------------
+inline juce::String oscFmRatio       (int index) { return oscPrefix (index) + ".fmRatio"; }
+inline juce::String oscFmFineRatio   (int index) { return oscPrefix (index) + ".fmFineRatio"; }
+inline juce::String oscFmAmount      (int index) { return oscPrefix (index) + ".fmAmount"; }
+inline juce::String oscPmAmount      (int index) { return oscPrefix (index) + ".pmAmount"; }
+inline juce::String oscFmFeedback    (int index) { return oscPrefix (index) + ".fmFeedback"; }
+inline juce::String oscFmOutputLevel (int index) { return oscPrefix (index) + ".fmOutputLevel"; }
+
 // Total number of independent oscillators.
 inline constexpr int NumOscillators = 6;
 

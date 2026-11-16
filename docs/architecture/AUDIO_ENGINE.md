@@ -66,6 +66,44 @@ Cada conexão possui tipo próprio com semântica de processamento distinta:
 ### Prevenção de ciclos
 Conexões que criariam ciclos no grafo de áudio são rejeitadas. Auto-loops (fonte == destino) também são rejeitados. Feedback explícito é tratado como recurso controlado, nunca como consequência acidental de um roteamento cíclico.
 
+## FM / PM Engine (P3.3 — Implementado)
+
+O FMOscillator implementa síntese por modulação de frequência (FM) e modulação de fase (PM) em taxa de áudio:
+
+### FM (Frequency Modulation)
+A frequência instantânea do portador é modulada pelo sinal de entrada:
+```
+phase_increment = base_freq * ratio * fine_ratio / sample_rate
+phase_increment += freqModInput * fmAmount
+phase += phase_increment
+```
+
+### PM (Phase Modulation)
+A fase do portador é modulada diretamente:
+```
+phase += phaseModInput * pmAmount
+```
+
+### Recursos do FMOscillator
+- **Frequency ratio**: razão portador:modulador
+- **Fine ratio**: ajuste fino da razão
+- **FM amount**: índice de modulação (0..100)
+- **PM amount**: quantidade de modulação de fase (0..10)
+- **Feedback**: auto-feedback (-1..1) com clamp para evitar runaway
+- **Output level**: ganho de saída (0..2)
+- **Hard sync**: reset de fase no zero-crossing da fonte
+- **Ring mod**: multiplicação da saída pelo sinal de entrada
+- **External audio input**: soma de áudio externo na saída
+
+### Processamento por voz
+Cada voz possui seus próprios 6 `OscillatorEngine` instances com estado independente (phase, feedback, mod inputs). O roteamento é compartilhado (snapshot imutável) mas o estado de sinal é por-voz, garantindo que notas simultâneas nunca interfirem umas nas outras.
+
+### Segurança
+- Feedback é limitado a [-1, 1] para evitar runaway
+- Saída é limitada a [-2, 2] via outputLevel clamp
+- Todas as operações são real-time safe (zero alocações, zero mutexes)
+- Output é verificado para finitude (não NaN/Inf)
+
 ## Status da Fase 1
 
 - [x] PluginProcessor implementado (estrutura base)
