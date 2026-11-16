@@ -33,7 +33,7 @@ bool Connection::readSourceTrigger (const OscillatorEngine&) const noexcept { re
 // -----------------------------------------------------------------------------
 void AudioConnection::applyExternalAudio (OscillatorEngine& dest, float sourceValue) const noexcept
 {
-    dest.setExternalAudioInput (sourceValue * m_gain);
+    dest.setExternalAudioInput (sourceValue * getGain());
 }
 
 float AudioConnection::readSourceValue (const OscillatorEngine& source) const noexcept
@@ -47,7 +47,7 @@ float AudioConnection::readSourceValue (const OscillatorEngine& source) const no
 // -----------------------------------------------------------------------------
 void FrequencyModulationConnection::applyFrequencyMod (OscillatorEngine& dest, float sourceValue) const noexcept
 {
-    dest.setFrequencyModInput (sourceValue * m_gain);
+    dest.setFrequencyModInput (sourceValue * getGain());
 }
 
 float FrequencyModulationConnection::readSourceValue (const OscillatorEngine& source) const noexcept
@@ -61,7 +61,7 @@ float FrequencyModulationConnection::readSourceValue (const OscillatorEngine& so
 // -----------------------------------------------------------------------------
 void PhaseModulationConnection::applyPhaseMod (OscillatorEngine& dest, float sourceValue) const noexcept
 {
-    dest.setPhaseModInput (sourceValue * m_gain);
+    dest.setPhaseModInput (sourceValue * getGain());
 }
 
 float PhaseModulationConnection::readSourceValue (const OscillatorEngine& source) const noexcept
