@@ -30,7 +30,7 @@ public:
     void setPolyphony (int polyphony);
 
     // --- Routing access (message thread) ----------------------------------
-    RoutingGraph& getRoutingGraph() noexcept { return m_routingGraph; }
+    dsp::RoutingGraph& getRoutingGraph() noexcept { return m_routingGraph; }
 
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;

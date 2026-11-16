@@ -75,7 +75,7 @@ float PhaseModulationConnection::readSourceValue (const OscillatorEngine& source
 // -----------------------------------------------------------------------------
 void RingModulationConnection::applyRingMod (OscillatorEngine& dest, float sourceValue) const noexcept
 {
-    dest.setRingModInput (sourceValue * m_gain);
+    dest.setRingModInput (sourceValue * getGain());
 }
 
 float RingModulationConnection::readSourceValue (const OscillatorEngine& source) const noexcept

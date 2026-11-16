@@ -152,10 +152,14 @@ int RoutingGraph::getNumConnections() const noexcept
 
 void RoutingGraph::publishConfig()
 {
-    auto config = std::make_shared<const RoutingConfig>();
-    config->connections.reserve (m_workingConnections.size());
+    // Build a non-const vector first, then wrap in shared_ptr<const RoutingConfig>.
+    std::vector<std::shared_ptr<const Connection>> conns;
+    conns.reserve (m_workingConnections.size());
     for (const auto& conn : m_workingConnections)
-        config->connections.push_back (conn);
+        conns.push_back (conn);
+
+    auto config = std::make_shared<const RoutingConfig>();
+    config->connections = std::move (conns);
 
     m_currentConfig.store (config, std::memory_order_release);
 }
