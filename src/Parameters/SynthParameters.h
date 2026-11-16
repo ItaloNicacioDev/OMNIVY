@@ -19,6 +19,10 @@ public:
     SynthParameters();
     ~SynthParameters() = default;
 
+    // Total number of independent oscillators (mirrors params::NumOscillators
+    // so the engine can reference SynthParameters::NumOscillators).
+    static constexpr int NumOscillators = params::NumOscillators;
+
     // Builds the APVTS ParameterLayout. Called by the plugin constructor.
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
