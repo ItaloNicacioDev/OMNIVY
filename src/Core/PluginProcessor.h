@@ -2,6 +2,9 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "DSP/Engine/AudioEngine.h"
+#include "Parameters/SynthParameters.h"
+
 class OmnivyAudioProcessor : public juce::AudioProcessor
 {
 public:
@@ -34,11 +37,16 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    // Test parameter for phase 1 validation
+    // Test parameter (Phase 1 legacy): drives the engine's test tone.
     float testParameter = 0.5f;
 
+    // Host-automatable parameter tree. Layout is defined in SynthParameters.
+    juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters",
+        SynthParameters::createParameterLayout() };
+
 private:
-    float testPhase = 0.0f; // continuidade de fase entre blocos de audio
+    omnivy::SynthParameters m_synthParameters;
+    omnivy::AudioEngine m_audioEngine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyAudioProcessor)
 };
