@@ -81,6 +81,14 @@ public:
     // Render one stereo frame. Each engine applies its own level/pan.
     StereoFrame processSample();
 
+    // Last rendered output (for audio connections to read). Updated each
+    // processSample() call.
+    StereoFrame getLastOutput() const noexcept { return m_lastOutput; }
+
+    // Reset all modulation inputs to zero/default. Called at the start of
+    // each audio block before the routing graph applies new values.
+    void resetModInputs() noexcept;
+
     // Attach shared wavetable data (not owned).
     void setWavetableData (dsp::WavetableData* data);
 
@@ -91,6 +99,7 @@ private:
     std::unique_ptr<OscillatorBase> m_oscillator;
     dsp::WavetableData* m_wavetableData = nullptr;
     double m_sampleRate = 44100.0;
+    StereoFrame m_lastOutput { 0.0f, 0.0f };
 };
 
 } // namespace dsp
