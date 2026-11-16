@@ -110,7 +110,20 @@ StereoFrame OscillatorEngine::processSample()
 {
     if (!m_oscillator)
         return StereoFrame { 0.0f, 0.0f };
-    return m_oscillator->processSample();
+    m_lastOutput = m_oscillator->processSample();
+    return m_lastOutput;
+}
+
+void OscillatorEngine::resetModInputs() noexcept
+{
+    if (m_oscillator)
+    {
+        m_oscillator->setExternalAudioInput (0.0f);
+        m_oscillator->setFrequencyModInput (0.0f);
+        m_oscillator->setPhaseModInput (0.0f);
+        m_oscillator->setRingModInput (0.0f);
+        m_oscillator->setHardSyncTrigger (false);
+    }
 }
 
 void OscillatorEngine::setWavetableData (dsp::WavetableData* data)
