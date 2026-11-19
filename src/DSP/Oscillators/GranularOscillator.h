@@ -153,6 +153,15 @@ private:
     // evitar data race.
     std::atomic<float> m_grainGainScale { 1.0f };
 
+    // ---- Cache de pitch ratio -----------------------------------------------
+    // effectivePitchRatio() chama 3× std::pow(). Os inputs mudam raramente
+    // (apenas em setters de pitch), então cacheamos o resultado e invalidamos
+    // quando qualquer parâmetro de pitch é alterado.
+    float m_pitchRatioCache = 1.0f;
+    bool m_pitchRatioDirty = true;
+
+    void updatePitchRatioCache() noexcept;
+
     // ---- Pool de grãos (pré-alocado) ----------------------------------------
     Grain m_grains[kMaxGrains];
     std::array<int, kMaxGrains> m_activeList;
