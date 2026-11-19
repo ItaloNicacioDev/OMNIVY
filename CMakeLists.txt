@@ -53,10 +53,8 @@ juce_add_plugin(OmnivyPlugin
 # Pré-configura o vst3_helper em Release para evitar incompatibilidade de CRT.
 # O CUSTOM_COMMAND gerado pelo JUCE configura o helper sem -DCMAKE_BUILD_TYPE,
 # resultando em Debug (/MDd) que entra em conflito com o projeto principal
-# (MultiThreadedDLL /MD). Ao pré-criar o cache em Release no tempo de
-# configuração, o CUSTOM_COMMAND mantém o valor existente (Release) ao
-# reconfigurar em tempo de build. Executa via cmake herdando o ambiente
-# MSVC do processo pai (vcvars64.bat).
+# (MultiThreadedDLL /MD). Ao pré-criar o cache em Release, o CUSTOM_COMMAND
+# manterá o valor existente (Release) ao reconfigurar em tempo de build.
 # ---------------------------------------------------------------------------
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -GNinja
