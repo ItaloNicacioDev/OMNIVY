@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include "DSP/Engine/VoiceManager.h"
@@ -63,7 +64,9 @@ private:
     dsp::SamplePublisher m_samplePublisher;
     const SynthParameters* m_parameters = nullptr;
 
-    float m_masterVolume = 0.7f;
+    // Master volume — acessado por thread de mensagem (setMasterVolume) e
+    // thread de áudio (processBlock). Atômico para evitar data race.
+    std::atomic<float> m_masterVolume { 0.7f };
     float m_testToneLevel = 0.0f;
     float m_testPhase = 0.0f;
 
@@ -76,6 +79,7 @@ private:
     // Smoother para master volume — evita clicks em automação do host
     // e mudanças de preset. 5 ms é transparente para automação e rápido
     // o suficiente para mudanças de preset.
+    // Apenas acessado pela thread de áudio.
     dsp::LinearSmoother m_masterVolumeSmoother;
 };
 
