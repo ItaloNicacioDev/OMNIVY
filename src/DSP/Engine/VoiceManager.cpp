@@ -8,6 +8,11 @@ namespace omnivy {
 VoiceManager::VoiceManager (dsp::WavetableData* wavetableData)
     : m_wavetableData (wavetableData)
 {
+    // Pré-aloca o pool completo de voices no construtor (thread de mensagem,
+    // criação do plugin). A thread de áudio nunca aloca nem desaloca voices.
+    m_voices.reserve (static_cast<size_t> (kMaxVoices));
+    for (int i = 0; i < kMaxVoices; ++i)
+        m_voices.emplace_back (std::make_unique<SynthVoice> (m_wavetableData));
 }
 
 void VoiceManager::setSampleRate (double sampleRate)
@@ -19,33 +24,9 @@ void VoiceManager::setSampleRate (double sampleRate)
 
 void VoiceManager::setPolyphony (int polyphony)
 {
-    polyphony = std::clamp (polyphony, 1, 64);
-
-    const int current = static_cast<int> (m_voices.size());
-    if (polyphony == current)
-    {
-        m_polyphony = polyphony;
-        return;
-    }
-
-    if (polyphony > current)
-    {
-        m_voices.reserve (static_cast<size_t> (polyphony));
-        for (int i = current; i < polyphony; ++i)
-        {
-            m_voices.emplace_back (std::make_unique<SynthVoice> (m_wavetableData));
-            m_voices.back()->setSampleRate (m_sampleRate);
-        }
-    }
-    else
-    {
-        // Release voices being removed, then destroy the excess (no copy needed).
-        for (int i = polyphony; i < current; ++i)
-            m_voices[i]->noteOff();
-        m_voices.resize (static_cast<size_t> (polyphony));
-    }
-
-    m_polyphony = polyphony;
+    // Apenas ajusta o contador ativo. Nenhuma alocação, nenhum resize, nenhum
+    // make_unique — o pool já está pré-alocado no construtor.
+    m_polyphony = std::clamp (polyphony, 1, kMaxVoices);
 }
 
 void VoiceManager::noteOn (int midiNote, float velocity)
