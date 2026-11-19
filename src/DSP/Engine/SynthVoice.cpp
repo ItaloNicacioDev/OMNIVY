@@ -164,6 +164,13 @@ dsp::StereoFrame SynthVoice::render()
     }
 
     // Sum six independent oscillators into stereo (each applies own level/pan).
+    // Gain staging: até 6 osciladores, cada um com nível 0.0f..2.0f
+    // (Granular/FM) ou 0.0f..1.0f (outros). Default 0.6f -> pico teórico
+    // máximo 6*0.6=3.6 antes do envelope/master. O envelope (sustain default
+    // 0.7f) e o master volume (default 0.7f) fornecem headroom, mas níveis
+    // elevados em múltiplos slots podem ainda saturar. A automação via APVTS
+    // é limitada a MaxLevel=1.0f (ParameterIDs.h); valores >1.0f requerem
+    // chamada direta de setLevel() (uso interno/editor).
     dsp::StereoFrame mix { 0.0f, 0.0f };
     bool anyActive = false;
     for (int i = 0; i < SynthParameters::NumOscillators; ++i)
