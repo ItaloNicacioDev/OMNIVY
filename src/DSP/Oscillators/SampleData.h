@@ -43,7 +43,7 @@ public:
 
     // Carrega um arquivo de áudio fora da thread de áudio (message thread).
     // Retorna false se o arquivo não puder ser lido.
-    bool loadFromFile (const juce::File& file)
+    bool loadFromFile (const juce::File& file, double baseFrequencyHz = 440.0)
     {
         juce::AudioFormatManager formatManager;
         formatManager.registerBasicFormats();
@@ -57,6 +57,7 @@ public:
         const int numSamples  = static_cast<int> (reader->lengthInSamples);
         m_sampleRate = reader->sampleRate;
         m_numSamples = numSamples;
+        m_baseFrequencyHz = baseFrequencyHz;
 
         m_channels.clear();
         m_channels.reserve (static_cast<size_t> (numChannels));
@@ -80,10 +81,11 @@ public:
     // Os dados são copiados (SampleData é proprietário).
     void fromMemory (const float* left, const float* right,
                      int numSamples, double sampleRate,
-                     bool isStereo)
+                     bool isStereo, double baseFrequencyHz = 440.0)
     {
         m_sampleRate = sampleRate;
         m_numSamples = numSamples;
+        m_baseFrequencyHz = baseFrequencyHz;
 
         m_channels.clear();
         m_channels.emplace_back (static_cast<size_t> (numSamples));
@@ -111,6 +113,7 @@ public:
     int    getNumChannels() const noexcept { return static_cast<int> (m_channels.size()); }
     int    getNumSamples() const noexcept { return m_numSamples; }
     double getSampleRate() const noexcept { return m_sampleRate; }
+    double getBaseFrequency() const noexcept { return m_baseFrequencyHz; }
     bool   isEmpty() const noexcept { return m_numSamples == 0 || m_channels.empty(); }
     bool   isStereo() const noexcept { return getNumChannels() >= 2; }
 
@@ -138,6 +141,7 @@ private:
     std::vector<std::vector<float>> m_channels;
     int m_numSamples = 0;
     double m_sampleRate = 44100.0;
+    double m_baseFrequencyHz = 440.0; // frequência base para a qual o sample foi gravado
 };
 
 } // namespace dsp
