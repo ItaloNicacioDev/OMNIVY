@@ -24,7 +24,7 @@ public:
 
     void prepare (double sampleRate, int samplesPerBlock);
     void releaseResources();
-    void reset();
+    void reset() noexcept;
 
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages);
 
@@ -41,14 +41,6 @@ public:
     // acquireSample() no início de cada processBlock.
     void publishSample (std::unique_ptr<dsp::SampleData> sample) noexcept;
     const dsp::SampleData* acquireSample() noexcept;
-
-    // --- Shutdown -----------------------------------------------------------
-    // Desliga o SamplePublisher, destruindo todos os buffers de sample
-    // aposentados e o buffer atual. Deve ser chamado apenas quando a thread
-    // de áudio parou (ex.: após releaseResources() ou antes da destruição do
-    // plugin). Não introduz locks, não bloqueia e não espera na thread de áudio.
-    // É idempotente: chamar múltiplas vezes é seguro.
-    void shutdown() noexcept;
 
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;
