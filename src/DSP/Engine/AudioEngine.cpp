@@ -68,12 +68,12 @@ int AudioEngine::getPolyphony() const noexcept { return m_voiceManager.getPolyph
 
 void AudioEngine::setTestToneLevel (float level) { m_testToneLevel = level; }
 
-void AudioEngine::publishSample (std::unique_ptr<SampleData> sample) noexcept
+void AudioEngine::publishSample (std::unique_ptr<dsp::SampleData> sample) noexcept
 {
     m_samplePublisher.publish (std::move (sample));
 }
 
-const SampleData* AudioEngine::acquireSample() noexcept
+const dsp::SampleData* AudioEngine::acquireSample() noexcept
 {
     return m_samplePublisher.acquire();
 }
