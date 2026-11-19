@@ -107,26 +107,31 @@ bool GranularOscillator::isActive() const
 void GranularOscillator::setOctave(int octave)
 {
     m_octave = octave;
+    m_pitchRatioDirty = true;
 }
 
 void GranularOscillator::setSemitone(int semitone)
 {
     m_semitone = semitone;
+    m_pitchRatioDirty = true;
 }
 
 void GranularOscillator::setDetuneCents(float cents)
 {
     m_detuneCents = std::clamp(cents, -50.0f, 50.0f);
+    m_pitchRatioDirty = true;
 }
 
 void GranularOscillator::setFineTuneCents(float cents)
 {
     m_fineTuneCents = std::clamp(cents, -50.0f, 50.0f);
+    m_pitchRatioDirty = true;
 }
 
-void GranularOscillator::setInitialPhase(float phase)
+void GranularOscillator::setPitch(float semitones)
 {
-    m_initialPhase = wrapPhase(phase);
+    m_pitchSemitones = std::clamp(semitones, kMinPitch, kMaxPitch);
+    m_pitchRatioDirty = true;
 }
 
 float GranularOscillator::getPhase() const
