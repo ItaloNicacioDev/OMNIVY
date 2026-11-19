@@ -141,7 +141,7 @@ private:
 
     // Lista de aposentadoria: (ponteiro, retireEpoch). Tocada apenas pela
     // thread de mensagem.
-    std::vector<std::pair<SampleData*, uint64_t>> m_retireList;
+    std::vector<std::pair<const SampleData*, uint64_t>> m_retireList;
 };
 
 } // namespace dsp
