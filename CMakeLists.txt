@@ -188,7 +188,6 @@ add_executable(OmnivyTests
     src/DSP/Oscillators/NoiseOscillator.cpp
     src/DSP/Oscillators/FMOscillator.cpp
     src/DSP/Oscillators/GranularOscillator.cpp
-    src/DSP/Oscillators/WavetableOscillator.cpp
 
     # --- DSP: Wavetable ---
     src/DSP/Wavetable/WavetableData.cpp
