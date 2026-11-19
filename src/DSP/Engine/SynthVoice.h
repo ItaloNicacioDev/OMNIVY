@@ -29,6 +29,7 @@ public:
     void noteOn (int midiNote, float velocity, double sampleRate);
     void noteOff();
     void setPitchBendSemitones (float semitones);
+    void updateKeyTrackRatio() noexcept;
 
     // Called once per block on the audio thread before rendering samples.
     void updateParameters (const SynthParameters& params);
