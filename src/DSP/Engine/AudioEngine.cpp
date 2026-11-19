@@ -41,18 +41,13 @@ void AudioEngine::releaseResources()
 {
     m_prepared = false;
     m_voiceManager.reset();
-    // Desliga o publisher de samples. A thread de áudio já parou neste ponto
-    // (o host chama releaseResources() após parar o callback de áudio), então
-    // é seguro destruir buffers aposentados aqui.
-    m_samplePublisher.shutdown();
+    // O SamplePublisher é destruído com o AudioEngine (via ~SamplePublisher
+    // no destructor), que garante que a thread de áudio já parou. Não desligar
+    // aqui preserva o sample publicado através de ciclos de parada e
+    // reinicialização do processamento (prepareToPlay / releaseResources).
 }
 
-void AudioEngine::shutdown() noexcept
-{
-    m_samplePublisher.shutdown();
-}
-
-void AudioEngine::reset()
+void AudioEngine::reset() noexcept
 {
     m_voiceManager.reset();
     m_testPhase = 0.0f;
