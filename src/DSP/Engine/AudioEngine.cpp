@@ -34,6 +34,12 @@ void AudioEngine::prepare (double sampleRate, int samplesPerBlock)
     });
 
     m_testPhase = 0.0f;
+
+    // Inicializa o smoother do master volume com o valor atual.
+    m_masterVolumeSmoother.setSampleRate (sampleRate);
+    m_masterVolumeSmoother.setSmoothTime (0.005f); // 5 ms
+    m_masterVolumeSmoother.reset (m_masterVolume);
+
     m_prepared = true;
 }
 
@@ -133,14 +139,16 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
         }
     }
 
-    // Apply master volume.
-    if (m_masterVolume != 1.0f)
+    // Apply master volume (suavizado para evitar clicks em automação).
+    m_masterVolumeSmoother.setTarget (m_masterVolume);
+    const float smoothedMasterVolume = m_masterVolumeSmoother.getNextValue();
+    if (smoothedMasterVolume != 1.0f)
     {
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
         {
             auto* channelData = buffer.getWritePointer (channel);
             for (int sample = 0; sample < numSamples; ++sample)
-                channelData[sample] *= m_masterVolume;
+                channelData[sample] *= smoothedMasterVolume;
         }
     }
 }
