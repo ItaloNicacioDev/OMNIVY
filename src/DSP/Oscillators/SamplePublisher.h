@@ -106,7 +106,7 @@ public:
         m_retireList.clear();
 
         // Destroi o buffer atual, se houver.
-        SampleData* current = m_current.exchange (nullptr, std::memory_order_acq_rel);
+        const SampleData* current = m_current.exchange (nullptr, std::memory_order_acq_rel);
         delete current;
     }
 
