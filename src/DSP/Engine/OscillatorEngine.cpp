@@ -381,5 +381,112 @@ const AdditivePartial& OscillatorEngine::getSpectrumBPartials (int index) const 
     return empty;
 }
 
+// ---- Granular parameter forwarding ---
+void OscillatorEngine::setGrainSize (float seconds)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setGrainSize (seconds);
+}
+float OscillatorEngine::getGrainSize() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getGrainSize();
+    return 0.0f;
+}
+void OscillatorEngine::setGrainDensity (float grainsPerSecond)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setGrainDensity (grainsPerSecond);
+}
+float OscillatorEngine::getGrainDensity() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getGrainDensity();
+    return 0.0f;
+}
+void OscillatorEngine::setPosition (float position)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setPosition (position);
+}
+float OscillatorEngine::getPosition() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getPosition();
+    return 0.0f;
+}
+void OscillatorEngine::setPositionSpray (float spray)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setPositionSpray (spray);
+}
+float OscillatorEngine::getPositionSpray() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getPositionSpray();
+    return 0.0f;
+}
+void OscillatorEngine::setPitch (float semitones)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setPitch (semitones);
+}
+float OscillatorEngine::getPitch() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getPitch();
+    return 0.0f;
+}
+void OscillatorEngine::setPitchRandomization (float semitones)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setPitchRandomization (semitones);
+}
+float OscillatorEngine::getPitchRandomization() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getPitchRandomization();
+    return 0.0f;
+}
+void OscillatorEngine::setGrainEnvelope (GranularOscillator::GrainEnvelope envelope)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setGrainEnvelope (envelope);
+}
+GranularOscillator::GrainEnvelope OscillatorEngine::getGrainEnvelope() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getGrainEnvelope();
+    return GranularOscillator::GrainEnvelope::None;
+}
+void OscillatorEngine::setStereoSpread (float spread)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setStereoSpread (spread);
+}
+float OscillatorEngine::getStereoSpread() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getStereoSpread();
+    return 0.0f;
+}
+void OscillatorEngine::setPlaybackDirection (GranularOscillator::PlaybackDirection direction)
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setPlaybackDirection (direction);
+}
+GranularOscillator::PlaybackDirection OscillatorEngine::getPlaybackDirection() const noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        return gr->getPlaybackDirection();
+    return GranularOscillator::PlaybackDirection::Forward;
+}
+
+void OscillatorEngine::setGranularSample (const SampleData* sample) noexcept
+{
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+        gr->setSample (sample);
+}
+
 } // namespace dsp
 } // namespace omnivy
