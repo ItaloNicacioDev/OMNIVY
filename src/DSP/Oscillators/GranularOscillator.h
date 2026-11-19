@@ -155,6 +155,9 @@ private:
     double m_spawnAccum = 0.0;           // acumulador fracionário de spawn
     uint32_t m_rngSeed = 12345u;         // LCG com semente fixa (determinístico)
 
+    // Gera um número aleatório em [0, 1) usando LCG com semente fixa.
+    float randomFloat();
+
     // ---- Ponteiro do sample (não proprietário) ------------------------------
     const SampleData* m_sample = nullptr;
 
