@@ -45,3 +45,4 @@ scratch/
 *.swo
 *~
 Tests/RoutingGraphTests.cpp
+Tests/RoutingGraphTests.cpp
