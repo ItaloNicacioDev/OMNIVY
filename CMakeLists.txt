@@ -194,13 +194,21 @@ add_executable(OmnivyTests
 )
 
 target_include_directories(OmnivyTests PRIVATE
+    "${CMAKE_SOURCE_DIR}"
     "${CMAKE_SOURCE_DIR}/src"
     "${JUCE_PATH}/modules"
 )
 
-target_link_libraries(OmnivyTests PRIVATE juce::juce_core)
+target_link_libraries(OmnivyTests PRIVATE
+    juce::juce_core
+    juce::juce_dsp
+    juce::juce_audio_processors
+    juce::juce_audio_utils
+)
 
 target_compile_definitions(OmnivyTests PRIVATE
     JUCE_STANDALONE=1
+    JUCE_VST3=0
+    JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone
 )
 
