@@ -34,21 +34,30 @@ void VoiceManager::noteOn (int midiNote, float velocity)
     // Re-trigger an existing voice playing the same note (mono per-note).
     if (SynthVoice* existing = findVoiceForNote (midiNote))
     {
+        const bool wasActive = existing->isActive();
         existing->noteOn (midiNote, velocity, 0.0);
+        if (!wasActive)
+            ++m_activeVoiceCount;
         return;
     }
 
     // Prefer a free (idle) voice.
     if (SynthVoice* freeVoice = findFreeVoice())
     {
+        const bool wasActive = freeVoice->isActive();
         freeVoice->noteOn (midiNote, velocity, 0.0);
+        if (!wasActive)
+            ++m_activeVoiceCount;
         return;
     }
 
     // No free voice: steal intelligently.
     if (SynthVoice* victim = selectStealVictim())
     {
+        const bool wasActive = victim->isActive();
         victim->noteOn (midiNote, velocity, 0.0);
+        if (!wasActive)
+            ++m_activeVoiceCount;
         return;
     }
 
@@ -68,6 +77,7 @@ void VoiceManager::noteOffAll()
 {
     for (auto& voice : m_voices)
         if (voice) voice->noteOff();
+    m_activeVoiceCount = 0;
 }
 
 void VoiceManager::reset()
@@ -76,6 +86,7 @@ void VoiceManager::reset()
     for (auto& voice : m_voices)
         if (voice) voice->reset();
     m_noteOnCounter = 0;
+    m_activeVoiceCount = 0;
 }
 
 void VoiceManager::setPitchBendSemitones (float semitones)
@@ -94,6 +105,10 @@ void VoiceManager::updateParameters (const SynthParameters& params)
 
 dsp::StereoFrame VoiceManager::renderNextSample()
 {
+    // Se não há voices ativas, retorna silêncio imediatamente sem iterar o pool.
+    if (m_activeVoiceCount <= 0)
+        return dsp::StereoFrame { 0.0f, 0.0f };
+
     dsp::StereoFrame sum { 0.0f, 0.0f };
 
     for (auto& voice : m_voices)
@@ -103,6 +118,10 @@ dsp::StereoFrame VoiceManager::renderNextSample()
             const auto frame = voice->render();
             sum.left += frame.left;
             sum.right += frame.right;
+
+            // Se a voice terminou (envelope completo), decremente o contador.
+            if (!voice->isActive())
+                --m_activeVoiceCount;
         }
     }
 
