@@ -1,3 +1,4 @@
+
 {
   "version": 6,
   "cmakeMinimumRequired": {
@@ -5,30 +6,32 @@
     "minor": 22,
     "patch": 0
   },
-
   "configurePresets": [
     {
-      "name": "vs2022-x64-release",
-      "displayName": "Visual Studio 2022 x64 Release",
-      "description": "OMNIVY VST3 x64 Release build with MSVC",
-      "generator": "Visual Studio 17 2022",
-      "architecture": "x64",
-      "toolset": "v143",
+      "name": "ninja-x64-release",
+      "displayName": "Ninja x64 Release (MSVC)",
+      "description": "OMNIVY VST3 x64 Release using installed MSVC and Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/ninja-x64-release",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "E:/VS_TOOLS/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+        "CMAKE_CXX_COMPILER": "E:/VS_TOOLS/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+        "CMAKE_MAKE_PROGRAM": "E:/VS_TOOLS/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe",
         "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
         "JUCE_PATH": "F:/BACKUP/FREELA/PROGRAMS/VST/Dependencies/JUCE"
       }
     }
   ],
-
   "buildPresets": [
     {
-      "name": "vs2022-x64-release",
-      "displayName": "Visual Studio 2022 x64 Release",
-      "description": "Build OMNIVY VST3 plugin",
-      "configurePreset": "vs2022-x64-release",
-      "configuration": "Release"
+      "name": "ninja-x64-release",
+      "displayName": "Ninja x64 Release (MSVC)",
+      "configurePreset": "ninja-x64-release"
     }
   ]
 }
