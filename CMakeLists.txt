@@ -182,16 +182,37 @@ add_executable(OmnivyTests
     tests/TestMain.cpp
     tests/DSPTests.cpp
 
+    # --- DSP: Oscillators ---
+    src/DSP/Oscillators/AdditiveOscillator.cpp
+    src/DSP/Oscillators/VAOscillator.cpp
+    src/DSP/Oscillators/NoiseOscillator.cpp
+    src/DSP/Oscillators/FMOscillator.cpp
     src/DSP/Oscillators/GranularOscillator.cpp
-    src/DSP/Engine/OscillatorEngine.cpp
-    src/DSP/Engine/AudioEngine.cpp
-    src/DSP/Engine/SynthVoice.cpp
-    src/DSP/Engine/VoiceManager.cpp
-    src/DSP/Envelopes/ADSREnvelope.cpp
-    src/DSP/Filters/StateVariableFilter.cpp
+    src/DSP/Oscillators/WavetableOscillator.cpp
+
+    # --- DSP: Wavetable ---
     src/DSP/Wavetable/WavetableData.cpp
     src/DSP/Wavetable/WavetableGenerator.cpp
-)
+    src/DSP/Wavetable/WavetableOscillator.cpp
+
+    # --- DSP: Filters ---
+    src/DSP/Filters/StateVariableFilter.cpp
+
+    # --- DSP: Envelopes ---
+    src/DSP/Envelopes/ADSREnvelope.cpp
+
+    # --- DSP: Engine ---
+    src/DSP/Engine/SynthVoice.cpp
+    src/DSP/Engine/VoiceManager.cpp
+    src/DSP/Engine/AudioEngine.cpp
+    src/DSP/Engine/OscillatorEngine.cpp
+
+    # --- DSP: Routing ---
+    src/DSP/Routing/Connection.cpp
+    src/DSP/Routing/RoutingGraph.cpp
+
+    # --- Parameters ---
+    src/Parameters/SynthParameters.cpp)
 
 target_include_directories(OmnivyTests PRIVATE
     "${CMAKE_SOURCE_DIR}"
