@@ -140,11 +140,26 @@ float GranularOscillator::getPhase() const
 void GranularOscillator::setGrainSize(float seconds)
 {
     m_grainSize = std::clamp(seconds, kMinGrainSize, kMaxGrainSize);
+    updateGrainGainScale();
 }
 
 void GranularOscillator::setGrainDensity(float grainsPerSecond)
 {
     m_grainDensity = std::clamp(grainsPerSecond, kMinGrainDensity, kMaxGrainDensity);
+    updateGrainGainScale();
+}
+
+void GranularOscillator::updateGrainGainScale() noexcept
+{
+    // Número esperado de grãos simultâneos = densidade × tamanho.
+    // Lei da potência constante: somando N sinais independentes, RMS cresce
+    // como √N. Escalamos o ganho por 1/√N para manter o nível de saída
+    // previsível sem alterar o volume em densidades baixas.
+    float expectedActive = m_grainDensity * m_grainSize;
+    if (expectedActive > 1.0f)
+        m_grainGainScale = 1.0f / std::sqrt(expectedActive);
+    else
+        m_grainGainScale = 1.0f;
 }
 
 void GranularOscillator::setPosition(float position)
@@ -287,8 +302,10 @@ bool GranularOscillator::spawnGrain()
     grain.samplesLeft = samplesLeft;
 
     // ---- Ganho por grão -----------------------------------------------------
-    // Conservador para evitar clipping com muitos grãos sobrepostos.
-    grain.gain = 0.3f;
+    // Escalado pelo número esperado de grãos simultâneos para evitar
+    // clipping com sobreposição intensa. Preserva ganho cheio (0.3f) em
+    // densidades baixas, onde há pouca sobreposição.
+    grain.gain = 0.3f * m_grainGainScale;
 
     // ---- Pan (com espalhamento estéreo) -------------------------------------
     float pan = m_pan;
