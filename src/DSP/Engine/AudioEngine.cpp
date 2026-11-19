@@ -68,6 +68,16 @@ int AudioEngine::getPolyphony() const noexcept { return m_voiceManager.getPolyph
 
 void AudioEngine::setTestToneLevel (float level) { m_testToneLevel = level; }
 
+void AudioEngine::publishSample (std::unique_ptr<SampleData> sample) noexcept
+{
+    m_samplePublisher.publish (std::move (sample));
+}
+
+const SampleData* AudioEngine::acquireSample() noexcept
+{
+    return m_samplePublisher.acquire();
+}
+
 void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -81,6 +91,16 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
 
     if (!m_prepared)
         return;
+
+    // Adquire o snapshot do sample uma vez por bloco (RCU). O ponteiro é válido
+    // durante todo o processBlock e é partilhado por todas as vozes/slots.
+    m_currentSample = acquireSample();
+
+    // Define o sample em todos os engines granulares (no-op para engines não-granulares).
+    m_voiceManager.visitEngines ([this] (dsp::OscillatorEngine* engine, dsp::NodeId)
+    {
+        engine->setGranularSample (m_currentSample);
+    });
 
     handleMidi (midiMessages);
 
