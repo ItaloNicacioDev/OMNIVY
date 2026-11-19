@@ -6,6 +6,7 @@
 #include "DSP/Engine/OscillatorEngine.h"
 #include "DSP/Engine/OscillatorEngineFactory.h"
 #include "DSP/Routing/RoutingGraph.h"
+#include "DSP/Oscillators/SampleData.h"
 #include "DSP/Oscillators/SamplePublisher.h"
 #include "DSP/Wavetable/WavetableData.h"
 #include "Parameters/SynthParameters.h"
