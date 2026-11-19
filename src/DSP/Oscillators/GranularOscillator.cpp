@@ -41,6 +41,7 @@ void GranularOscillator::setSampleRate(double sampleRate)
 {
     m_sampleRate = sampleRate;
     m_levelSmoother.setSampleRate(sampleRate);
+    m_levelSmoother.reset(m_level); // inicializa o smoother no nível do oscilador
 }
 
 void GranularOscillator::reset()
