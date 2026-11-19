@@ -61,6 +61,7 @@ target_sources(OmnivyPlugin PRIVATE
     src/DSP/Oscillators/VAOscillator.cpp
     src/DSP/Oscillators/NoiseOscillator.cpp
     src/DSP/Oscillators/FMOscillator.cpp
+    src/DSP/Oscillators/GranularOscillator.cpp
 
     # --- DSP: Wavetable ---
     src/DSP/Wavetable/WavetableData.cpp
@@ -95,6 +96,7 @@ target_compile_definitions(OmnivyPlugin PRIVATE
 
 target_link_libraries(OmnivyPlugin PRIVATE
     juce::juce_audio_processors
+    juce::juce_audio_formats
     juce::juce_gui_basics
     juce::juce_audio_utils
     juce::juce_dsp
