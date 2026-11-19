@@ -44,7 +44,8 @@ public:
     const dsp::SampleData* acquireSample() noexcept;
 
     int getNumActiveVoices() const noexcept;
-    int getPolyphony() const noexcept;
+    int getPolyphony() const noexcept { return m_voiceManager.getPolyphony(); }
+    float getMasterVolume() const noexcept { return m_masterVolume.load(); }
     double getSampleRate() const noexcept { return m_sampleRate; }
 
     void setTestToneLevel (float level);

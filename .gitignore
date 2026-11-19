@@ -48,3 +48,7 @@ Tests/RoutingGraphTests.cpp
 Tests/RoutingGraphTests.cpp
 Tests/RoutingGraphTests.cpp
 Tests/RoutingGraphTests.cpp
+.tests/ 
+tests/DSPTests.cpp
+tests/TestFramework.h
+tests/TestMain.cpp

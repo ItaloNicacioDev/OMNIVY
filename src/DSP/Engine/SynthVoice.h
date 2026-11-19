@@ -45,6 +45,13 @@ public:
     void setNoteOnOrder (int order) noexcept { m_noteOnOrder = order; }
     bool isPlayingNote (int midiNote) const noexcept { return m_active && m_note == midiNote; }
 
+    // --- Test accessors --------------------------------------------------
+    // Expose the cached key-track ratio so unit tests can compare it against
+    // the direct std::pow() calculation. Default behaviour is unchanged
+    // (m_filterKeyTrack defaults to 0.0f, so the ratio defaults to 1.0f).
+    float getKeyTrackRatio() const noexcept { return m_keyTrackRatio; }
+    void setFilterKeyTrack (float keyTrack) noexcept { m_filterKeyTrack = keyTrack; updateKeyTrackRatio(); }
+
     // Access the engine in a given slot (0..5). Used by the routing graph
     // to bind engine nodes for modulation signal transport.
     dsp::OscillatorEngine* getOscillatorEngine (int slot) noexcept

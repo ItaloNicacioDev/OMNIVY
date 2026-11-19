@@ -162,11 +162,10 @@ void GranularOscillator::setGrainDensity(float grainsPerSecond)
 
 void GranularOscillator::updateGrainGainScale() noexcept
 {
-    // Número esperado de grãos simultâneos = densidade × tamanho.
-    // Lei da potência constante: somando N sinais independentes, RMS cresce
-    // como √N. Escalamos o ganho por 1/√N para manter o nível de saída
-    // previsível sem alterar o volume em densidades baixas.
-    float expectedActive = m_grainDensity * m_grainSize;
+    // Número esperado de grãos simultâneos = densidade × tamanho. Ambos são
+    // atômicos, então esta leitura não expõe um par inconsistente mesmo sob
+    // atualizações concorrentes de setters (thread de mensagem e/ou áudio).
+    float expectedActive = m_grainDensity.load() * m_grainSize.load();
     float scale = 1.0f;
     if (expectedActive > 1.0f)
         scale = 1.0f / std::sqrt(expectedActive);

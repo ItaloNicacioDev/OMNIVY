@@ -138,8 +138,8 @@ private:
     float m_frequencyHz = 440.0f;
 
     // ---- Parâmetros granulares ----------------------------------------------
-    float m_grainSize = 0.1f;            // segundos
-    float m_grainDensity = 20.0f;        // grãos por segundo
+    std::atomic<float> m_grainSize { 0.1f };            // segundos
+    std::atomic<float> m_grainDensity { 20.0f };        // grãos por segundo
     float m_position = 0.5f;             // 0 .. 1
     float m_positionSpray = 0.0f;        // 0 .. 1
     float m_pitchSemitones = 0.0f;       // -48 .. +48

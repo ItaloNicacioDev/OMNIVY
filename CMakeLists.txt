@@ -168,3 +168,39 @@ set_target_properties(OmnivyStandalone PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+# ---------------------------------------------------------------------------
+# Unit test executable (Phase 3.4).
+//
+// No external test framework is used (project rule: no new external
+// dependencies). Only the JUCE headers are required on the include path: every
+// DSP translation unit under test is standard-library / header-inline only, so
+// no JUCE library linking is strictly required. juce::juce_core is linked to
+// cover any out-of-line JUCE core symbol (e.g. ScopedNoDenormals) referenced
+// by compiled-but-not-called DSP bodies.
+// ---------------------------------------------------------------------------
+add_executable(OmnivyTests
+    tests/TestMain.cpp
+    tests/DSPTests.cpp
+
+    src/DSP/Oscillators/GranularOscillator.cpp
+    src/DSP/Engine/OscillatorEngine.cpp
+    src/DSP/Engine/AudioEngine.cpp
+    src/DSP/Engine/SynthVoice.cpp
+    src/DSP/Engine/VoiceManager.cpp
+    src/DSP/Envelopes/ADSREnvelope.cpp
+    src/DSP/Filters/StateVariableFilter.cpp
+    src/DSP/Wavetable/WavetableData.cpp
+    src/DSP/Wavetable/WavetableGenerator.cpp
+)
+
+target_include_directories(OmnivyTests PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+    "${JUCE_PATH}/modules"
+)
+
+target_link_libraries(OmnivyTests PRIVATE juce::juce_core)
+
+target_compile_definitions(OmnivyTests PRIVATE
+    JUCE_STANDALONE=1
+)
+
