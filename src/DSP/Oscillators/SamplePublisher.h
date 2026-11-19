@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -72,8 +73,11 @@ public:
     // Publica um novo sample. A propriedade do SampleData é transferida para
     // o publisher; o chamador não deve mais usá-lo após esta chamada.
     // Pode alocar; nunca bloqueia a thread de áudio.
+    // Serializado com shutdown() via m_publishMutex para evitar data race
+    // em m_retireList (std::vector não thread-safe).
     void publish (std::unique_ptr<SampleData> next) noexcept
     {
+        std::scoped_lock lock (m_publishMutex);
         SampleData* raw = next.get();
         const SampleData* old = m_current.exchange (raw, std::memory_order_acq_rel);
         next.release(); // propriedade agora pertence a m_current
@@ -96,13 +100,14 @@ public:
     // releaseResources() antes da destruição do processor. Além disso,
     // publish() NÃO pode ocorrer simultaneamente a shutdown(); ambas
     // executam na thread de mensagem e a ausência de concorrência entre
-    // elas é uma pré-condição do ciclo de vida do processor. Destroi todos
-    // os buffers de sample aposentados e o buffer atual. Não introduz
-    // locks, não bloqueia e não espera na thread de áudio. É idempotente:
-    // chamar múltiplas vezes é seguro (delete nullptr e lista de
-    // aposentadoria já vazia são no-op).
+    // elas é uma pré-condição do ciclo de vida do processor. Serializado
+    // com publish() via m_publishMutex. Destroi todos os buffers de sample
+    // aposentados e o buffer atual. Não introduz locks, não bloqueia e não
+    // espera na thread de áudio. É idempotente: chamar múltiplas vezes é
+    // seguro (delete nullptr e lista de aposentadoria já vazia são no-op).
     void shutdown() noexcept
     {
+        std::scoped_lock lock (m_publishMutex);
         // Força o áudio a anunciar o epoch mais recente (se ainda estiver
         // rodando). Depois disso, todos os buffers aposentados são seguros.
         m_audioSeenEpoch.store(
@@ -121,7 +126,8 @@ public:
 
 private:
     // Reclamação: destrói buffers aposentados cujo retireEpoch <= audioSeenEpoch.
-    // Chamada apenas pela thread de mensagem.
+    // Chamada apenas pela thread de mensagem (dentro de publish(), que já
+    // detém m_publishMutex).
     void reclaim() noexcept
     {
         const uint64_t audioSeen =
@@ -148,8 +154,13 @@ private:
     // (acquire). Marca a última fronteira de bloco vista pelo áudio.
     std::atomic<uint64_t>          m_audioSeenEpoch { 0 };
 
+    // Serializa publish() e shutdown() para evitar data race em m_retireList.
+    // Não é usado na thread de áudio: acquire() permanece wait-free, sem
+    // alocação, sem mutex.
+    std::mutex m_publishMutex;
+
     // Lista de aposentadoria: (ponteiro, retireEpoch). Tocada apenas pela
-    // thread de mensagem.
+    // thread de mensagem (dentro de publish() e shutdown(), sob m_publishMutex).
     std::vector<std::pair<const SampleData*, uint64_t>> m_retireList;
 };
 
