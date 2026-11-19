@@ -156,10 +156,10 @@ void GranularOscillator::updateGrainGainScale() noexcept
     // como √N. Escalamos o ganho por 1/√N para manter o nível de saída
     // previsível sem alterar o volume em densidades baixas.
     float expectedActive = m_grainDensity * m_grainSize;
+    float scale = 1.0f;
     if (expectedActive > 1.0f)
-        m_grainGainScale = 1.0f / std::sqrt(expectedActive);
-    else
-        m_grainGainScale = 1.0f;
+        scale = 1.0f / std::sqrt(expectedActive);
+    m_grainGainScale.store (scale);
 }
 
 void GranularOscillator::setPosition(float position)
@@ -305,7 +305,7 @@ bool GranularOscillator::spawnGrain()
     // Escalado pelo número esperado de grãos simultâneos para evitar
     // clipping com sobreposição intensa. Preserva ganho cheio (0.3f) em
     // densidades baixas, onde há pouca sobreposição.
-    grain.gain = 0.3f * m_grainGainScale;
+    grain.gain = 0.3f * m_grainGainScale.load ();
 
     // ---- Pan (com espalhamento estéreo) -------------------------------------
     float pan = m_pan;
@@ -462,11 +462,18 @@ StereoFrame GranularOscillator::processSample()
     mixL *= smoothedLevel;
     mixR *= smoothedLevel;
 
-    // ---- 4. Proteção contra NaN/Inf ----------------------------------------
+    // ---- 4. Proteção contra NaN/Inf e clipping ------------------------------
+    // O ganho por grão é escalado pelo número esperado de grãos ativos, mas
+    // grãos correlacionados (position spray = 0, mesma posição de leitura)
+    // podem somar linearmente e exceder 0 dBFS. Um clamp de saída garante
+    // que o sinal nunca ultrapasse o range do formato, sem alterar o
+    // comportamento sonoro em níveis normais de operação.
     if (!std::isfinite(mixL))
         mixL = 0.0f;
     if (!std::isfinite(mixR))
         mixR = 0.0f;
+    mixL = std::clamp (mixL, -1.0f, 1.0f);
+    mixR = std::clamp (mixR, -1.0f, 1.0f);
 
     return StereoFrame{mixL, mixR};
 }

@@ -4,6 +4,7 @@
 #include "DSP/Oscillators/SampleData.h"
 #include "DSP/Utilities/Smoothing.h"
 
+#include <atomic>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -147,11 +148,10 @@ private:
     float m_stereoSpread = 0.5f;         // 0 .. 1
     PlaybackDirection m_playbackDirection = PlaybackDirection::Forward;
 
-    // ---- Ganho escalado por densidade esperada ------------------------------
-    // O ganho por grão é reduzido à medida que o número esperado de grãos
-    // simultâneos cresce, preservando headroom com sobreposição intensa sem
-    // alterar o volume em densidades baixas (pouca sobreposição).
-    float m_grainGainScale = 1.0f;
+    // Ganho escalado por densidade esperada — acessado por thread de áudio
+    // (spawnGrain) e thread de mensagem (updateGrainGainScale). Atômico para
+    // evitar data race.
+    std::atomic<float> m_grainGainScale { 1.0f };
 
     // ---- Pool de grãos (pré-alocado) ----------------------------------------
     Grain m_grains[kMaxGrains];

@@ -2,9 +2,11 @@
 
 #include <memory>
 
-#include "DSP/Oscillators/OscillatorBase.h"
 #include "DSP/Oscillators/AdditiveOscillator.h"
+#include "DSP/Oscillators/FMOscillator.h"
 #include "DSP/Oscillators/GranularOscillator.h"
+#include "DSP/Oscillators/OscillatorBase.h"
+#include "DSP/Oscillators/VAOscillator.h"
 #include "DSP/Wavetable/WavetableData.h"
 
 namespace omnivy {
@@ -163,7 +165,18 @@ public:
     void recreateOscillator();
 
     EngineType m_engineType = EngineType::VA;
-    std::unique_ptr<OscillatorBase> m_oscillator;
+    // Ponteiro não-owning para o oscilador ativo. Aponta para uma das instâncias
+    // pré-alocadas abaixo; nunca é destruído diretamente.
+    OscillatorBase* m_oscillator = nullptr;
+
+    // Instâncias pré-alocadas (zero alocação na thread de áudio). Cada tipo de
+    // engine é criado uma vez no construtor e reutilizado em trocas de tipo.
+    std::unique_ptr<OscillatorBase> m_vaOscillator;
+    std::unique_ptr<OscillatorBase> m_wavetableOscillator;
+    std::unique_ptr<OscillatorBase> m_fmOscillator;
+    std::unique_ptr<OscillatorBase> m_additiveOscillator;
+    std::unique_ptr<OscillatorBase> m_granularOscillator;
+
     dsp::WavetableData* m_wavetableData = nullptr;
     double m_sampleRate = 44100.0;
     StereoFrame m_lastOutput { 0.0f, 0.0f };

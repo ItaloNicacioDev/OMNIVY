@@ -11,7 +11,21 @@
 namespace omnivy {
 namespace dsp {
 
-OscillatorEngine::OscillatorEngine() = default;
+OscillatorEngine::OscillatorEngine()
+{
+    // Pré-aloca todos os tipos de oscilador no construtor (thread de
+    // mensagem, criação do plugin). A thread de áudio nunca aloca nem
+    // desaloca osciladores durante troca de engine.
+    m_vaOscillator = std::make_unique<VAOscillator>();
+    m_wavetableOscillator = std::make_unique<WavetableOscillator>();
+    m_fmOscillator = std::make_unique<FMOscillator>();
+    m_additiveOscillator = std::make_unique<AdditiveOscillator>();
+    m_granularOscillator = std::make_unique<GranularOscillator>();
+
+    // Ativa o engine padrão (VA).
+    m_oscillator = m_vaOscillator.get();
+    m_engineType = EngineType::VA;
+}
 
 void OscillatorEngine::init (dsp::WavetableData* wavetableData)
 {
@@ -42,26 +56,28 @@ void OscillatorEngine::setEngineType (EngineType type)
 
 void OscillatorEngine::recreateOscillator()
 {
+    // Apenas troca o ponteiro ativo para uma instância já pré-alocada.
+    // Zero alocação, zero desalocação na thread de áudio.
     switch (m_engineType)
     {
         case EngineType::Wavetable:
-            m_oscillator = std::make_unique<WavetableOscillator>();
+            m_oscillator = m_wavetableOscillator.get();
             break;
         case EngineType::Additive:
-            m_oscillator = std::make_unique<AdditiveOscillator>();
+            m_oscillator = m_additiveOscillator.get();
             break;
         case EngineType::Granular:
-            m_oscillator = std::make_unique<GranularOscillator>();
+            m_oscillator = m_granularOscillator.get();
             break;
         case EngineType::VA:
         default:
-            m_oscillator = std::make_unique<VAOscillator>();
+            m_oscillator = m_vaOscillator.get();
             break;
     }
 
     if (m_wavetableData != nullptr)
     {
-        if (auto* wt = dynamic_cast<WavetableOscillator*> (m_oscillator.get()))
+        if (auto* wt = dynamic_cast<WavetableOscillator*> (m_oscillator))
             wt->setWavetableData (m_wavetableData);
     }
 
@@ -150,7 +166,7 @@ void OscillatorEngine::setWavetableData (dsp::WavetableData* data)
     m_wavetableData = data;
     if (m_oscillator)
     {
-        if (auto* wt = dynamic_cast<WavetableOscillator*> (m_oscillator.get()))
+        if (auto* wt = dynamic_cast<WavetableOscillator*> (m_oscillator))
             wt->setWavetableData (data);
     }
 }
@@ -158,78 +174,78 @@ void OscillatorEngine::setWavetableData (dsp::WavetableData* data)
 // ---- FM parameter forwarding ----
 void OscillatorEngine::setFrequencyRatio (float ratio)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setFrequencyRatio (ratio);
 }
 
 float OscillatorEngine::getFrequencyRatio() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getFrequencyRatio();
     return 0.0f;
 }
 
 void OscillatorEngine::setFineRatio (float fineRatio)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setFineRatio (fineRatio);
 }
 
 float OscillatorEngine::getFineRatio() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getFineRatio();
     return 0.0f;
 }
 
 void OscillatorEngine::setFmAmount (float amount)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setFmAmount (amount);
 }
 
 float OscillatorEngine::getFmAmount() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getFmAmount();
     return 0.0f;
 }
 
 void OscillatorEngine::setPmAmount (float amount)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setPmAmount (amount);
 }
 
 float OscillatorEngine::getPmAmount() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getPmAmount();
     return 0.0f;
 }
 
 void OscillatorEngine::setFeedback (float amount)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setFeedback (amount);
 }
 
 float OscillatorEngine::getFeedback() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getFeedback();
     return 0.0f;
 }
 
 void OscillatorEngine::setOutputLevel (float level)
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         fm->setOutputLevel (level);
 }
 
 float OscillatorEngine::getOutputLevel() const noexcept
 {
-    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator.get()))
+    if (auto* fm = dynamic_cast<FMOscillator*> (m_oscillator))
         return fm->getOutputLevel();
     return 0.0f;
 }
@@ -237,78 +253,78 @@ float OscillatorEngine::getOutputLevel() const noexcept
 // ---- Additive parameter forwarding ----
 void OscillatorEngine::setHarmonicCount (int count)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setHarmonicCount (count);
 }
 
 int OscillatorEngine::getHarmonicCount() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getHarmonicCount();
     return 0;
 }
 
 void OscillatorEngine::setSpectralMorph (float morph)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setSpectralMorph (morph);
 }
 
 float OscillatorEngine::getSpectralMorph() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getSpectralMorph();
     return 0.0f;
 }
 
 void OscillatorEngine::setSpectralTilt (float tilt)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setSpectralTilt (tilt);
 }
 
 float OscillatorEngine::getSpectralTilt() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getSpectralTilt();
     return 0.0f;
 }
 
 void OscillatorEngine::setOddEvenBalance (float balance)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setOddEvenBalance (balance);
 }
 
 float OscillatorEngine::getOddEvenBalance() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getOddEvenBalance();
     return 0.0f;
 }
 
 void OscillatorEngine::setFundamentalLevel (float level)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setFundamentalLevel (level);
 }
 
 float OscillatorEngine::getFundamentalLevel() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getFundamentalLevel();
     return 0.0f;
 }
 
 void OscillatorEngine::setAddOutputLevel (float level)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setOutputLevel (level);
 }
 
 float OscillatorEngine::getAddOutputLevel() const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getOutputLevel();
     return 0.0f;
 }
@@ -316,59 +332,59 @@ float OscillatorEngine::getAddOutputLevel() const noexcept
 // ---- Additive partial access forwarding ----
 void OscillatorEngine::setPartialAmplitude (int index, float amplitude)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setPartialAmplitude (index, amplitude);
 }
 
 float OscillatorEngine::getPartialAmplitude (int index) const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getPartialAmplitude (index);
     return 0.0f;
 }
 
 void OscillatorEngine::setPartialPhase (int index, float phase)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setPartialPhase (index, phase);
 }
 
 float OscillatorEngine::getPartialPhase (int index) const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getPartialPhase (index);
     return 0.0f;
 }
 
 void OscillatorEngine::setPartialFrequencyRatio (int index, float ratio)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setPartialFrequencyRatio (index, ratio);
 }
 
 float OscillatorEngine::getPartialFrequencyRatio (int index) const noexcept
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getPartialFrequencyRatio (index);
     return 0.0f;
 }
 
 void OscillatorEngine::setSpectrumAPartial (int index, const AdditivePartial& partial)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setSpectrumAPartial (index, partial);
 }
 
 void OscillatorEngine::setSpectrumBPartial (int index, const AdditivePartial& partial)
 {
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         ad->setSpectrumBPartial (index, partial);
 }
 
 const AdditivePartial& OscillatorEngine::getSpectrumAPartial (int index) const noexcept
 {
     static const AdditivePartial empty;
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getSpectrumAPartial (index);
     return empty;
 }
@@ -376,7 +392,7 @@ const AdditivePartial& OscillatorEngine::getSpectrumAPartial (int index) const n
 const AdditivePartial& OscillatorEngine::getSpectrumBPartials (int index) const noexcept
 {
     static const AdditivePartial empty;
-    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator.get()))
+    if (auto* ad = dynamic_cast<AdditiveOscillator*> (m_oscillator))
         return ad->getSpectrumBPartials (index);
     return empty;
 }
@@ -384,107 +400,107 @@ const AdditivePartial& OscillatorEngine::getSpectrumBPartials (int index) const 
 // ---- Granular parameter forwarding ---
 void OscillatorEngine::setGrainSize (float seconds)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setGrainSize (seconds);
 }
 float OscillatorEngine::getGrainSize() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getGrainSize();
     return 0.0f;
 }
 void OscillatorEngine::setGrainDensity (float grainsPerSecond)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setGrainDensity (grainsPerSecond);
 }
 float OscillatorEngine::getGrainDensity() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getGrainDensity();
     return 0.0f;
 }
 void OscillatorEngine::setPosition (float position)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setPosition (position);
 }
 float OscillatorEngine::getPosition() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getPosition();
     return 0.0f;
 }
 void OscillatorEngine::setPositionSpray (float spray)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setPositionSpray (spray);
 }
 float OscillatorEngine::getPositionSpray() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getPositionSpray();
     return 0.0f;
 }
 void OscillatorEngine::setPitch (float semitones)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setPitch (semitones);
 }
 float OscillatorEngine::getPitch() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getPitch();
     return 0.0f;
 }
 void OscillatorEngine::setPitchRandomization (float semitones)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setPitchRandomization (semitones);
 }
 float OscillatorEngine::getPitchRandomization() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getPitchRandomization();
     return 0.0f;
 }
 void OscillatorEngine::setGrainEnvelope (GranularOscillator::GrainEnvelope envelope)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setGrainEnvelope (envelope);
 }
 GranularOscillator::GrainEnvelope OscillatorEngine::getGrainEnvelope() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getGrainEnvelope();
     return GranularOscillator::GrainEnvelope::None;
 }
 void OscillatorEngine::setStereoSpread (float spread)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setStereoSpread (spread);
 }
 float OscillatorEngine::getStereoSpread() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getStereoSpread();
     return 0.0f;
 }
 void OscillatorEngine::setPlaybackDirection (GranularOscillator::PlaybackDirection direction)
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setPlaybackDirection (direction);
 }
 GranularOscillator::PlaybackDirection OscillatorEngine::getPlaybackDirection() const noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         return gr->getPlaybackDirection();
     return GranularOscillator::PlaybackDirection::Forward;
 }
 
 void OscillatorEngine::setGranularSample (const SampleData* sample) noexcept
 {
-    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator.get()))
+    if (auto* gr = dynamic_cast<GranularOscillator*> (m_oscillator))
         gr->setSample (sample);
 }
 

@@ -85,6 +85,7 @@ private:
     int m_polyphony = 16;
     float m_pitchBendSemitones = 0.0f;
     int m_noteOnCounter = 0; // monotonic, for deterministic FIFO stealing
+    int m_activeVoiceCount = 0; // número de voices com m_active == true
     double m_sampleRate = 44100.0;
 };
 
