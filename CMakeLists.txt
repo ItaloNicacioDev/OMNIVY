@@ -170,14 +170,14 @@ set_target_properties(OmnivyStandalone PROPERTIES
 
 # ---------------------------------------------------------------------------
 # Unit test executable (Phase 3.4).
-//
-// No external test framework is used (project rule: no new external
-// dependencies). Only the JUCE headers are required on the include path: every
-// DSP translation unit under test is standard-library / header-inline only, so
-// no JUCE library linking is strictly required. juce::juce_core is linked to
-// cover any out-of-line JUCE core symbol (e.g. ScopedNoDenormals) referenced
-// by compiled-but-not-called DSP bodies.
-// ---------------------------------------------------------------------------
+#
+# No external test framework is used (project rule: no new external
+# dependencies). Only the JUCE headers are required on the include path: every
+# DSP translation unit under test is standard-library / header-inline only, so
+# no JUCE library linking is strictly required. juce::juce_core is linked to
+# cover any out-of-line JUCE core symbol (e.g. ScopedNoDenormals) referenced
+# by compiled-but-not-called DSP bodies.
+# ---------------------------------------------------------------------------
 add_executable(OmnivyTests
     tests/TestMain.cpp
     tests/DSPTests.cpp
