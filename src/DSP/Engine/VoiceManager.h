@@ -23,6 +23,8 @@ namespace omnivy {
 class VoiceManager
 {
 public:
+    static constexpr int kMaxVoices = 64;
+
     VoiceManager (dsp::WavetableData* wavetableData);
     ~VoiceManager() = default;
 
