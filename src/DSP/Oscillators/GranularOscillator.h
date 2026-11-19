@@ -123,6 +123,9 @@ private:
     // Spawn de um novo grão. Retorna false se o pool estiver cheio.
     bool spawnGrain();
 
+    // Atualiza o ganho por grão com base no número esperado de grãos ativos.
+    void updateGrainGainScale() noexcept;
+
     // Aplica o envelope a um ganho base, dado a fase do envelope (0..1).
     float applyEnvelope (float envPhase) const noexcept;
 
