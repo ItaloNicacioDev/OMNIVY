@@ -39,8 +39,8 @@ public:
     // --- Sample access ------------------------------------------------------
     // Publica um sample (message thread). O áudio adquire o snapshot via
     // acquireSample() no início de cada processBlock.
-    void publishSample (std::unique_ptr<SampleData> sample) noexcept;
-    const SampleData* acquireSample() noexcept;
+    void publishSample (std::unique_ptr<dsp::SampleData> sample) noexcept;
+    const dsp::SampleData* acquireSample() noexcept;
 
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;
@@ -71,7 +71,7 @@ private:
 
     // Sample adquirido uma vez por processBlock via acquireSample().
     // Válido durante todo o bloco; não-owning.
-    const SampleData* m_currentSample = nullptr;
+    const dsp::SampleData* m_currentSample = nullptr;
 };
 
 } // namespace omnivy
