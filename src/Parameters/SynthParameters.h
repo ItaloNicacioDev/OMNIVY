@@ -101,6 +101,22 @@ public:
 
     const AdditiveParams& getAdditiveParams (int index) const noexcept { return m_addParams[index]; }
 
+    // ---- Granular synthesis parameters per oscillator -----------------------
+    struct GranularParams
+    {
+        float  grainSize = 0.1f;              // seconds
+        float  grainDensity = 20.0f;          // grains per second
+        float  position = 0.5f;               // 0..1
+        float  positionSpray = 0.0f;          // 0..1
+        float  pitch = 0.0f;                  // semitones -48..+48
+        float  pitchRandomization = 0.0f;     // semitones 0..24
+        int    grainEnvelope = 1;             // 0=None, 1=Triangle, 2=Hanning, 3=Linear
+        float  stereoSpread = 0.5f;           // 0..1
+        int    playbackDirection = 0;         // 0=Forward, 1=Reverse
+    };
+
+    const GranularParams& getGranularParams (int index) const noexcept { return m_granParams[index]; }
+
 private:
     std::atomic<float> m_masterVolume { 0.7f };
     std::atomic<int>   m_polyphony    { 16 };
@@ -110,6 +126,7 @@ private:
     FmParams m_fmParams[params::NumOscillators];
 
     AdditiveParams m_addParams[params::NumOscillators];
+    GranularParams m_granParams[params::NumOscillators];
     Filter     m_filter;
     Envelope   m_envelope;
 };

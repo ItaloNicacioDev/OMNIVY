@@ -4,6 +4,7 @@
 
 #include "DSP/Oscillators/OscillatorBase.h"
 #include "DSP/Oscillators/AdditiveOscillator.h"
+#include "DSP/Oscillators/GranularOscillator.h"
 #include "DSP/Wavetable/WavetableData.h"
 
 namespace omnivy {
@@ -133,6 +134,30 @@ public:
     void setSpectrumBPartial (int index, const AdditivePartial& partial);
     const AdditivePartial& getSpectrumAPartial (int index) const noexcept;
     const AdditivePartial& getSpectrumBPartials (int index) const noexcept;
+
+    // ---- Granular parameter forwarding (no-op for non-granular engines) -----
+    void setGrainSize (float seconds);
+    float getGrainSize() const noexcept;
+    void setGrainDensity (float grainsPerSecond);
+    float getGrainDensity() const noexcept;
+    void setPosition (float position);
+    float getPosition() const noexcept;
+    void setPositionSpray (float spray);
+    float getPositionSpray() const noexcept;
+    void setPitch (float semitones);
+    float getPitch() const noexcept;
+    void setPitchRandomization (float semitones);
+    float getPitchRandomization() const noexcept;
+    void setGrainEnvelope (GranularOscillator::GrainEnvelope envelope);
+    GranularOscillator::GrainEnvelope getGrainEnvelope() const noexcept;
+    void setStereoSpread (float spread);
+    float getStereoSpread() const noexcept;
+    void setPlaybackDirection (GranularOscillator::PlaybackDirection direction);
+    GranularOscillator::PlaybackDirection getPlaybackDirection() const noexcept;
+
+    // Attach a sample (non-owning pointer from SamplePublisher). Called on the
+    // audio thread with the pointer acquired via SamplePublisher::acquire().
+    void setGranularSample (const SampleData* sample) noexcept;
 
  private:
     void recreateOscillator();

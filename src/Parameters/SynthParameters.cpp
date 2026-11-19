@@ -26,6 +26,7 @@ SynthParameters::SynthParameters()
         m_oscillators[i].phase = 0.0f;
         m_oscEngine[i] = dsp::EngineType::VA;
         m_addParams[i] = AdditiveParams();
+        m_granParams[i] = GranularParams();
     }
 }
 
@@ -130,6 +131,35 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthParameters::createParam
         params.push_back (std::make_unique<AudioParameterFloat> (oscAddOutputLevel (i),
             "OSC " + num + " Add Output Level",
             NormalisableRange<float> (0.0f, 2.0f, 0.01f), 0.7f));
+
+        // ---- Granular synthesis parameters ----------------------------------
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranGrainSize (i),
+            "OSC " + num + " Granular Grain Size",
+            NormalisableRange<float> (0.01f, 2.0f, 0.01f), 0.1f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranDensity (i),
+            "OSC " + num + " Granular Density",
+            NormalisableRange<float> (0.0f, 1000.0f, 1.0f), 20.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranPosition (i),
+            "OSC " + num + " Granular Position",
+            NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranPositionSpray (i),
+            "OSC " + num + " Granular Position Spray",
+            NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranPitch (i),
+            "OSC " + num + " Granular Pitch",
+            NormalisableRange<float> (-48.0f, 48.0f, 0.1f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranPitchRandomization (i),
+            "OSC " + num + " Granular Pitch Randomization",
+            NormalisableRange<float> (0.0f, 24.0f, 0.1f), 0.0f));
+        params.push_back (std::make_unique<AudioParameterInt> (oscGranGrainEnvelope (i),
+            "OSC " + num + " Granular Grain Envelope",
+            0, static_cast<int> (dsp::GranularOscillator::GrainEnvelope::Count) - 1, 1));
+        params.push_back (std::make_unique<AudioParameterFloat> (oscGranStereoSpread (i),
+            "OSC " + num + " Granular Stereo Spread",
+            NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<AudioParameterInt> (oscGranPlaybackDirection (i),
+            "OSC " + num + " Granular Playback Direction",
+            0, 1, 0));
     }
 
     // ---- Filter ---------------------------------------------------------------

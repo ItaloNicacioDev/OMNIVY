@@ -48,6 +48,17 @@ inline juce::String oscAddOddEven (int index) { return oscPrefix (index) + ".add
 inline juce::String oscAddFundLevel (int index) { return oscPrefix (index) + ".addFundLevel"; }
 inline juce::String oscAddOutputLevel (int index) { return oscPrefix (index) + ".addOutputLevel"; }
 
+// ---- Granular synthesis parameters (indexed 0..5, maps to OSC 1..6) -------
+inline juce::String oscGranGrainSize (int index) { return oscPrefix (index) + ".granGrainSize"; }
+inline juce::String oscGranDensity (int index) { return oscPrefix (index) + ".granDensity"; }
+inline juce::String oscGranPosition (int index) { return oscPrefix (index) + ".granPosition"; }
+inline juce::String oscGranPositionSpray (int index) { return oscPrefix (index) + ".granPositionSpray"; }
+inline juce::String oscGranPitch (int index) { return oscPrefix (index) + ".granPitch"; }
+inline juce::String oscGranPitchRandomization (int index) { return oscPrefix (index) + ".granPitchRandomization"; }
+inline juce::String oscGranGrainEnvelope (int index) { return oscPrefix (index) + ".granGrainEnvelope"; }
+inline juce::String oscGranStereoSpread (int index) { return oscPrefix (index) + ".granStereoSpread"; }
+inline juce::String oscGranPlaybackDirection (int index) { return oscPrefix (index) + ".granPlaybackDirection"; }
+
 // Total number of independent oscillators.
 inline constexpr int NumOscillators = 6;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DSP/Engine/OscillatorEngine.h"
+#include "DSP/Oscillators/GranularOscillator.h"
 
 namespace omnivy {
 namespace dsp {
@@ -38,6 +39,14 @@ public:
         {
             // Additive defaults: harmonic series, 8 partials.
             engine->setWaveform (Waveform::Sine);
+        }
+        else if (type == EngineType::Granular)
+        {
+            // Granular defaults: moderate density, triangle envelope, forward.
+            engine->setGrainDensity (20.0f);
+            engine->setGrainSize (0.1f);
+            engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::Triangle);
+            engine->setPlaybackDirection (GranularOscillator::PlaybackDirection::Forward);
         }
         return engine;
     }
