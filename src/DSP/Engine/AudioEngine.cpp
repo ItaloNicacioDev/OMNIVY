@@ -74,7 +74,6 @@ void AudioEngine::setPitchBendSemitones (float semitones)
 void AudioEngine::setPolyphony (int polyphony) { m_voiceManager.setPolyphony (polyphony); }
 
 int AudioEngine::getNumActiveVoices() const noexcept { return m_voiceManager.getNumActiveVoices(); }
-int AudioEngine::getPolyphony() const noexcept { return m_voiceManager.getPolyphony(); }
 
 void AudioEngine::setTestToneLevel (float level) { m_testToneLevel = level; }
 
