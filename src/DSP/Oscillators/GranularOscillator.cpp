@@ -183,11 +183,6 @@ void GranularOscillator::setPositionSpray(float spray)
     m_positionSpray = std::clamp(spray, 0.0f, 1.0f);
 }
 
-void GranularOscillator::setPitch(float semitones)
-{
-    m_pitchSemitones = std::clamp(semitones, kMinPitch, kMaxPitch);
-}
-
 void GranularOscillator::setPitchRandomization(float semitones)
 {
     m_pitchRandomization = std::clamp(semitones, kMinPitchRand, kMaxPitchRand);
