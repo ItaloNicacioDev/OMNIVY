@@ -273,7 +273,9 @@ bool GranularOscillator::spawnGrain()
 
     const double bufSampleRate = m_sample->getSampleRate();
     const double rateRatio = m_sampleRate / bufSampleRate;
-    grain.increment = ratio * rateRatio;
+    const double baseFreq = m_sample->getBaseFrequency();
+    const double noteRatio = m_frequencyHz / baseFreq;
+    grain.increment = noteRatio * ratio * rateRatio;
 
     if (m_playbackDirection == PlaybackDirection::Reverse)
         grain.increment = -grain.increment;
