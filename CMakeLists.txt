@@ -64,7 +64,7 @@ execute_process(
         -Dsource_file="${JUCE_PATH}/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp"
         -Dshared_defs_file="${CMAKE_BINARY_DIR}/vst3_helpers/OmnivyPlugin/shared_defs_Release.txt"
         -Dshared_incs_file="${CMAKE_BINARY_DIR}/vst3_helpers/OmnivyPlugin/shared_incs_Release.txt"
-        -DCMAKE_MAKE_PROGRAM="${CMAKE_MAKE_PROGRAM}"
+        -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
         -DCMAKE_BUILD_TYPE=Release
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     RESULT_VARIABLE _omnivy_vst3_helper_result
