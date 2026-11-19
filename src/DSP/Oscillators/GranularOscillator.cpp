@@ -31,6 +31,7 @@ GranularOscillator::GranularOscillator()
         m_freeList[i] = i;
     m_freeCount = kMaxGrains;
     m_activeCount = 0;
+    m_pitchRatioDirty = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -134,6 +135,11 @@ void GranularOscillator::setPitch(float semitones)
     m_pitchRatioDirty = true;
 }
 
+void GranularOscillator::setInitialPhase(float phase)
+{
+    m_initialPhase = wrapPhase(phase);
+}
+
 float GranularOscillator::getPhase() const
 {
     return m_initialPhase;
@@ -205,13 +211,33 @@ void GranularOscillator::setPlaybackDirection(PlaybackDirection direction)
 // -----------------------------------------------------------------------------
 // DSP internos
 // -----------------------------------------------------------------------------
-float GranularOscillator::effectivePitchRatio() const noexcept
+void GranularOscillator::updatePitchRatioCache() noexcept
 {
-    const float ratio = centsToRatio(m_detuneCents + m_fineTuneCents)
+    // Calcula o ratio de pitch uma vez e reutiliza até que algum parâmetro
+    // de pitch mude. Evita 3× std::pow() por spawn de grão.
+    m_pitchRatioCache = centsToRatio(m_detuneCents + m_fineTuneCents)
                       * static_cast<float>(std::pow(2.0, m_semitone / 12.0))
                       * static_cast<float>(std::pow(2.0, m_octave))
                       * static_cast<float>(std::pow(2.0, m_pitchSemitones / 12.0));
-    return ratio;
+    m_pitchRatioDirty = false;
+}
+
+float GranularOscillator::effectivePitchRatio() const noexcept
+{
+    // Usa o valor em cache se estiver válido; caso contrário, recalcula.
+    // Isso é chamado por spawnGrain() (thread de áudio), então não deve
+    // bloquear nem alocar. A invalidação é feita nos setters (thread de
+    // mensagem), então há uma pequena janela de consistência eventual.
+    if (m_pitchRatioDirty)
+    {
+        // Não podemos modificar membros não-atômicos em um método const.
+        // Retornamos o cálculo direto se o cache estiver sujo.
+        return centsToRatio(m_detuneCents + m_fineTuneCents)
+             * static_cast<float>(std::pow(2.0, m_semitone / 12.0))
+             * static_cast<float>(std::pow(2.0, m_octave))
+             * static_cast<float>(std::pow(2.0, m_pitchSemitones / 12.0));
+    }
+    return m_pitchRatioCache;
 }
 
 float GranularOscillator::applyEnvelope(float envPhase) const noexcept
@@ -283,7 +309,10 @@ bool GranularOscillator::spawnGrain()
     grain.position = pos * static_cast<double>(numSamples > 1 ? numSamples - 1 : 0);
 
     // ---- Pitch --------------------------------------------------------------
-    float ratio = effectivePitchRatio();
+    // Garante que o cache de pitch está atualizado antes de usar.
+    if (m_pitchRatioDirty)
+        updatePitchRatioCache();
+    float ratio = m_pitchRatioCache;
     if (m_pitchRandomization > 0.0f)
     {
         const float r = randomFloat() * 2.0f - 1.0f;
