@@ -49,6 +49,32 @@ juce_add_plugin(OmnivyPlugin
     FORMATS VST3
 )
 
+# ---------------------------------------------------------------------------
+# Pré-configura o vst3_helper em Release para evitar incompatibilidade de CRT.
+# O CUSTOM_COMMAND gerado pelo JUCE configura o helper sem -DCMAKE_BUILD_TYPE,
+# resultando em Debug (/MDd) que entra em conflito com o projeto principal
+# (MultiThreadedDLL /MD). Ao pré-criar o cache em Release, o CUSTOM_COMMAND
+# manterá o valor existente (Release) ao reconfigurar em tempo de build.
+# ---------------------------------------------------------------------------
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -GNinja
+        -S "${JUCE_PATH}/extras/Build/CMake/juce_vst3_helper"
+        -B "${CMAKE_BINARY_DIR}/vst3_helpers/OmnivyPlugin"
+        -Dhelper_name=vst3_helper
+        -Dsource_file="${JUCE_PATH}/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp"
+        -Dshared_defs_file="${CMAKE_BINARY_DIR}/vst3_helpers/OmnivyPlugin/shared_defs_Release.txt"
+        -Dshared_incs_file="${CMAKE_BINARY_DIR}/vst3_helpers/OmnivyPlugin/shared_incs_Release.txt"
+        -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
+        -DCMAKE_BUILD_TYPE=Release
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    RESULT_VARIABLE _omnivy_vst3_helper_result
+    OUTPUT_QUIET
+    ERROR_QUIET
+)
+if (_omnivy_vst3_helper_result)
+    message(WARNING "Falha ao pré-configurar vst3_helper em Release (código ${_omnivy_vst3_helper_result}). O VST3 pode falhar com incompatibilidade de CRT.")
+endif()
+
 target_sources(OmnivyPlugin PRIVATE
     src/Core/PluginProcessor.cpp
     src/Core/PluginEditor.cpp
