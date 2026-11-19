@@ -72,6 +72,11 @@ private:
     // Sample adquirido uma vez por processBlock via acquireSample().
     // Válido durante todo o bloco; não-owning.
     const dsp::SampleData* m_currentSample = nullptr;
+
+    // Smoother para master volume — evita clicks em automação do host
+    // e mudanças de preset. 5 ms é transparente para automação e rápido
+    // o suficiente para mudanças de preset.
+    dsp::LinearSmoother m_masterVolumeSmoother;
 };
 
 } // namespace omnivy
