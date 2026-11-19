@@ -135,6 +135,18 @@ void SynthVoice::updateParameters (const SynthParameters& params)
         o->setOddEvenBalance (add.oddEvenBalance);
         o->setFundamentalLevel (add.fundamentalLevel);
         o->setAddOutputLevel (add.outputLevel);
+
+        // Apply granular-specific parameters when the engine is Granular.
+        const auto& gran = params.getGranularParams (i);
+        o->setGrainSize (gran.grainSize);
+        o->setGrainDensity (gran.grainDensity);
+        o->setPosition (gran.position);
+        o->setPositionSpray (gran.positionSpray);
+        o->setPitch (gran.pitch);
+        o->setPitchRandomization (gran.pitchRandomization);
+        o->setGrainEnvelope (static_cast<dsp::GranularOscillator::GrainEnvelope> (gran.grainEnvelope));
+        o->setStereoSpread (gran.stereoSpread);
+        o->setPlaybackDirection (static_cast<dsp::GranularOscillator::PlaybackDirection> (gran.playbackDirection));
     }
 
     m_triggered = false;

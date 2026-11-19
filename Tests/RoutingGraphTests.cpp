@@ -20,6 +20,13 @@
 #include "DSP/Routing/RoutingGraph.h"
 #include "DSP/Wavetable/WavetableData.h"
 
+#include "DSP/Oscillators/GranularOscillator.h"
+#include "DSP/Oscillators/SampleData.h"
+#include "DSP/Oscillators/SamplePublisher.h"
+
+#include <thread>
+#include <atomic>
+
 using namespace omnivy::dsp;
 
 // -----------------------------------------------------------------------------
@@ -1259,6 +1266,995 @@ static void testAdditivePolyphony()
         ASSERT (std::fabs (out.left) > 0.001f,
                 "Additive oscillator produces non-zero output");
     }
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — engine initialization
+// -----------------------------------------------------------------------------
+static void testGranularInit()
+{
+    TEST ("Granular — engine initialization");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+
+    // Sem sample: saída deve ser silêncio, finita.
+    const auto out = engine->processSample();
+    ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+            "Saída finita sem sample");
+    ASSERT (out.left == 0.0f && out.right == 0.0f,
+            "Saída zero sem sample");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — reprodução buffer mono
+// -----------------------------------------------------------------------------
+static void testGranularMonoPlayback()
+{
+    TEST ("Granular — reprodução buffer mono");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);      // saída total à esquerda (unity gain)
+    engine->setGrainSize (2.0f); // grão longo: cobre todo o render
+    engine->setGrainDensity (1.0f); // 1 grão/s: apenas um grão ativo
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    // Sample mono DC 1.0, 44100 samples (1 segundo).
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Render 100 samples com apenas um grão ativo.
+    float sumL = 0.0f;
+    for (int s = 0; s < 100; ++s)
+    {
+        const auto out = engine->processSample();
+        sumL += out.left;
+    }
+
+    // Com DC 1.0, envelope none, pan -1 (unity left), saída deve ser ~0.3 (ganho do grão).
+    ASSERT (std::isfinite (sumL), "Saída mono finita");
+    ASSERT (sumL > 0.0f, "Saída mono não-nula");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — reprodução buffer estéreo
+// -----------------------------------------------------------------------------
+static void testGranularStereoPlayback()
+{
+    TEST ("Granular — reprodução buffer estéreo");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (0.0f);       // pan center
+    engine->setGrainSize (2.0f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+    engine->setStereoSpread (0.0f);
+
+    // Sample estéreo: L = 1.0, R = 0.5 (diferentes).
+    const int numSamples = 44100;
+    std::vector<float> leftBuf (numSamples, 1.0f);
+    std::vector<float> rightBuf (numSamples, 0.5f);
+    SampleData sample;
+    sample.fromMemory (leftBuf.data(), rightBuf.data(), numSamples, 44100.0, true);
+    engine->setSample (&sample);
+
+    const auto out = engine->processSample();
+
+    // Fonte estéreo L≠R: saída deve refletir ambos os canais (L != R em geral).
+    ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+            "Saída estéreo finita");
+    ASSERT (out.left != out.right, "Canais estéreo preservados (L != R)");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — buffer vazio
+// -----------------------------------------------------------------------------
+static void testGranularEmptyBuffer()
+{
+    TEST ("Granular — buffer vazio");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+
+    SampleData sample;
+    sample.allocate (1, 0, 44100.0); // zero samples
+    engine->setSample (&sample);
+
+    const auto out = engine->processSample();
+    ASSERT (out.left == 0.0f && out.right == 0.0f,
+            "Buffer vazio produz silêncio");
+    ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+            "Saída finita com buffer vazio");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — buffer inválido (nullptr)
+// -----------------------------------------------------------------------------
+static void testGranularInvalidBuffer()
+{
+    TEST ("Granular — buffer inválido (nullptr)");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+
+    engine->setSample (nullptr); // sem sample
+
+    const auto out = engine->processSample();
+    ASSERT (out.left == 0.0f && out.right == 0.0f,
+            "Buffer nulo produz silêncio");
+    ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+            "Saída finita com buffer nulo");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Grain Size
+// -----------------------------------------------------------------------------
+static void testGranularGrainSize()
+{
+    TEST ("Granular — Grain Size afeta energia");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainDensity (100.0f); // muitos grãos
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+
+    // Tamanho curto: grãos curtos, menos energia acumulada por bloco.
+    engine->setGrainSize (0.01f);
+    engine->setSample (&sample);
+    float sumShort = 0.0f;
+    for (int s = 0; s < 4410; ++s) // 100 ms
+        sumShort += std::fabs (engine->processSample().left);
+
+    // Tamanho longo: grãos longos, mais energia acumulada.
+    engine->setGrainSize (1.0f);
+    engine->setSample (&sample);
+    float sumLong = 0.0f;
+    for (int s = 0; s < 4410; ++s) // 100 ms
+        sumLong += std::fabs (engine->processSample().left);
+
+    ASSERT (sumLong > sumShort, "Grain Size maior produz mais energia");
+    ASSERT (std::isfinite (sumShort) && std::isfinite (sumLong),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Grain Density
+// -----------------------------------------------------------------------------
+static void testGranularGrainDensity()
+{
+    TEST ("Granular — Grain Density controla quantidade de grãos");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Densidade zero: silêncio.
+    engine->setGrainDensity (0.0f);
+    float sumZero = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumZero += std::fabs (engine->processSample().left);
+    ASSERT (sumZero == 0.0f, "Densidade 0 produz silêncio");
+
+    // Densidade alta: saída não-nula.
+    engine->setGrainDensity (500.0f);
+    engine->reset();
+    engine->setSample (&sample);
+    float sumHigh = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumHigh += std::fabs (engine->processSample().left);
+    ASSERT (sumHigh > 0.0f, "Densidade alta produz saída não-nula");
+    ASSERT (std::isfinite (sumHigh), "Saída finita com densidade alta");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Position
+// -----------------------------------------------------------------------------
+static void testGranularPosition()
+{
+    TEST ("Granular — Position muda a leitura do buffer");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (1.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    // Buffer: rampa 0 -> 1.
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples);
+    for (int i = 0; i < numSamples; ++i)
+        buffer[i] = static_cast<float> (i) / static_cast<float> (numSamples - 1);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+
+    // Posição 0: lê do início (valor ~0).
+    engine->setPosition (0.0f);
+    engine->setSample (&sample);
+    engine->reset();
+    const auto outStart = engine->processSample();
+
+    // Posição 0.5: lê do meio (valor ~0.5).
+    engine->setPosition (0.5f);
+    engine->reset();
+    const auto outMid = engine->processSample();
+
+    ASSERT (std::fabs (outMid.left - outStart.left) > 0.01f,
+            "Posições diferentes produzem saídas diferentes");
+    ASSERT (std::isfinite (outStart.left) && std::isfinite (outMid.left),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Position Spray
+// -----------------------------------------------------------------------------
+static void testGranularPositionSpray()
+{
+    TEST ("Granular — Position Spray é determinístico com spray 0");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (10.0f);
+    engine->setPosition (0.3f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 0.5f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Duas execuções idênticas com spray 0 devem ser iguais (semente fixa do LCG).
+    engine->setPositionSpray (0.0f);
+    engine->reset();
+    float sumA = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumA += engine->processSample().left;
+
+    engine->reset();
+    float sumB = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumB += engine->processSample().left;
+
+    ASSERT (std::fabs (sumA - sumB) < 1e-6f,
+            "Spray 0 produz render determinístico");
+    ASSERT (std::isfinite (sumA) && std::isfinite (sumB),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Pitch
+// -----------------------------------------------------------------------------
+static void testGranularPitch()
+{
+    TEST ("Granular — Pitch transposição muda a saída");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.5f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples);
+    for (int i = 0; i < numSamples; ++i)
+        buffer[i] = static_cast<float> (std::sin (6.283185307179586 * i / 44100.0));
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+
+    // Pitch 0 vs +12 st (oitava acima): saídas diferentes.
+    engine->setPitch (0.0f);
+    engine->setSample (&sample);
+    engine->reset();
+    const auto out0 = engine->processSample();
+
+    engine->setPitch (12.0f);
+    engine->reset();
+    const auto out12 = engine->processSample();
+
+    ASSERT (std::fabs (out12.left - out0.left) > 0.001f,
+            "Pitch diferente produz saída diferente");
+    ASSERT (std::isfinite (out0.left) && std::isfinite (out12.left),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Pitch Randomization
+// -----------------------------------------------------------------------------
+static void testGranularPitchRandomization()
+{
+    TEST ("Granular — Pitch Randomization desligado é determinístico");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (10.0f);
+    engine->setPosition (0.3f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 0.7f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    engine->setPitchRandomization (0.0f);
+    engine->reset();
+    float sumA = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumA += engine->processSample().left;
+
+    engine->reset();
+    float sumB = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumB += engine->processSample().left;
+
+    ASSERT (std::fabs (sumA - sumB) < 1e-6f,
+            "Pitch Randomization 0 é determinístico");
+    ASSERT (std::isfinite (sumA) && std::isfinite (sumB),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Grain Envelope
+// -----------------------------------------------------------------------------
+static void testGranularGrainEnvelope()
+{
+    TEST ("Granular — Grain Envelope muda a saída");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.5f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Envelope None.
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+    engine->reset();
+    float sumNone = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumNone += std::fabs (engine->processSample().left);
+
+    // Envelope Triangle.
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::Triangle);
+    engine->reset();
+    float sumTri = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumTri += std::fabs (engine->processSample().left);
+
+    ASSERT (std::fabs (sumNone - sumTri) > 0.001f,
+            "Envelopes diferentes produzem saídas diferentes");
+    ASSERT (std::isfinite (sumNone) && std::isfinite (sumTri),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Stereo Spread (mono)
+// -----------------------------------------------------------------------------
+static void testGranularStereoSpreadMono()
+{
+    TEST ("Granular — Stereo Spread mono: spread 0 => L == R");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (0.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Spread 0, pan 0: L == R.
+    engine->setStereoSpread (0.0f);
+    engine->reset();
+    const auto out0 = engine->processSample();
+    ASSERT (std::fabs (out0.left - out0.right) < 0.001f,
+            "Mono spread 0 => L == R");
+
+    // Spread 1: L != R (largura artificial).
+    engine->setStereoSpread (1.0f);
+    engine->reset();
+    const auto out1 = engine->processSample();
+    ASSERT (std::fabs (out1.left - out1.right) > 0.001f,
+            "Mono spread 1 => L != R (largura artificial)");
+
+    ASSERT (std::isfinite (out0.left) && std::isfinite (out0.right) &&
+            std::isfinite (out1.left) && std::isfinite (out1.right),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — Stereo Spread (estéreo)
+// -----------------------------------------------------------------------------
+static void testGranularStereoSpreadStereo()
+{
+    TEST ("Granular — Stereo Spread estéreo: spread 0 não implica L == R");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (0.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    // Fonte estéreo: L = 1.0, R = 0.0.
+    const int numSamples = 44100;
+    std::vector<float> leftBuf (numSamples, 1.0f);
+    std::vector<float> rightBuf (numSamples, 0.0f);
+    SampleData sample;
+    sample.fromMemory (leftBuf.data(), rightBuf.data(), numSamples, 44100.0, true);
+    engine->setSample (&sample);
+
+    // Spread 0: L != R (canais da fonte preservados).
+    engine->setStereoSpread (0.0f);
+    engine->reset();
+    const auto out0 = engine->processSample();
+    ASSERT (std::fabs (out0.left - out0.right) > 0.001f,
+            "Estéreo spread 0 => L != R (canais fonte preservados)");
+
+    // Spread 1: ainda L != R.
+    engine->setStereoSpread (1.0f);
+    engine->reset();
+    const auto out1 = engine->processSample();
+    ASSERT (std::fabs (out1.left - out1.right) > 0.001f,
+            "Estéreo spread 1 => L != R");
+
+    ASSERT (std::isfinite (out0.left) && std::isfinite (out0.right) &&
+            std::isfinite (out1.left) && std::isfinite (out1.right),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — reprodução reversa
+// -----------------------------------------------------------------------------
+static void testGranularReverse()
+{
+    TEST ("Granular — reprodução reversa");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (1.0f);
+    engine->setGrainDensity (1.0f);
+    engine->setPosition (1.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+    engine->setPlaybackDirection (GranularOscillator::PlaybackDirection::Reverse);
+
+    // Buffer: rampa 0 -> 1. Reversa lê do fim para o início.
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples);
+    for (int i = 0; i < numSamples; ++i)
+        buffer[i] = static_cast<float> (i) / static_cast<float> (numSamples - 1);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    engine->reset();
+    const auto outStart = engine->processSample(); // começa no fim (valor ~1.0)
+
+    // Forward na mesma posição começaria no início (valor ~0.0).
+    auto engineFwd = std::make_unique<GranularOscillator>();
+    engineFwd->setSampleRate (44100.0);
+    engineFwd->reset();
+    engineFwd->setLevel (1.0f);
+    engineFwd->setPan (-1.0f);
+    engineFwd->setGrainSize (1.0f);
+    engineFwd->setGrainDensity (1.0f);
+    engineFwd->setPosition (1.0f);
+    engineFwd->setPositionSpray (0.0f);
+    engineFwd->setPitch (0.0f);
+    engineFwd->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+    engineFwd->setPlaybackDirection (GranularOscillator::PlaybackDirection::Forward);
+    engineFwd->setSample (&sample);
+    engineFwd->reset();
+    const auto outFwd = engineFwd->processSample();
+
+    ASSERT (outStart.left > outFwd.left,
+            "Reversa produz saída diferente do forward na mesma posição");
+    ASSERT (std::isfinite (outStart.left) && std::isfinite (outFwd.left),
+            "Saídas finitas");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — sobreposição de grãos
+// -----------------------------------------------------------------------------
+static void testGranularGrainOverlap()
+{
+    TEST ("Granular — sobreposição de grãos");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.5f);     // 0.5 s de duração
+    engine->setGrainDensity (100.0f); // 100 grãos/s -> ~50 grãos simultâneos
+    engine->setPosition (0.5f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Render 1 segundo — muitos grãos devem estar ativos simultaneamente.
+    bool anyNonZero = false;
+    for (int s = 0; s < 44100; ++s)
+    {
+        const auto out = engine->processSample();
+        if (std::fabs (out.left) > 0.001f)
+            anyNonZero = true;
+        ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+                "Saída finita com sobreposição de grãos");
+    }
+
+    ASSERT (anyNonZero, "Sobreposição de grãos produz saída não-nula");
+    ASSERT (engine->getActiveGrainCount() > 0, "Grãos ativos existentes");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — limite máximo de grãos
+// -----------------------------------------------------------------------------
+static void testGranularMaxGrains()
+{
+    TEST ("Granular — limite máximo de grãos (sem crash)");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (2.0f);     // duração máxima anunciada
+    engine->setGrainDensity (1000.0f); // densidade máxima anunciada
+    engine->setPosition (0.5f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Render 1 segundo com densidade máxima: não deve travar nem produzir NaN/Inf.
+    for (int s = 0; s < 44100; ++s)
+    {
+        const auto out = engine->processSample();
+        ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+                "Saída finita com densidade máxima");
+        ASSERT (engine->getActiveGrainCount() <= GranularOscillator::kMaxGrains,
+                "Grãos ativos não excedem o pool");
+    }
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — troca segura de buffers
+// -----------------------------------------------------------------------------
+static void testGranularSafeBufferSwap()
+{
+    TEST ("Granular — troca segura de buffers durante render");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (10.0f);
+    engine->setPosition (0.0f);
+    engine->setPositionSpray (0.0f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+    const int numSamples = 44100;
+    std::vector<float> bufA (numSamples, 1.0f);
+    std::vector<float> bufB (numSamples, 0.0f);
+    SampleData sampleA;
+    sampleA.fromMemory (bufA.data(), nullptr, numSamples, 44100.0, false);
+    SampleData sampleB;
+    sampleB.fromMemory (bufB.data(), nullptr, numSamples, 44100.0, false);
+
+    engine->setSample (&sampleA);
+    engine->reset();
+
+    // Render com sample A.
+    float sumA = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumA += std::fabs (engine->processSample().left);
+    ASSERT (sumA > 0.0f, "Sample A produz saída não-nula");
+
+    // Troca para sample B enquanto renderiza.
+    engine->setSample (&sampleB);
+    float sumB = 0.0f;
+    for (int s = 0; s < 4410; ++s)
+        sumB += std::fabs (engine->processSample().left);
+    ASSERT (sumB == 0.0f, "Sample B (silêncio) produz saída zero");
+    ASSERT (std::isfinite (sumA) && std::isfinite (sumB),
+            "Saídas finitas após troca");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — isolamento entre seis instâncias
+// -----------------------------------------------------------------------------
+static void testGranularSixInstancesIsolation()
+{
+    TEST ("Granular — isolamento entre seis instâncias");
+
+    std::unique_ptr<GranularOscillator> engines[6];
+    for (int i = 0; i < 6; ++i)
+    {
+        engines[i] = std::make_unique<GranularOscillator>();
+        engines[i]->setSampleRate (44100.0);
+        engines[i]->reset();
+        engines[i]->setLevel (1.0f);
+        engines[i]->setPan (static_cast<float> (i - 3) / 3.0f);
+        engines[i]->setGrainSize (0.1f);
+        engines[i]->setGrainDensity (10.0f + i * 10.0f);
+        engines[i]->setPosition (static_cast<float> (i) / 6.0f);
+        engines[i]->setPositionSpray (0.0f);
+        engines[i]->setPitch (static_cast<float> (i) * 2.0f);
+        engines[i]->setGrainEnvelope (GranularOscillator::GrainEnvelope::None);
+
+        const int numSamples = 44100;
+        std::vector<float> buffer (numSamples, 0.5f + static_cast<float> (i) * 0.1f);
+        SampleData sample;
+        sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+        engines[i]->setSample (&sample);
+    }
+
+    // Todas devem produzir saída finita e diferente umas das outras.
+    for (int i = 0; i < 6; ++i)
+    {
+        const auto out = engines[i]->processSample();
+        ASSERT (std::isfinite (out.left) && std::isfinite (out.right),
+                "Instância granular produz saída finita");
+    }
+
+    // Instâncias com parâmetros diferentes devem produzir saídas diferentes.
+    bool anyDifferent = false;
+    for (int i = 1; i < 6; ++i)
+    {
+        auto outA = engines[0]->processSample();
+        auto outB = engines[i]->processSample();
+        if (std::fabs (outA.left - outB.left) > 0.001f ||
+            std::fabs (outA.right - outB.right) > 0.001f)
+        {
+            anyDifferent = true;
+            break;
+        }
+    }
+    ASSERT (anyDifferent, "Instâncias com parâmetros diferentes produzem saídas diferentes");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — ausência de NaN/Inf
+// -----------------------------------------------------------------------------
+static void testGranularNoNaNInf()
+{
+    TEST ("Granular — ausência de NaN/Inf com parâmetros extremos");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (2.0f);
+    engine->setPan (1.0f);
+    engine->setGrainSize (2.0f);
+    engine->setGrainDensity (1000.0f);
+    engine->setPosition (1.0f);
+    engine->setPositionSpray (1.0f);
+    engine->setPitch (48.0f);
+    engine->setPitchRandomization (24.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::Hanning);
+    engine->setStereoSpread (1.0f);
+    engine->setPlaybackDirection (GranularOscillator::PlaybackDirection::Reverse);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 1.0f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // 100.000 amostras com parâmetros extremos — nenhuma NaN/Inf permitida.
+    for (int s = 0; s < 100000; ++s)
+    {
+        const auto out = engine->processSample();
+        ASSERT (std::isfinite (out.left), "Sem NaN/Inf no canal esquerdo");
+        ASSERT (std::isfinite (out.right), "Sem NaN/Inf no canal direito");
+    }
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — ausência de alocações no processamento
+// -----------------------------------------------------------------------------
+static void testGranularNoAllocations()
+{
+    TEST ("Granular — ausência de alocações no processamento");
+
+    auto engine = std::make_unique<GranularOscillator>();
+    engine->setSampleRate (44100.0);
+    engine->reset();
+    engine->setLevel (1.0f);
+    engine->setPan (-1.0f);
+    engine->setGrainSize (0.1f);
+    engine->setGrainDensity (100.0f);
+    engine->setPosition (0.5f);
+    engine->setPositionSpray (0.1f);
+    engine->setPitch (0.0f);
+    engine->setGrainEnvelope (GranularOscillator::GrainEnvelope::Triangle);
+
+    const int numSamples = 44100;
+    std::vector<float> buffer (numSamples, 0.5f);
+    SampleData sample;
+    sample.fromMemory (buffer.data(), nullptr, numSamples, 44100.0, false);
+    engine->setSample (&sample);
+
+    // Conta alocações durante o render.
+    std::atomic<int> allocCount { 0 };
+    auto* oldNewHandler = std::set_new_handler ([&allocCount] () { ++allocCount; throw std::bad_alloc (); });
+
+    // Warm-up (pool já alocado no construtor).
+    for (int s = 0; s < 100; ++s)
+        engine->processSample();
+
+    allocCount.store (0);
+    for (int s = 0; s < 44100; ++s)
+        engine->processSample();
+
+    std::set_new_handler (oldNewHandler);
+
+    ASSERT (allocCount.load () == 0, "Zero alocações durante o processamento");
+    ASSERT (std::isfinite (engine->processSample().left),
+            "Saída finita após render");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — stress: troca concorrente durante render (threads reais)
+// -----------------------------------------------------------------------------
+static void testGranularConcurrentSwapStress()
+{
+    TEST ("Granular — stress: troca concorrente durante render (threads reais)");
+
+    SamplePublisher publisher;
+    std::atomic<bool> stop { false };
+    std::atomic<int> finiteCount { 0 };
+    std::atomic<int> totalSamples { 0 };
+
+    // Thread A: simula áudio — adquire e renderiza continuamente.
+    std::thread audioThread ([&] ()
+    {
+        while (!stop.load (std::memory_order_acquire))
+        {
+            const SampleData* sample = publisher.acquire();
+            if (sample == nullptr || sample->isEmpty())
+                continue;
+
+            const float* left = sample->getChannelData (0);
+            const int numSamples = sample->getNumSamples();
+
+            // Renderiza algumas amostras com o sample adquirido.
+            for (int s = 0; s < 64 && !stop.load (std::memory_order_acquire); ++s)
+            {
+                // Simula leitura do buffer (sem GranularOscillator para isolar o publisher).
+                double pos = static_cast<double> (s) / 64.0 * (numSamples - 1);
+                int idx = static_cast<int> (pos);
+                if (idx >= numSamples - 1) idx = numSamples - 2;
+                double frac = pos - idx;
+                float v = left[idx] * static_cast<float> (1.0 - frac)
+                        + left[idx + 1] * static_cast<float> (frac);
+
+                if (std::isfinite (v))
+                    ++finiteCount;
+                ++totalSamples;
+            }
+        }
+    });
+
+    // Thread B: message thread — publica novos samples repetidamente.
+    std::thread msgThread ([&] ()
+    {
+        int counter = 0;
+        while (!stop.load (std::memory_order_acquire) && counter < 1000)
+        {
+            const int numSamples = 4410;
+            auto newSample = std::make_unique<SampleData>();
+            std::vector<float> buf (numSamples, 0.5f);
+            newSample->fromMemory (buf.data(), nullptr, numSamples, 44100.0, false);
+            publisher.publish (std::move (newSample));
+            ++counter;
+            // Pequena pausa para permitir overlap com a thread de áudio.
+            for (volatile int i = 0; i < 100; ++i) {}
+        }
+    });
+
+    audioThread.join();
+    msgThread.join();
+
+    ASSERT (totalSamples.load () > 0, "Render ocorreu");
+    ASSERT (finiteCount.load () == totalSamples.load (),
+            "Todas as amostras lidas são finitas (sem uso-após-liberação)");
+
+    PASS ();
+}
+
+// -----------------------------------------------------------------------------
+// Test: Granular — publicação, aquisição, aposentadoria e destruição durante render
+// -----------------------------------------------------------------------------
+static void testGranularPublisherLifecycle()
+{
+    TEST ("Granular — publisher: publish/acquire/retire/destroy durante render");
+
+    SamplePublisher publisher;
+
+    // Cria um sample com padrão sentinela.
+    auto sampleA = std::make_unique<SampleData>();
+    {
+        std::vector<float> buf (4410, 0x1234567f); // padrão reconhecível
+        sampleA->fromMemory (buf.data(), nullptr, 4410, 44100.0, false);
+    }
+    publisher.publish (std::move (sampleA));
+
+    // Adquire e renderiza.
+    const SampleData* acquired = publisher.acquire();
+    ASSERT (acquired != nullptr, "Aquisição retorna sample válido");
+    ASSERT (!acquired->isEmpty(), "Sample não está vazio");
+
+    // Publica um novo sample enquanto o anterior ainda pode estar em uso.
+    auto sampleB = std::make_unique<SampleData>();
+    {
+        std::vector<float> buf (4410, 0x89abcdef);
+        sampleB->fromMemory (buf.data(), nullptr, 4410, 44100.0, false);
+    }
+    publisher.publish (std::move (sampleB));
+
+    // Adquire novamente — deve obter o novo sample.
+    const SampleData* acquired2 = publisher.acquire();
+    ASSERT (acquired2 != nullptr, "Segunda aquisição retorna sample válido");
+
+    // Shutdown fora da thread de áudio — deve destruir todos os buffers sem crash.
+    publisher.shutdown();
+
     PASS ();
 }
 

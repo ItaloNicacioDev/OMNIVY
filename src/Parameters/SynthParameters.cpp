@@ -229,6 +229,18 @@ void SynthParameters::updateFromValueTreeState (juce::AudioProcessorValueTreeSta
         add.oddEvenBalance = *vts.getRawParameterValue (oscAddOddEven (i));
         add.fundamentalLevel = *vts.getRawParameterValue (oscAddFundLevel (i));
         add.outputLevel = *vts.getRawParameterValue (oscAddOutputLevel (i));
+
+        // ---- Granular synthesis parameters ----------------------------------
+        auto& gran = m_granParams[i];
+        gran.grainSize = *vts.getRawParameterValue (oscGranGrainSize (i));
+        gran.grainDensity = *vts.getRawParameterValue (oscGranDensity (i));
+        gran.position = *vts.getRawParameterValue (oscGranPosition (i));
+        gran.positionSpray = *vts.getRawParameterValue (oscGranPositionSpray (i));
+        gran.pitch = *vts.getRawParameterValue (oscGranPitch (i));
+        gran.pitchRandomization = *vts.getRawParameterValue (oscGranPitchRandomization (i));
+        gran.grainEnvelope = static_cast<int> (*vts.getRawParameterValue (oscGranGrainEnvelope (i)));
+        gran.stereoSpread = *vts.getRawParameterValue (oscGranStereoSpread (i));
+        gran.playbackDirection = static_cast<int> (*vts.getRawParameterValue (oscGranPlaybackDirection (i)));
     }
 
     m_filter.enabled   = *vts.getRawParameterValue (FilterEnabled) > 0.5f;

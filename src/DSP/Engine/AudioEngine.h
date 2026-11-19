@@ -1,9 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include "DSP/Engine/VoiceManager.h"
 #include "DSP/Engine/OscillatorEngine.h"
+#include "DSP/Engine/OscillatorEngineFactory.h"
 #include "DSP/Routing/RoutingGraph.h"
+#include "DSP/Oscillators/SamplePublisher.h"
 #include "DSP/Wavetable/WavetableData.h"
 #include "Parameters/SynthParameters.h"
 
@@ -32,6 +35,12 @@ public:
     // --- Routing access (message thread) ----------------------------------
     dsp::RoutingGraph& getRoutingGraph() noexcept { return m_routingGraph; }
 
+    // --- Sample access ------------------------------------------------------
+    // Publica um sample (message thread). O áudio adquire o snapshot via
+    // acquireSample() no início de cada processBlock.
+    void publishSample (std::unique_ptr<SampleData> sample) noexcept;
+    const SampleData* acquireSample() noexcept;
+
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;
     double getSampleRate() const noexcept { return m_sampleRate; }
@@ -50,6 +59,7 @@ private:
     dsp::WavetableData m_wavetable;
     VoiceManager m_voiceManager;
     dsp::RoutingGraph m_routingGraph;
+    dsp::SamplePublisher m_samplePublisher;
     const SynthParameters* m_parameters = nullptr;
 
     float m_masterVolume = 0.7f;
@@ -57,6 +67,10 @@ private:
     float m_testPhase = 0.0f;
 
     float m_pitchBendSemitones = 0.0f;
+
+    // Sample adquirido uma vez por processBlock via acquireSample().
+    // Válido durante todo o bloco; não-owning.
+    const SampleData* m_currentSample = nullptr;
 };
 
 } // namespace omnivy
