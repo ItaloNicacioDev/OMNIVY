@@ -93,11 +93,14 @@ public:
     // Shutdown: chamado fora da thread de áudio (releaseResources /
     // destruição do plugin). PRECONDICÃO: a thread de áudio deve já ter
     // parado de chamar acquire() — o host garante isso ao chamar
-    // releaseResources() antes da destruição do processor. Destroi todos os
-    // buffers de sample aposentados e o buffer atual. Não introduz locks,
-    // não bloqueia e não espera na thread de áudio. É idempotente: chamar
-    // múltiplas vezes é seguro (delete nullptr e lista de aposentadoria já
-    // vazia são no-op).
+    // releaseResources() antes da destruição do processor. Além disso,
+    // publish() NÃO pode ocorrer simultaneamente a shutdown(); ambas
+    // executam na thread de mensagem e a ausência de concorrência entre
+    // elas é uma pré-condição do ciclo de vida do processor. Destroi todos
+    // os buffers de sample aposentados e o buffer atual. Não introduz
+    // locks, não bloqueia e não espera na thread de áudio. É idempotente:
+    // chamar múltiplas vezes é seguro (delete nullptr e lista de
+    // aposentadoria já vazia são no-op).
     void shutdown() noexcept
     {
         // Força o áudio a anunciar o epoch mais recente (se ainda estiver
