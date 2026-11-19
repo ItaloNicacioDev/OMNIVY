@@ -136,6 +136,48 @@ Partials cuja frequência (`fundamental × ratio`) excede `0.49 × sampleRate` s
 ### Processamento por voz
 Cada voz possui seu próprio `AdditiveOscillator` com fase e estado independentes. O `phaseIncrement` é calculado a partir da frequência efetiva (considerando octave, semitone, detune, fine-tune). Cada partial soma `amplitude × sin(2π × (phase × ratio + phaseOffset))`.
 
+## Granular Engine (P3.5 — Implementado)
+
+O `GranularOscillator` implementa síntese granular genuína: um sample é dividido em múltiplos grãos (pequenos segmentos) que são reproduzidos simultaneamente com posições, durações, pitches e pan independentes.
+
+### Arquitetura
+- **Pool de grãos**: `kMaxGrains = 4096` grãos pré-alocados em `std::array` fixo (zero alocação no audio thread). Dimensionado para suportar até 2.048 grãos simultâneos (1.000 grãos/s × 2,0 s de duração) com margem de segurança.
+- **Cada grão**: posição de leitura (double), incremento de posição (pitch × taxa de sample), ganho, pan, fase do envelope, amostras restantes.
+- **Spawn contínuo**: acumulador fracionário de densidade garante nascimento de grãos sem interrupções abruptas na mudança de densidade.
+- **Leitura do buffer**: interpolação linear no `SampleData` (mono ou estéreo). Suporte a diferentes sample rates entre sample e projeto.
+- **Direção de reprodução**: Forward e Reverse.
+- **Envelope por grão**: None, Linear, Triangle, Hanning.
+- **Estéreo**: pan por grão com constant-power; Stereo Spread controla largura da imagem (mono ganha largura artificial; estéreo preserva canais da fonte).
+- **Proteção**: clamp de parâmetros, `std::isfinite` na saída, silenciamento quando buffer inválido/vazio.
+
+### Gerenciamento de Sample (RCU)
+- `SampleData` é imutável após construção; carregado fora da thread de áudio.
+- `SamplePublisher` (um por instância do plugin, membro de `AudioEngine`) implementa publicação RCU/epoch-based:
+  - Áudio: `acquire()` uma vez por `processBlock` — wait-free, sem alocação, sem mutex, sem destruição.
+  - Mensagem: `publish(std::unique_ptr<SampleData>)` — única responsável por destruir buffers antigos.
+  - Ordenação de memória: `m_current` (acq_rel), `m_audioSeenEpoch` (release/acquire), `m_globalEpoch` (acq_rel).
+  - Reclamation só destrói após o áudio passar por uma fronteira de bloco comprovadamente segura (`audioSeenEpoch >= retireEpoch`).
+- Todas as vozes e slots compartilham o mesmo `SampleData` durante um bloco (sem duplicação).
+
+### Parâmetros
+| Parâmetro | Range | Descrição |
+|-----------|-------|-----------|
+| grainSize | 0.01..2.0 s | Duração de cada grão |
+| grainDensity | 0..1000 /s | Quantidade de grãos gerados por segundo |
+| position | 0..1 | Posição de leitura no sample |
+| positionSpray | 0..1 | Aleatoriedade da posição |
+| pitch | -48..+48 st | Transposição dos grãos |
+| pitchRandomization | 0..24 st | Variação aleatória de pitch |
+| grainEnvelope | 0..3 | None/Linear/Triangle/Hanning |
+| stereoSpread | 0..1 | Distribuição espacial |
+| playbackDirection | 0..1 | Forward/Reverse |
+
+### Segurança em tempo real
+- Zero alocações dinâmicas em `processSample()` (pool fixo `std::array`).
+- Zero mutexes, zero operações de disco, zero spin-waits na thread de áudio.
+- Nenhuma destruição de buffers na thread de áudio (exclusivamente fora dela).
+- Destruição de `SampleData` antigo apenas após fronteira de bloco comprovadamente segura.
+
 ## Status da Fase 1
 
 - [x] PluginProcessor implementado (estrutura base)
