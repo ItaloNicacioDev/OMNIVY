@@ -202,9 +202,9 @@ dsp::StereoFrame SynthVoice::render()
     }
 
     // Apply key-tracked cutoff per voice (note 69 = 440 Hz reference).
-    const float keyTrackRatio = static_cast<float> (std::pow (2.0,
-        (static_cast<double> (m_note) - 69.0) / 12.0 * m_filterKeyTrack));
-    const float cutoff = m_filterCutoffBase * keyTrackRatio;
+    // m_keyTrackRatio é pré-calculado em noteOn() e updateParameters()
+    // para evitar std::pow() por sample.
+    const float cutoff = m_filterCutoffBase * m_keyTrackRatio;
     m_filterLeft.setCutoff (cutoff);
     m_filterRight.setCutoff (cutoff);
 
