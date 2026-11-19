@@ -2,6 +2,7 @@
 
 #include "DSP/Oscillators/AdditiveOscillator.h"
 #include "DSP/Oscillators/FMOscillator.h"
+#include "DSP/Oscillators/GranularOscillator.h"
 #include "DSP/Oscillators/VAOscillator.h"
 #include "DSP/Wavetable/WavetableOscillator.h"
 
@@ -48,6 +49,9 @@ void OscillatorEngine::recreateOscillator()
             break;
         case EngineType::Additive:
             m_oscillator = std::make_unique<AdditiveOscillator>();
+            break;
+        case EngineType::Granular:
+            m_oscillator = std::make_unique<GranularOscillator>();
             break;
         case EngineType::VA:
         default:
