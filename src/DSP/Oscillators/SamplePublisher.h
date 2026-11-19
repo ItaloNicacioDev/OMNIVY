@@ -75,7 +75,7 @@ public:
     void publish (std::unique_ptr<SampleData> next) noexcept
     {
         SampleData* raw = next.get();
-        SampleData* old = m_current.exchange (raw, std::memory_order_acq_rel);
+        const SampleData* old = m_current.exchange (raw, std::memory_order_acq_rel);
         next.release(); // propriedade agora pertence a m_current
 
         if (old == nullptr)
