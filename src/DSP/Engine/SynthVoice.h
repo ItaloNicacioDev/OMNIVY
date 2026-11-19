@@ -77,6 +77,7 @@ private:
     bool m_filterEnabled = true;
     float m_filterCutoffBase = 2000.0f;
     float m_filterKeyTrack = 0.0f;
+    float m_keyTrackRatio = 1.0f; // pré-calculado em noteOn() e updateParameters()
 
     double m_sampleRate = 44100.0;
 };
