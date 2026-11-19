@@ -42,6 +42,14 @@ public:
     void publishSample (std::unique_ptr<dsp::SampleData> sample) noexcept;
     const dsp::SampleData* acquireSample() noexcept;
 
+    // --- Shutdown -----------------------------------------------------------
+    // Desliga o SamplePublisher, destruindo todos os buffers de sample
+    // aposentados e o buffer atual. Deve ser chamado apenas quando a thread
+    // de áudio parou (ex.: após releaseResources() ou antes da destruição do
+    // plugin). Não introduz locks, não bloqueia e não espera na thread de áudio.
+    // É idempotente: chamar múltiplas vezes é seguro.
+    void shutdown() noexcept;
+
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept;
     double getSampleRate() const noexcept { return m_sampleRate; }
