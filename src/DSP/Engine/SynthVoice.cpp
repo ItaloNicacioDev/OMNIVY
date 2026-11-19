@@ -55,6 +55,14 @@ void SynthVoice::noteOn (int midiNote, float velocity, double /*sampleRate*/)
 
     m_ampEnv.noteOn();
     updateOscillatorFrequencies();
+    updateKeyTrackRatio();
+}
+
+void SynthVoice::updateKeyTrackRatio() noexcept
+{
+    // Pré-calcula o ratio de key tracking para evitar std::pow() por sample.
+    m_keyTrackRatio = static_cast<float> (std::pow (2.0,
+        (static_cast<double> (m_note) - 69.0) / 12.0 * m_filterKeyTrack));
 }
 
 void SynthVoice::noteOff()
@@ -93,6 +101,7 @@ void SynthVoice::updateParameters (const SynthParameters& params)
     m_filterEnabled = params.getFilter().enabled;
     m_filterCutoffBase = params.getFilter().cutoff;
     m_filterKeyTrack = params.getFilter().keyTrack;
+    updateKeyTrackRatio();
     m_filterLeft.setType (static_cast<dsp::FilterType> (params.getFilter().type));
     m_filterRight.setType (static_cast<dsp::FilterType> (params.getFilter().type));
     m_filterLeft.setResonance (params.getFilter().resonance);
