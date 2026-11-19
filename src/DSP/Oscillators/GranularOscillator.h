@@ -144,6 +144,12 @@ private:
     float m_stereoSpread = 0.5f;         // 0 .. 1
     PlaybackDirection m_playbackDirection = PlaybackDirection::Forward;
 
+    // ---- Ganho escalado por densidade esperada ------------------------------
+    // O ganho por grão é reduzido à medida que o número esperado de grãos
+    // simultâneos cresce, preservando headroom com sobreposição intensa sem
+    // alterar o volume em densidades baixas (pouca sobreposição).
+    float m_grainGainScale = 1.0f;
+
     // ---- Pool de grãos (pré-alocado) ----------------------------------------
     Grain m_grains[kMaxGrains];
     std::array<int, kMaxGrains> m_activeList;
