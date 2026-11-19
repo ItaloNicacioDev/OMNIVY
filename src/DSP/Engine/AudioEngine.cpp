@@ -65,7 +65,7 @@ void AudioEngine::setParameters (const SynthParameters& parameters)
     m_voiceManager.setPolyphony (parameters.getPolyphony());
 }
 
-void AudioEngine::setMasterVolume (float volume)   { m_masterVolume = volume; }
+void AudioEngine::setMasterVolume (float volume)   { m_masterVolume.store (volume); }
 void AudioEngine::setPitchBendSemitones (float semitones)
 {
     m_pitchBendSemitones = semitones;
@@ -140,7 +140,7 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     }
 
     // Apply master volume (suavizado para evitar clicks em automação).
-    m_masterVolumeSmoother.setTarget (m_masterVolume);
+    m_masterVolumeSmoother.setTarget (m_masterVolume.load ());
     const float smoothedMasterVolume = m_masterVolumeSmoother.getNextValue();
     if (smoothedMasterVolume != 1.0f)
     {
