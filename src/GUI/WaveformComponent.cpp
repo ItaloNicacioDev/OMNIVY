@@ -62,8 +62,8 @@ juce::Path WaveformComponent::buildWaveformPath (dsp::Waveform w, int numPoints)
                 y = (phase < juce::MathConstants<float>::pi) ? -1.0f : 1.0f;
                 break;
             case dsp::Waveform::Triangle:
-                y = 2.0f * std::fabsf (fmodf (phase + juce::MathConstants<float>::piOverTwo,
-                                              twoPi) / juce::MathConstants<float>::pi - 1.0f) - 1.0f;
+                y = 2.0f * std::fabsf (fmodf (phase + (float) juce::MathConstants<double>::pi / 2.0,
+                                              twoPi) / (float) juce::MathConstants<double>::pi - 1.0f) - 1.0f;
                 break;
             case dsp::Waveform::Pulse:
                 y = (phase < juce::MathConstants<float>::pi * 0.75f) ? -1.0f : 1.0f;
