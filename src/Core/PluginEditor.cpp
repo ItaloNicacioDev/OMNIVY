@@ -1,5 +1,7 @@
 #include "PluginEditor.h"
 
+#include "PluginProcessor.h"
+
 #include "GUI/DesignSystem.h"
 #include "GUI/OscillatorPanel.h"
 #include "GUI/WavetablePanel.h"
@@ -12,6 +14,8 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 
 #include <cmath>
 #include <memory>
@@ -323,7 +327,27 @@ public:
 
         juce::Path shape;
         float shear = 8.0f;
-        shape.addParallelogram (area, shear);
+        shape.addRectangle (area);
+        // Aplica cisalhamento manual (paralelogramo): desloca a linha superior para a direita
+        // e a inferior para a esquerda, mantendo o centro.
+        juce::Path skewed;
+        // Reconstruímos como um polígono de 4 pontos com cisalhamento.
+        auto x = area.getX();
+        auto y = area.getY();
+        auto w = area.getWidth();
+        auto h = area.getHeight();
+        juce::Point<float> pts[4] = {
+            { x + shear * 0.5f, y },
+            { x + w + shear * 0.5f, y },
+            { x + w - shear * 0.5f, y + h },
+            { x - shear * 0.5f, y + h }
+        };
+        shape.clear();
+        shape.startNewSubPath (pts[0]);
+        shape.lineTo (pts[1]);
+        shape.lineTo (pts[2]);
+        shape.lineTo (pts[3]);
+        shape.closeSubPath();
         g.fillPath (shape);
 
         if (!m_active)
@@ -502,7 +526,7 @@ private:
 // Faixa 4, coluna 4 — ArpeggiatorPanel
 // Abas: Arpeggiator | Clip
 // ============================================================================
-class ArpeggiatorPanel : public juce::Component, public juce::TabbedComponent::Listener
+class ArpeggiatorPanel : public juce::Component
 {
 public:
     ArpeggiatorPanel (juce::AudioProcessorValueTreeState& /*apvts*/)
@@ -510,7 +534,6 @@ public:
         m_tabbed.setTabBarDepth (36);
         m_tabbed.addTab ("Arpeggiator", PanelDark, nullptr, true);
         m_tabbed.addTab ("Clip", PanelDark, nullptr, false);
-        m_tabbed.addListener (this);
         addAndMakeVisible (m_tabbed);
 
         buildArpPage();
@@ -519,10 +542,7 @@ public:
         m_tabbed.setCurrentTabIndex (0);
     }
 
-    ~ArpeggiatorPanel() override
-    {
-        m_tabbed.removeListener (this);
-    }
+    ~ArpeggiatorPanel() override = default;
 
     void paint (juce::Graphics& g) override
     {
@@ -540,22 +560,12 @@ public:
         m_tabbed.setBounds (area);
     }
 
-    void currentTabChanged (int newTabIndex, const juce::String& /*tabName*/) override
-    {
-        m_arpPage->setVisible (newTabIndex == 0);
-        m_clipPage->setVisible (newTabIndex == 1);
-        repaint();
-    }
-
 private:
     juce::TabbedComponent m_tabbed { juce::TabbedButtonBar::TabsAtTop };
-    juce::Component* m_arpPage = nullptr;
-    juce::Component* m_clipPage = nullptr;
 
     void buildArpPage()
     {
-        m_arpPage = new juce::Component();
-        auto* page = m_arpPage;
+        auto* page = new juce::Component();
         page->setInterceptsMouseClicks (true, true);
 
         auto makeLabel = [&] (const juce::String& text)
@@ -578,39 +588,18 @@ private:
         m_arpMode->setEnabled (false);
         page->addAndMakeVisible (*m_arpMode);
 
-        m_arpOctaves = new KnobComponent (dummyApvts(), "arpOctaves", "Octaves", "", KnobComponent::Size::Small, PrimaryPurple);
-        m_arpOctaves->setEnabled (false);
-        page->addAndMakeVisible (*m_arpOctaves);
-
-        m_arpRate = new KnobComponent (dummyApvts(), "arpRate", "Rate", "", KnobComponent::Size::Small, Osc2Colour);
-        m_arpRate->setEnabled (false);
-        page->addAndMakeVisible (*m_arpRate);
-
-        m_arpGate = new KnobComponent (dummyApvts(), "arpGate", "Gate", "", KnobComponent::Size::Small, Osc3Colour);
-        m_arpGate->setEnabled (false);
-        page->addAndMakeVisible (*m_arpGate);
-
-        m_arpSwing = new KnobComponent (dummyApvts(), "arpSwing", "Swing", "", KnobComponent::Size::Small, TextSecondary);
-        m_arpSwing->setEnabled (false);
-        page->addAndMakeVisible (*m_arpSwing);
-
         m_arpPlay.setButtonText ("▶ Play");
         m_arpPlay.setEnabled (false);
         page->addAndMakeVisible (m_arpPlay);
 
         makeLabel ("Modo");
-        makeLabel ("Oitavas");
-        makeLabel ("Taxa");
-        makeLabel ("Gate");
-        makeLabel ("Swing");
 
-        m_tabbed.getTabbedButtonBar()->addAndMakeVisible (*page);
+        m_tabbed.getTabbedButtonBar().addAndMakeVisible (*page);
     }
 
     void buildClipPage()
     {
-        m_clipPage = new juce::Component();
-        auto* page = m_clipPage;
+        auto* page = new juce::Component();
         page->setInterceptsMouseClicks (true, true);
 
         auto makeLabel = [&] (const juce::String& text)
@@ -636,21 +625,10 @@ private:
 
         makeLabel ("Modo de clip");
 
-        m_tabbed.getTabbedButtonBar()->addAndMakeVisible (*page);
-    }
-
-    static juce::AudioProcessorValueTreeState& dummyApvts()
-    {
-        static juce::AudioProcessor dummyProc (juce::AudioProcessor::BusesProperties());
-        static juce::AudioProcessorValueTreeState dummy (dummyProc, nullptr, "Dummy", {});
-        return dummy;
+        m_tabbed.getTabbedButtonBar().addAndMakeVisible (*page);
     }
 
     juce::ComboBox* m_arpMode = nullptr;
-    KnobComponent* m_arpOctaves = nullptr;
-    KnobComponent* m_arpRate = nullptr;
-    KnobComponent* m_arpGate = nullptr;
-    KnobComponent* m_arpSwing = nullptr;
     juce::TextButton m_arpPlay { "▶ Play" };
     juce::ComboBox* m_clipMode = nullptr;
     juce::TextButton m_clipPlay { "▶ Play" };
@@ -812,7 +790,7 @@ public:
                 else             c = on ? PrimaryPurple : PrimaryPurple.withAlpha (0.15f);
 
                 g.setColour (c);
-                g.fillRoundedRectangle (4.0f + i * segW, y, segW - 4.0f, segH, 3.0f);
+                g.fillRoundedRectangle ((int) (4.0f + i * segW), (int) y, (int) (segW - 4.0f), (int) segH, 3.0f);
             }
 
             g.setColour (TextMuted);
