@@ -67,10 +67,8 @@ public:
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
 
-            // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
-            // DEVE ser chamado APÓS a criação do processor, pois audioDeviceAboutToStart()
-            // invoca processor->prepareToPlay().
-            audioDeviceManager.addAudioCallback (this);
+            // Diagnóstico: comentado temporariamente para isolar crash
+            // audioDeviceManager.addAudioCallback (this);
 
             // --- Seletor de entrada MIDI ---
             midiDevices = juce::MidiInput::getAvailableDevices();
@@ -84,7 +82,7 @@ public:
                 selectMidiInput (midiInputSelector.getSelectedItemIndex());
             }
             midiInputSelector.onChange = [this] { selectMidiInput (midiInputSelector.getSelectedItemIndex()); };
-            addAndMakeVisible (midiInputSelector);
+            addAndMakeVisible (&midiInputSelector);
 
             // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
             auto* container = new ContentContainer (*editor, midiInputSelector, configButton, midiKeyboardComponent);
