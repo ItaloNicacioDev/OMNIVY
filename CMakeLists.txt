@@ -147,6 +147,7 @@ add_executable(OmnivyStandalone
 target_link_libraries(OmnivyStandalone PRIVATE
     OmnivyPlugin
     juce::juce_audio_processors
+    juce::juce_audio_devices
     juce::juce_gui_basics
     juce::juce_audio_utils
 )
