@@ -10,23 +10,23 @@ EnvelopePanel::EnvelopePanel (juce::AudioProcessorValueTreeState& apvts)
 
     m_attackKnob = new KnobComponent (apvts, params::EnvAttack, "Attack", "s",
                                       KnobComponent::Size::Medium, Env1Colour);
-    addAndMakeVisible (m_attackKnob);
+    addAndMakeVisible (*m_attackKnob);
 
     m_decayKnob = new KnobComponent (apvts, params::EnvDecay, "Decay", "s",
                                      KnobComponent::Size::Medium, Env1Colour);
-    addAndMakeVisible (m_decayKnob);
+    addAndMakeVisible (*m_decayKnob);
 
     m_sustainKnob = new KnobComponent (apvts, params::EnvSustain, "Sustain", "",
                                        KnobComponent::Size::Medium, Env1Colour);
-    addAndMakeVisible (m_sustainKnob);
+    addAndMakeVisible (*m_sustainKnob);
 
     m_releaseKnob = new KnobComponent (apvts, params::EnvRelease, "Release", "s",
                                        KnobComponent::Size::Medium, Env1Colour);
-    addAndMakeVisible (m_releaseKnob);
+    addAndMakeVisible (*m_releaseKnob);
 
     m_envelopeDisplay = new EnvelopeDisplay();
     m_envelopeDisplay->setColour (Env1Colour);
-    addAndMakeVisible (m_envelopeDisplay);
+    addAndMakeVisible (*m_envelopeDisplay);
 
     // Escuta o APVTS para manter o gráfico sincronizado com mudanças de MIDI,
     // automação ou presets.
