@@ -58,19 +58,25 @@ public:
             logToFile ("Omnivy: audioDeviceManager.initialise(0 in, 2 out) called");
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
+            logToFile ("Omnivy: criando processor");
             processor = std::make_unique<OmnivyAudioProcessor>();
+            logToFile ("Omnivy: processor criado OK");
 
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
+            logToFile ("Omnivy: editor criado OK");
             editor->setSize (1200, 760);
+            logToFile ("Omnivy: editor setSize OK");
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
+            logToFile ("Omnivy: midiKeyboardState listener OK");
 
             // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
             // DEVE ser chamado APÓS a criação do processor, pois audioDeviceAboutToStart()
             // invoca processor->prepareToPlay().
             audioDeviceManager.addAudioCallback (this);
+            logToFile ("Omnivy: audioCallback registrado OK");
 
             // --- Seletor de entrada MIDI ---
             midiDevices = juce::MidiInput::getAvailableDevices();
