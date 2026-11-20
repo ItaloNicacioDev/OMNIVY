@@ -39,7 +39,7 @@ public:
 private:
     OmnivyAudioProcessor& audioProcessor;
 
-    OmnivyLookAndFeel m_lookAndFeel;
+    omnivy::gui::OmnivyLookAndFeel m_lookAndFeel;
 
     juce::TabbedComponent m_tabbed { juce::TabbedButtonBar::TabsAtTop };
 
