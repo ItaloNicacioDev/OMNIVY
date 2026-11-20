@@ -5,6 +5,8 @@
 #include "DSP/Engine/AudioEngine.h"
 #include "Parameters/SynthParameters.h"
 
+namespace omnivy { namespace dsp { class RoutingGraph; } }
+
 class OmnivyAudioProcessor : public juce::AudioProcessor
 {
 public:
@@ -50,7 +52,7 @@ public:
         omnivy::SynthParameters::createParameterLayout() };
 
     // --- Roteamento (message thread) ---
-    dsp::RoutingGraph& getRoutingGraph() noexcept { return m_audioEngine.getRoutingGraph(); }
+    omnivy::dsp::RoutingGraph& getRoutingGraph() noexcept { return m_audioEngine.getRoutingGraph(); }
 
 private:
     omnivy::SynthParameters m_synthParameters;
