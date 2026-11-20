@@ -179,27 +179,31 @@ public:
         public:
             ContentContainer (juce::AudioProcessorEditor& ed,
                               juce::ComboBox& midiSel,
-                              juce::TextButton& btn)
-                : editor (ed), midiSelector (midiSel), button (btn)
+                              juce::TextButton& btn,
+                              juce::MidiKeyboardComponent& keybd)
+                : editor (ed), midiSelector (midiSel), button (btn), keyboard (keybd)
             {
                 addAndMakeVisible (editor);
                 addAndMakeVisible (midiSelector);
                 addAndMakeVisible (button);
+                addAndMakeVisible (keyboard);
             }
 
             void resized() override
             {
                 auto area = getLocalBounds();
-                editor.setBounds (area.removeFromBottom (400));
+                editor.setBounds (area.removeFromBottom (340));
                 area.removeFromTop (10);
-                midiSelector.setBounds (10, 410, 220, 24);
-                button.setBounds (240, 410, 200, 24);
+                midiSelector.setBounds (10, 350, 220, 24);
+                button.setBounds (240, 350, 200, 24);
+                keyboard.setBounds (10, 384, getWidth() - 20, 66);
             }
 
         private:
             juce::AudioProcessorEditor& editor;
             juce::ComboBox& midiSelector;
             juce::TextButton& button;
+            juce::MidiKeyboardComponent& keyboard;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentContainer)
         };
