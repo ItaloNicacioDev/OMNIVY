@@ -71,7 +71,7 @@ void OmnivyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 juce::AudioProcessorEditor* OmnivyAudioProcessor::createEditor()
 {
-    return new OmnivyAudioProcessorEditor (*this);
+    return new omnivy::gui::OmnivyAudioProcessorEditor (*this);
 }
 
 bool OmnivyAudioProcessor::hasEditor() const
