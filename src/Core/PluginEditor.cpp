@@ -717,6 +717,10 @@ public:
         m_vuMeter.repaint();
     }
 
+    OmnivyAudioProcessor& m_processor;
+    juce::TextButton m_hold { "Hold" };
+    juce::TextButton m_mono { "Mono" };
+    juce::TextButton m_legato { "Legato" };
     juce::Label m_masterLabel;
     KnobComponent* m_masterKnob = nullptr;
 
