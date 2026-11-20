@@ -151,7 +151,7 @@ public:
             logToFile ("Omnivy: audioDeviceAboutToStart() INICIO");
             auto audioDevice = audioDeviceManager.getCurrentAudioDevice();
             logToFile ("Omnivy: audioDeviceAboutToStart() getCurrentAudioDevice OK");
-            logToFile ("Omnivy: audioDeviceAboutToStart() device = " + juce::String ((int64) (uintptr_t) audioDevice));
+            logToFile ("Omnivy: audioDeviceAboutToStart() device = " + juce::String (audioDevice != nullptr ? "valid" : "null"));
             if (audioDevice != nullptr)
             {
                 logToFile ("Omnivy: audioDeviceAboutToStart() sampleRate = " + juce::String (audioDevice->getCurrentSampleRate()));
