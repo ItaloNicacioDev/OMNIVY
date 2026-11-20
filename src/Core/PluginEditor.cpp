@@ -896,15 +896,15 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     // addAndMakeVisible (*m_tabBar);
 
     // Faixa 3 — Painéis superiores (quatro colunas).
-    m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
-    m_wavetablePanel = new WavetablePanel (audioProcessor.apvts);
-    m_routingPanel = new RoutingPanel (audioProcessor);
-    m_filterPanel = new FilterPanel (audioProcessor.apvts);
+    // m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
+    // m_wavetablePanel = new WavetablePanel (audioProcessor.apvts);
+    // m_routingPanel = new RoutingPanel (audioProcessor);
+    // m_filterPanel = new FilterPanel (audioProcessor.apvts);
 
-    addAndMakeVisible (*m_oscPanel);
-    addAndMakeVisible (*m_wavetablePanel);
-    addAndMakeVisible (*m_routingPanel);
-    addAndMakeVisible (*m_filterPanel);
+    // addAndMakeVisible (*m_oscPanel);
+    // addAndMakeVisible (*m_wavetablePanel);
+    // addAndMakeVisible (*m_routingPanel);
+    // addAndMakeVisible (*m_filterPanel);
 
     // Faixa 4 — Painéis inferiores (quatro colunas).
     // m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
