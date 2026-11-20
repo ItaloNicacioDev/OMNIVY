@@ -192,23 +192,15 @@ private:
 
     void savePreset()
     {
-        juce::FileChooser chooser ("Salvar preset Omnivy",
-                                   juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                   "*.omnivy");
-        if (chooser.browseForFileToSave (true))
+        juce::File file = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
+                            .getChildFile ("Omnivy Preset.omnivy");
+        juce::MemoryBlock block;
+        m_processor.getStateInformation (block);
+        if (auto stream = file.createOutputStream())
         {
-            juce::File file = chooser.getResult();
-            if (file.getFileExtension().isEmpty())
-                file = file.withFileExtension (".omnivy");
-
-            juce::MemoryBlock block;
-            m_processor.getStateInformation (block);
-            if (auto* stream = file.createOutputStream())
-            {
-                stream->write (block.getData(), static_cast<int> (block.getSize()));
-                stream->flush();
-                m_presetName.setText (file.getFileNameWithoutExtension(), juce::dontSendNotification);
-            }
+            stream->write (block.getData(), static_cast<int> (block.getSize()));
+            stream->flush();
+            m_presetName.setText (file.getFileNameWithoutExtension(), juce::dontSendNotification);
         }
     }
 
