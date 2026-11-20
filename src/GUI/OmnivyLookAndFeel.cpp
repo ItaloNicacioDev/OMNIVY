@@ -5,19 +5,13 @@ namespace gui {
 
 OmnivyLookAndFeel::OmnivyLookAndFeel()
 {
-    setDefaultSansSerifTypeface (uiFont (FontSizeLabel).getTypeface());
 }
 
 void OmnivyLookAndFeel::drawPanelBackground (juce::Graphics& g,
                                              const juce::Rectangle<float>& area,
                                              bool highlighted)
 {
-    // Sombra externa sutil (glow de borda) quando destacado.
-    if (highlighted)
-    {
-        juce::DropShadow (Colours::black.withAlpha (0.6f), 8, { 0, 4 })
-            .drawForRectangle (g, area);
-    }
+    juce::ignoreUnused (highlighted);
 
     // Corpo do painel com gradiente muito sutil para dar profundidade.
     juce::ColourGradient grad (PanelDark.withAlpha (0.95f), area.getTopLeft(),
@@ -67,20 +61,13 @@ void OmnivyLookAndFeel::drawTabButton (juce::TabBarButton& button, juce::Graphic
                                        bool isMouseOver, bool isMouseDown)
 {
     auto area = button.getBounds().toFloat();
-    bool isFront = button.isCurrent();
+    juce::ignoreUnused (isMouseDown);
 
-    if (isFront)
+    // Todas as abas usam a mesma aparência escura; destaque sutil no hover.
+    if (isMouseOver)
     {
-        juce::ColourGradient grad (PrimaryPurpleDark, area.getTopLeft(),
-                                   PrimaryPurple, area.getBottomRight(),
-                                   false);
-        g.setGradientFill (grad);
+        g.setColour (PrimaryPurple.withAlpha (0.2f));
         g.fillRoundedRectangle (area, 6.0f);
-
-        g.setColour (GlowActive.withAlpha (0.35f));
-        g.drawRoundedRectangle (area, 6.0f, 1.5f);
-
-        g.setColour (TextMain);
     }
     else
     {
@@ -88,19 +75,13 @@ void OmnivyLookAndFeel::drawTabButton (juce::TabBarButton& button, juce::Graphic
         g.fillRoundedRectangle (area, 6.0f);
         g.setColour (Border);
         g.drawRoundedRectangle (area, 6.0f, (float) BorderWidth);
-        g.setColour (isMouseOver ? TextSecondary : TextMuted);
     }
+    g.setColour (isMouseOver ? TextMain : TextSecondary);
 
     g.setFont (getTabButtonFont (button, area.getHeight()));
     g.drawText (button.getName(), (int) area.getX(), (int) area.getY(),
                 (int) area.getWidth(), (int) area.getHeight(),
                 juce::Justification::centred, true);
-}
-
-void OmnivyLookAndFeel::drawTabButtonText (juce::TabBarButton& button, juce::Graphics& g,
-                                           bool isMouseOver, bool isMouseDown)
-{
-    juce::ignoreUnused (button, isMouseOver, isMouseDown);
 }
 
 } // namespace gui
