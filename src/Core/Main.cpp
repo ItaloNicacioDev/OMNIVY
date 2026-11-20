@@ -46,6 +46,9 @@ public:
             // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
             audioDeviceManager.addAudioCallback (this);
 
+            // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
+            midiKeyboardState.addListener (this);
+
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
             processor = std::make_unique<OmnivyAudioProcessor>();
 
