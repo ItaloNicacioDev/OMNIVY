@@ -79,9 +79,7 @@ private:
 
     int knobDiameter() const noexcept;
 
-    void updateValueText();
     float angleForValue (float value) const noexcept;
-    float valueForAngle (float angleDegrees) const noexcept;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KnobComponent)
 };
