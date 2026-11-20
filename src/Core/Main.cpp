@@ -128,7 +128,7 @@ public:
                 selector->setSize (520, 480);
                 setContentOwned (selector);
                 setResizable (true, false);
-                centreAroundOwner (&owner, 520, 480);
+                centreAroundComponent (520, 480, &owner);
                 setVisible (true);
             }
 
