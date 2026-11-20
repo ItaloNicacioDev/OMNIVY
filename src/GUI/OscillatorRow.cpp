@@ -26,40 +26,40 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
                                              m_stripeColour);
     m_powerButton->setToggleState (false, juce::dontSendNotification);
     m_powerButton->onClick = [this] { repaint(); };
-    addAndMakeVisible (m_powerButton);
+    addAndMakeVisible (*m_powerButton);
 
     // Tipo de engine — parâmetro real oscEngine.
     m_engineCombo = new juce::ComboBox ("OSC " + juce::String (oscillatorIndex + 1) + " Engine");
     m_engineCombo->addListener (this);
     populateEngineCombo();
-    addAndMakeVisible (m_engineCombo);
+    addAndMakeVisible (*m_engineCombo);
 
     // Tipo de onda — parâmetro real oscWaveform.
     m_waveformCombo = new juce::ComboBox ("OSC " + juce::String (oscillatorIndex + 1) + " Waveform");
     m_waveformCombo->addListener (this);
     populateWaveformCombo();
-    addAndMakeVisible (m_waveformCombo);
+    addAndMakeVisible (*m_waveformCombo);
 
     // Pré-visualização da forma de onda.
     m_waveformPreview = new WaveformComponent();
     m_waveformPreview->setColour (m_stripeColour);
     m_waveformPreview->setSizeHint (64, 40);
-    addAndMakeVisible (m_waveformPreview);
+    addAndMakeVisible (*m_waveformPreview);
 
     // Level — parâmetro real oscLevel.
     m_levelKnob = new KnobComponent (apvts, oscLevel (oscillatorIndex),
                                      "Level", "", KnobComponent::Size::Small, m_stripeColour);
-    addAndMakeVisible (m_levelKnob);
+    addAndMakeVisible (*m_levelKnob);
 
     // Octave — parâmetro real oscOctave.
     m_octaveKnob = new KnobComponent (apvts, oscOctave (oscillatorIndex),
                                       "Oct", "", KnobComponent::Size::Small, TextSecondary);
-    addAndMakeVisible (m_octaveKnob);
+    addAndMakeVisible (*m_octaveKnob);
 
     // Semitone — parâmetro real oscSemitone.
     m_semitoneKnob = new KnobComponent (apvts, oscSemitone (oscillatorIndex),
                                         "Semi", "", KnobComponent::Size::Small, TextSecondary);
-    addAndMakeVisible (m_semitoneKnob);
+    addAndMakeVisible (*m_semitoneKnob);
 
     // Chevron de seleção da linha (estado apenas da UI).
     m_chevronButton = new juce::TextButton ("›");
@@ -68,7 +68,7 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     m_chevronButton->setColour (juce::TextButton::textColourOffId, TextMuted);
     m_chevronButton->setColour (juce::TextButton::textColourOnId, PrimaryPurple);
     m_chevronButton->onClick = [this] { setSelected (!m_selected); };
-    addAndMakeVisible (m_chevronButton);
+    addAndMakeVisible (*m_chevronButton);
 
     // Attachments aos parâmetros reais do APVTS (não-knobs; os knobs criam
     // seu próprio SliderAttachment internamente no construtor).
