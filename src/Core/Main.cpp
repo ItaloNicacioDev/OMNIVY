@@ -27,7 +27,8 @@ public:
     }
 
     class OmnivyStandaloneWindow : public juce::DocumentWindow,
-                                   public juce::AudioIODeviceCallback
+                                   public juce::AudioIODeviceCallback,
+                                   public juce::MidiKeyboardStateListener
     {
     public:
         OmnivyStandaloneWindow (const juce::String& name)
@@ -133,6 +134,20 @@ public:
         void audioDeviceStopped() override
         {
             processor->releaseResources();
+        }
+
+        // --- juce::MidiKeyboardStateListener (teclado virtual / teclado do computador) ---
+
+        void handleNoteOn (juce::MidiKeyboardState* /*source*/, int midiChannel, int midiNoteNumber, float velocity) override
+        {
+            juce::MidiMessage m = juce::MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity);
+            midiCollector.addMessageToCollector (m);
+        }
+
+        void handleNoteOff (juce::MidiKeyboardState* /*source*/, int midiChannel, int midiNoteNumber, float velocity) override
+        {
+            juce::MidiMessage m = juce::MidiMessage::noteOff (midiChannel, midiNoteNumber, velocity);
+            midiCollector.addMessageToCollector (m);
         }
 
     private:
@@ -241,6 +256,8 @@ public:
         juce::MidiMessageCollector midiCollector;
         juce::Array<juce::MidiDeviceInfo> midiDevices;
         juce::String previousMidiDeviceIdentifier;
+        juce::MidiKeyboardState midiKeyboardState;
+        juce::MidiKeyboardComponent midiKeyboardComponent { midiKeyboardState, juce::MidiKeyboardComponent::horizontalKeyboard };
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyStandaloneWindow)
     };
