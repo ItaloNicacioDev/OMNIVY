@@ -11,7 +11,7 @@ OscillatorPanel::OscillatorPanel (juce::AudioProcessorValueTreeState& apvts)
     for (int i = 0; i < omnivy::params::NumOscillators; ++i)
     {
         m_rows[i] = new OscillatorRowComponent (apvts, i, true);
-        addAndMakeVisible (m_rows[i]);
+        addAndMakeVisible (*m_rows[i]);
     }
     m_rows[0]->setSelected (true);
     m_selectedOscillator = 0;
