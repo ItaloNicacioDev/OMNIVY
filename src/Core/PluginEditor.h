@@ -2,6 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "GUI/DesignSystem.h"
 #include "PluginProcessor.h"
 
 // Forward declarations dos painéis de conteúdo (definidos em PluginEditor.cpp).
@@ -14,7 +15,7 @@ class FilterPanel;
 class EnvelopePanel;
 class VisualizerPanel;
 class TopBarComponent;
-class KeyboardMasterComponent;
+class MasterBandComponent;
 } // namespace gui
 } // namespace omnivy
 
@@ -42,10 +43,12 @@ public:
 private:
     OmnivyAudioProcessor& audioProcessor;
 
+    OmnivyLookAndFeel m_lookAndFeel;
+
     juce::TabbedComponent m_tabbed { juce::TabbedButtonBar::TabsAtTop };
 
     omnivy::gui::TopBarComponent* m_topBar = nullptr;
-    omnivy::gui::KeyboardMasterComponent* m_keyboardMaster = nullptr;
+    omnivy::gui::MasterBandComponent* m_masterBand = nullptr;
 
     // Índices das abas.
     static constexpr int TabOscillators = 0;
