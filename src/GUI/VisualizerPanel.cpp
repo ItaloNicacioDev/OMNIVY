@@ -48,7 +48,13 @@ VisualizerPanel::~VisualizerPanel()
 
 void VisualizerPanel::parameterValueChanged (const juce::String& /*parameterID*/, float /*newValue*/)
 {
-    refresh();
+    // refresh() lê parâmetros do APVTS e atualiza componentes de UI. Garante
+    // execução na thread de mensagem para evitar data race com paint() quando
+    // a automação do host notifica na thread de áudio.
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+        refresh();
+    else
+        juce::MessageManager::getInstance()->callAsync ([this] { refresh(); });
 }
 
 void VisualizerPanel::refresh()
