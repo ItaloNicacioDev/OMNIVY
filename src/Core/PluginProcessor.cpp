@@ -168,11 +168,11 @@ void OmnivyAudioProcessor::setStateInformation (const void* data, int sizeInByte
         juce::ValueTree tree = juce::ValueTree::readFromData (d + 4, static_cast<size_t> (sizeInBytes - 4));
         if (tree.isValid())
         {
-            const juce::NamedValueSet& props = tree.getProperties();
-            for (int i = 0; i < props.size(); ++i)
+            for (int i = 0; i < tree.getNumProperties(); ++i)
             {
-                if (auto* param = apvts.getParameter (props.getName (i).toString()))
-                    param->setValue (static_cast<float> (props.getValue (i)));
+                juce::Identifier propName = tree.getPropertyName (i);
+                if (auto* param = apvts.getParameter (propName.toString()))
+                    param->setValue (static_cast<float> (tree.getProperty (propName)));
             }
         }
     }
