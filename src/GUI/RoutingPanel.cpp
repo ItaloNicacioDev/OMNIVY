@@ -25,18 +25,6 @@ juce::Colour typeColour (dsp::ConnectionType type)
     }
 }
 
-const char* typeName (dsp::ConnectionType type)
-{
-    switch (type)
-    {
-        case dsp::ConnectionType::Audio:             return "Áudio";
-        case dsp::ConnectionType::FrequencyModulation: return "FM";
-        case dsp::ConnectionType::PhaseModulation:   return "PM";
-        case dsp::ConnectionType::RingModulation:    return "Ring";
-        case dsp::ConnectionType::HardSync:          return "Hard Sync";
-        default:                                     return "—";
-    }
-}
 }
 
 RoutingPanel::RoutingPanel (OmnivyAudioProcessor& processor)
