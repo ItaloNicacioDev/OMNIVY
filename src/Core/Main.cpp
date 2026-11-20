@@ -60,7 +60,7 @@ public:
             configButton.setButtonText ("Configurar Áudio...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
-            setContentOwned (container);
+            setContentOwned (container, true);
             setSize (600, 440);
 
             centreWithSize (getWidth(), getHeight());
@@ -127,7 +127,7 @@ public:
                                                                          true,   // show channels
                                                                          true);  // show sample rates
                 selector->setSize (520, 480);
-                setContentOwned (selector);
+                setContentOwned (selector, true);
                 setResizable (true, false);
                 centreWithSize (520, 480);
                 setVisible (true);
