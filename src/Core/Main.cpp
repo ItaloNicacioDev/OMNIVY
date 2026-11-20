@@ -8,6 +8,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace omnivy::gui;
+
 static void logToFile (const juce::String& message)
 {
     std::ofstream logFile ("OmnivyStandalone_log.txt", std::ios::app);
@@ -60,7 +62,7 @@ public:
 
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
-            editor->setSize (1200, 760);
+            // O editor já é dimensionado no construtor (1648 × 920); não redimensionar aqui.
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
@@ -86,13 +88,13 @@ public:
 
             // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
             auto* container = new ContentContainer (*editor, midiInputSelector, configButton, midiKeyboardComponent);
-            container->setSize (1200, 860);
+            container->setSize (1648, 1006);
 
             configButton.setButtonText ("Audio Setup...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
             setContentOwned (container, true);
-            setSize (1200, 860);
+            setSize (1648, 1006);
 
             centreWithSize (getWidth(), getHeight());
             logToFile ("Omnivy: window created and visible");
