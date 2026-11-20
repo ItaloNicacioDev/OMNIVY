@@ -80,3 +80,6 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     m_waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
         (m_apvts, params::oscWaveform (oscillatorIndex), *m_waveformCombo);
 }
+
+} // namespace gui
+} // namespace omnivy
