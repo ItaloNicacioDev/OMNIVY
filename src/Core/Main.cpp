@@ -239,6 +239,8 @@ public:
         juce::ComboBox midiInputSelector;
         juce::TextButton configButton;
         juce::MidiMessageCollector midiCollector;
+        juce::Array<juce::MidiDeviceInfo> midiDevices;
+        juce::String previousMidiDeviceIdentifier;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyStandaloneWindow)
     };
