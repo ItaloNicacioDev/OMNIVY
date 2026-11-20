@@ -907,24 +907,24 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     addAndMakeVisible (*m_filterPanel);
 
     // Faixa 4 — Painéis inferiores (quatro colunas).
-    m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
-    m_visualizerPanel = new VisualizerPanel (audioProcessor.apvts);
-    m_arpPanel = new ArpeggiatorPanel (audioProcessor.apvts);
+    // m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
+    // m_visualizerPanel = new VisualizerPanel (audioProcessor.apvts);
+    // m_arpPanel = new ArpeggiatorPanel (audioProcessor.apvts);
 
-    addAndMakeVisible (*m_modMatrixPanel);
-    addAndMakeVisible (*m_visualizerPanel);
-    addAndMakeVisible (*m_arpPanel);
+    // addAndMakeVisible (*m_modMatrixPanel);
+    // addAndMakeVisible (*m_visualizerPanel);
+    // addAndMakeVisible (*m_arpPanel);
 
-    m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
-    m_envTabbed->setTabBarDepth (36);
-    m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
-    m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
-    m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
-    addAndMakeVisible (*m_envTabbed);
+    // m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
+    // m_envTabbed->setTabBarDepth (36);
+    // m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
+    // m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
+    // m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
+    // addAndMakeVisible (*m_envTabbed);
 
     // Faixa 5 — Teclado + Master + Footer.
-    m_bottomBand = new BottomBandComponent (audioProcessor);
-    addAndMakeVisible (*m_bottomBand);
+    // m_bottomBand = new BottomBandComponent (audioProcessor);
+    // addAndMakeVisible (*m_bottomBand);
 
     m_activeTab = 0;
 }
@@ -969,13 +969,13 @@ void OmnivyAudioProcessorEditor::resized()
     m_filterPanel->setBounds (topRow.removeFromLeft (colW));
 
     auto bottomRow = area.removeFromTop (bottomRowH);
-    m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
-    bottomRow.removeFromLeft (gap);
-    m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
-    bottomRow.removeFromLeft (gap);
-    m_visualizerPanel->setBounds (bottomRow.removeFromLeft (colW));
-    bottomRow.removeFromLeft (gap);
-    m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
+    // m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
+    // bottomRow.removeFromLeft (gap);
+    // m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
+    // bottomRow.removeFromLeft (gap);
+    // m_visualizerPanel->setBounds (bottomRow.removeFromLeft (colW));
+    // bottomRow.removeFromLeft (gap);
+    // m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
 
     m_bottomBand->setBounds (area);
 }
