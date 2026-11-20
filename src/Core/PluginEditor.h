@@ -27,8 +27,7 @@ class MasterBandComponent;
 // Todos os controles gravam em parâmetros reais do AudioProcessorValueTreeState
 // e nenhum controle é deixado sem conexão com o DSP.
 // -----------------------------------------------------------------------------
-class OmnivyAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                   private juce::TabbedComponent::Listener
+class OmnivyAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     OmnivyAudioProcessorEditor (OmnivyAudioProcessor&);
@@ -36,9 +35,6 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
-
-    // TabbedComponent::Listener — detecta troca de aba para atualizar foco.
-    void currentTabChanged (int newTabIndex, juce::TabbedComponent* /*tabComponent*/) override;
 
 private:
     OmnivyAudioProcessor& audioProcessor;
@@ -59,7 +55,6 @@ private:
     static constexpr int TabVisualizer = 5;
 
     void buildTabs();
-    void updateTabStrip();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyAudioProcessorEditor)
 };
