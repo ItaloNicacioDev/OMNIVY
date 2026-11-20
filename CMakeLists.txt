@@ -111,7 +111,20 @@ target_sources(OmnivyPlugin PRIVATE
     src/DSP/Routing/RoutingGraph.cpp
 
     # --- Parameters ---
-    src/Parameters/SynthParameters.cpp)
+    src/Parameters/SynthParameters.cpp
+
+    # --- GUI: Design System e componentes reutilizáveis ---
+    src/GUI/OmnivyLookAndFeel.cpp
+    src/GUI/KnobComponent.cpp
+    src/GUI/PanelComponent.cpp
+    src/GUI/WaveformComponent.cpp
+    src/GUI/OscillatorRow.cpp
+    src/GUI/OscillatorPanel.cpp
+    src/GUI/WavetablePanel.cpp
+    src/GUI/RoutingPanel.cpp
+    src/GUI/FilterPanel.cpp
+    src/GUI/EnvelopePanel.cpp
+    src/GUI/VisualizerPanel.cpp)
 
 target_compile_definitions(OmnivyPlugin PRIVATE
   JUCE_VST3=1
