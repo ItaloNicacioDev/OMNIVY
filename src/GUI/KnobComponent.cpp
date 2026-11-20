@@ -172,7 +172,7 @@ void KnobComponent::paint (juce::Graphics& g)
     if (m_size != Size::Small)
     {
         juce::String text;
-        if (m_slider.getRange().getInterval() >= 1.0f)
+        if (m_slider.getInterval() >= 1.0f)
             text = juce::String ((int) value);
         else
             text = juce::String (value, 2);
