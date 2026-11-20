@@ -40,8 +40,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     // Test parameter (Phase 1 legacy): drives the engine's test tone.
-    // Inicia em zero para que o plugin não emita som ao abrir sem interação do usuário.
-    float testParameter = 0.0f;
+    float testParameter = 0.5f;
 
     // Leitura real do motor (para indicadores da UI).
     int getPolyphony() const noexcept { return m_audioEngine.getPolyphony(); }
