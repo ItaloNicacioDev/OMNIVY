@@ -1,7 +1,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_utils/players/juce_AudioProcessorPlayer.h>
 #include <juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
@@ -27,7 +26,8 @@ public:
         mainWindow = nullptr; // destrói a janela, que libera o áudio
     }
 
-    class OmnivyStandaloneWindow : public juce::DocumentWindow
+    class OmnivyStandaloneWindow : public juce::DocumentWindow,
+                                   public juce::AudioIODeviceCallback
     {
     public:
         OmnivyStandaloneWindow (const juce::String& name)
@@ -39,38 +39,53 @@ public:
             setUsingNativeTitleBar (true);
             setResizable (true, false);
 
-            // --- Áudio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
+            // --- Audio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
             audioDeviceManager.initialise (0, 2, nullptr, true, {});
+
+            // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
+            audioDeviceManager.addAudioCallback (this);
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
             processor = std::make_unique<OmnivyAudioProcessor>();
-
-            // --- Player: aciona prepareToPlay/processBlock/releaseResources no callback de áudio ---
-            player = std::make_unique<juce::AudioProcessorPlayer>();
-            player->setProcessor (processor.get());
 
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
             editor->setSize (600, 400);
 
-            // --- Container com editor + botão de configuração de áudio ---
-            auto* container = new ContentContainer (*editor, configButton);
-            container->setSize (600, 440);
+            // --- Seletor de entrada MIDI ---
+            midiInputSelector.setLabel ("MIDI Input:");
+            midiInputSelector.addItemList (juce::MidiInput::getAvailableDevices(), 1);
+            if (midiInputSelector.getNumItems() > 0)
+            {
+                midiInputSelector.setSelectedId (1);
+                selectMidiInput (midiInputSelector.getSelectedItemIndex());
+            }
+            midiInputSelector.onChange = [this] { selectMidiInput (midiInputSelector.getSelectedItemIndex()); };
+            addAndMakeVisible (midiInputSelector);
 
-            configButton.setButtonText ("Configurar Áudio...");
+            // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
+            auto* container = new ContentContainer (*editor, midiInputSelector, configButton);
+            container->setSize (600, 460);
+
+            configButton.setButtonText ("Audio Setup...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
             setContentOwned (container, true);
-            setSize (600, 440);
+            setSize (600, 460);
 
             centreWithSize (getWidth(), getHeight());
         }
 
         ~OmnivyStandaloneWindow()
         {
-            // Para o callback de áudio (chama releaseResources) antes de destruir
-            // editor/processor.
-            player = nullptr;
+            // Remove os callbacks de áudio e MIDI primeiro (para o callback de áudio,
+            // que chama releaseResources no processador), depois destrói editor/processor.
+            audioDeviceManager.removeAudioCallback (this);
+            audioDeviceManager.removeMidiInputCallback (midiInputSelector.getText().isNotEmpty()
+                                                            ? midiInputSelector.getText()
+                                                            : juce::String(), nullptr);
+            editor = nullptr;
+            processor = nullptr;
         }
 
         void closeButtonPressed() override
@@ -84,14 +99,66 @@ public:
                 c->setBounds (getLocalBounds());
         }
 
+        // --- juce::AudioIODeviceCallback (chamado pela thread de áudio JUCE) ---
+
+        void audioDeviceIOCallback (const float** inputChannelData,
+                                    int numInputChannels,
+                                    float** outputChannelData,
+                                    int numOutputChannels,
+                                    int numSamples) override
+        {
+            juce::AudioBuffer<float> buffer (outputChannelData, numOutputChannels, numSamples);
+            juce::MidiBuffer midiBuffer;
+
+            // Drena o coletor de MIDI externo (preenchido na thread de mensagem
+            // por addMidiInputCallback) para um MidiBuffer local, sem alocação.
+            midiCollector.removeNextBlockOfMessages (midiBuffer, numSamples);
+
+            // --- Processamento: mesma pipeline do VST3 (prepareToPlay/processBlock) ---
+            processor->processBlock (buffer, midiBuffer);
+        }
+
+        void audioDeviceAboutToStart (juce::AudioIODevice* device) override
+        {
+            juce::ignoreUnused (device);
+            processor->prepareToPlay (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate(),
+                                      audioDeviceManager.getCurrentAudioDevice()->getCurrentBufferSizeSamples());
+            midiCollector.reset (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
+        }
+
+        void audioDeviceStopped() override
+        {
+            processor->releaseResources();
+        }
+
     private:
+        void selectMidiInput (int index)
+        {
+            auto deviceNames = juce::MidiInput::getAvailableDevices();
+            if (index < 0 || index >= deviceNames.size())
+                return;
+
+            auto deviceName = deviceNames [(std::size_t) index];
+
+            // Remove callback anterior (se houver).
+            audioDeviceManager.removeMidiInputCallback (midiInputSelector.getText().isNotEmpty()
+                                                            ? midiInputSelector.getText()
+                                                            : juce::String(), nullptr);
+
+            // Registra o coletor para o novo dispositivo MIDI (thread de mensagem).
+            audioDeviceManager.addMidiInputCallback (deviceName, &midiCollector);
+            midiInputSelector.setSelectedId (index + 1);
+        }
         class ContentContainer : public juce::Component
         {
         public:
-            ContentContainer (juce::AudioProcessorEditor& ed, juce::TextButton& btn)
-                : editor (ed), button (btn)
+            ContentContainer (juce::AudioProcessorEditor& ed,
+                              juce::ComboBox& midiSel,
+                              juce::TextButton& btn)
+                : editor (ed), midiSelector (midiSel), button (btn)
             {
                 addAndMakeVisible (editor);
+                addAndMakeVisible (midiSelector);
                 addAndMakeVisible (button);
             }
 
@@ -99,11 +166,14 @@ public:
             {
                 auto area = getLocalBounds();
                 editor.setBounds (area.removeFromBottom (400));
-                button.setBounds (10, 405, 200, 30);
+                area.removeFromTop (10);
+                midiSelector.setBounds (10, 410, 220, 24);
+                button.setBounds (240, 410, 200, 24);
             }
 
         private:
             juce::AudioProcessorEditor& editor;
+            juce::ComboBox& midiSelector;
             juce::TextButton& button;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentContainer)
@@ -157,10 +227,11 @@ public:
 
         juce::AudioDeviceManager audioDeviceManager;
         std::unique_ptr<OmnivyAudioProcessor> processor;
-        std::unique_ptr<juce::AudioProcessorPlayer> player;
         std::unique_ptr<OmnivyAudioProcessorEditor> editor;
         std::unique_ptr<AudioDeviceDialog> audioDeviceDialog;
+        juce::ComboBox midiInputSelector;
         juce::TextButton configButton;
+        juce::MidiMessageCollector midiCollector;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyStandaloneWindow)
     };
