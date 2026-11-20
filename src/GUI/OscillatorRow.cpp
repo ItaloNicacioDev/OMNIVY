@@ -81,5 +81,103 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
         (m_apvts, params::oscWaveform (oscillatorIndex), *m_waveformCombo);
 }
 
+OscillatorRowComponent::~OscillatorRowComponent()
+{
+}
+
+void OscillatorRowComponent::paint (juce::Graphics& g)
+{
+    auto area = getLocalBounds().toFloat();
+    g.setColour (ControlSurface);
+    g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+    g.setColour (Border);
+    g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+
+    // Faixa lateral colorida.\n    g.setColour (m_stripeColour);
+    g.fillRoundedRectangle (area.removeFromLeft (6.0f), (float) ControlCornerRadius);
+
+    if (m_selected)
+    {
+        g.setColour (PrimaryPurple.withAlpha (0.3f));
+        g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+    }
+}
+
+void OscillatorRowComponent::resized()
+{
+    auto area = getLocalBounds().reduced (4);
+    area.removeFromLeft (6); // faixa lateral
+
+    int labelW = 24;
+    int btnW = 28;
+    int comboW = 110;
+    int previewW = 72;
+    int knobW = 46;
+    int gap = 6;
+    int chevronW = 24;
+
+    m_numberLabel.setBounds (area.removeFromLeft (labelW));
+    area.removeFromLeft (gap);
+
+    m_powerButton->setBounds (area.removeFromLeft (btnW));
+    area.removeFromLeft (gap);
+
+    m_engineCombo->setBounds (area.removeFromLeft (comboW));
+    area.removeFromLeft (gap);
+
+    m_waveformCombo->setBounds (area.removeFromLeft (comboW));
+    area.removeFromLeft (gap);
+
+    m_waveformPreview->setBounds (area.removeFromLeft (previewW));
+    area.removeFromLeft (gap);
+
+    m_levelKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+    m_octaveKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+    m_semitoneKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+
+    m_chevronButton->setBounds (area.removeFromLeft (chevronW));
+}
+
+void OscillatorRowComponent::setSelected (bool selected)
+{
+    m_selected = selected;
+    updateSelectionVisuals();
+    repaint();
+}
+
+void OscillatorRowComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
+{
+    if (comboBoxThatHasChanged == m_waveformCombo)
+        m_waveformPreview->repaint();
+}
+
+void OscillatorRowComponent::populateEngineCombo()
+{
+    m_engineCombo->addItem ("VA", 1);
+    m_engineCombo->addItem ("Additive", 2);
+    m_engineCombo->addItem ("FM", 3);
+    m_engineCombo->addItem ("Granular", 4);
+    m_engineCombo->addItem ("Noise", 5);
+    m_engineCombo->setSelectedId (1);
+}
+
+void OscillatorRowComponent::populateWaveformCombo()
+{
+    m_waveformCombo->addItem ("Sine", 1);
+    m_waveformCombo->addItem ("Triangle", 2);
+    m_waveformCombo->addItem ("Saw", 3);
+    m_waveformCombo->addItem ("Square", 4);
+    m_waveformCombo->addItem ("Noise", 5);
+    m_waveformCombo->setSelectedId (1);
+}
+
+void OscillatorRowComponent::updateSelectionVisuals()
+{
+    // Estado visual apenas da UI; não afeta o DSP.
+}
+
 } // namespace gui
 } // namespace omnivy

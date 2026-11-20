@@ -24,7 +24,7 @@ class VisualizerPanel : public juce::Component,
 public:
     VisualizerPanel (juce::AudioProcessorValueTreeState& apvts);
 
-    ~VisualizerPanel() override = default;
+    ~VisualizerPanel() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;

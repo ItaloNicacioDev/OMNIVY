@@ -52,9 +52,9 @@ void FilterPanel::paint (juce::Graphics& g)
 
     float cutoff = 0.0f, resonance = 0.0f;
     if (auto* p = m_apvts.getParameter (params::FilterCutoff))
-        cutoff = static_cast<float> (*p);
+        cutoff = *m_apvts.getRawParameterValue (params::FilterCutoff);
     if (auto* p = m_apvts.getParameter (params::FilterResonance))
-        resonance = static_cast<float> (*p);
+        resonance = *m_apvts.getRawParameterValue (params::FilterResonance);
 
     juce::Rectangle<float> plot (area.getX(), area.getY(), area.getWidth(), area.getHeight() - 18);
     g.setColour (Border.brighter (0.2f));

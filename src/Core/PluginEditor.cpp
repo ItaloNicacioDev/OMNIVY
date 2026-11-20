@@ -419,17 +419,14 @@ void OmnivyAudioProcessorEditor::buildTabs()
 
 void OmnivyAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (BackgroundMain);
+    g.fillAll (omnivy::gui::BackgroundMain);
 }
 
 void OmnivyAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    m_topBar->setBounds (area.removeFromTop (TopBarHeight));
+    m_topBar->setBounds (area.removeFromTop (omnivy::gui::TopBarHeight));
     m_masterBand->setBounds (area.removeFromBottom (86));
     m_tabbed.setBounds (area);
 }
-
-} // namespace gui
-} // namespace omnivy

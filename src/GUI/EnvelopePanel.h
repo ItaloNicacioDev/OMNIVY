@@ -23,7 +23,7 @@ class EnvelopePanel : public PanelComponent,
 public:
     EnvelopePanel (juce::AudioProcessorValueTreeState& apvts);
 
-    ~EnvelopePanel() override = default;
+    ~EnvelopePanel() override;
 
     void resized() override;
 
@@ -38,6 +38,8 @@ private:
     KnobComponent* m_sustainKnob = nullptr;
     KnobComponent* m_releaseKnob = nullptr;
     EnvelopeDisplay* m_envelopeDisplay = nullptr;
+
+    void refreshDisplay();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EnvelopePanel)
 };

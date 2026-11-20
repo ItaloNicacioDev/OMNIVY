@@ -61,7 +61,7 @@ void VisualizerPanel::refresh()
 {
     if (auto* p = m_apvts.getParameter (params::oscWaveform (0)))
         m_waveformPreview->setWaveform (static_cast<dsp::Waveform> (
-            static_cast<int> (*p)));
+            static_cast<int> (*m_apvts.getRawParameterValue (params::oscWaveform (0)))));
 
     m_envelopeDisplay->setParameters (
         *m_apvts.getRawParameterValue (params::EnvAttack),

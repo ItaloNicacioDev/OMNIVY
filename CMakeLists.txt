@@ -124,7 +124,8 @@ target_sources(OmnivyPlugin PRIVATE
     src/GUI/RoutingPanel.cpp
     src/GUI/FilterPanel.cpp
     src/GUI/EnvelopePanel.cpp
-    src/GUI/VisualizerPanel.cpp)
+    src/GUI/VisualizerPanel.cpp
+    src/GUI/EnvelopeDisplay.cpp)
 
 target_compile_definitions(OmnivyPlugin PRIVATE
   JUCE_VST3=1

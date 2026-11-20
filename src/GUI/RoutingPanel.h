@@ -24,15 +24,17 @@ namespace gui {
 // e publicadas para a thread de áudio via publishConfig(). Não é um grafo
 // decorativo: representa roteamentos efetivos do sintetizador.
 // -----------------------------------------------------------------------------
-class RoutingPanel : public juce::Component
+class RoutingPanel : public juce::Component, private juce::Timer
 {
 public:
     RoutingPanel (OmnivyAudioProcessor& processor);
 
-    ~RoutingPanel() override = default;
+    ~RoutingPanel() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    void timerCallback() override;
 
 private:
     OmnivyAudioProcessor& m_processor;

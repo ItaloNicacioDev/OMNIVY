@@ -1,6 +1,6 @@
 #include "GUI/RoutingPanel.h"
 
-#include "PluginProcessor.h"
+#include "Core/PluginProcessor.h"
 
 #include "Parameters/ParameterIDs.h"
 
@@ -77,7 +77,14 @@ RoutingPanel::RoutingPanel (OmnivyAudioProcessor& processor)
     startTimerHz (15);
 }
 
-RoutingPanel::~RoutingPanel() = default;
+RoutingPanel::~RoutingPanel()
+{
+}
+
+void RoutingPanel::timerCallback()
+{
+    refreshStatus();
+}
 
 void RoutingPanel::populateNodeCombo (juce::ComboBox& combo)
 {
