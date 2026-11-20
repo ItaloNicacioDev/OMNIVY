@@ -35,6 +35,11 @@ public:
     {
         setInterceptsMouseClicks (true, true);
 
+        // --- Lado esquerdo: logotipo ---------------------------------------
+        m_logoWaveform.setColour (PrimaryPurple);
+        m_logoWaveform.setSizeHint (120, 30);
+        addAndMakeVisible (m_logoWaveform);
+
         m_wordmark.setText ("OMNIVY", juce::dontSendNotification);
         m_wordmark.setFont (uiFont (19.0f, juce::Font::bold));
         m_wordmark.setColour (juce::Label::textColourId, TextMain);
@@ -42,7 +47,7 @@ public:
         m_wordmark.setEnabled (false);
         addAndMakeVisible (m_wordmark);
 
-        m_tagline.setText ("Dark Neon Cyber-Synth", juce::dontSendNotification);
+        m_tagline.setText ("The Ultimate Synthesizer", juce::dontSendNotification);
         m_tagline.setFont (uiFont (FontSizeMicro));
         m_tagline.setColour (juce::Label::textColourId, TextMuted);
         m_tagline.setJustificationType (juce::Justification::left);
@@ -130,40 +135,47 @@ public:
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (10);
-        const int gap = 10;
+        auto area = getLocalBounds().reduced (12);
+        const int gap = 12;
 
-        m_wordmark.setBounds (area.removeFromLeft (130));
-        area.removeFromTop (2);
-        m_tagline.setBounds (area.removeFromLeft (130));
+        int logoW = 140;
+        m_logoWaveform.setBounds (area.removeFromLeft (logoW));
+        m_wordmark.setBounds (area.removeFromLeft (logoW));
+        m_tagline.setBounds (area.removeFromLeft (logoW));
         area.removeFromLeft (gap);
 
-        m_presetPrev.setBounds (area.removeFromLeft (26));
-        area.removeFromLeft (gap / 2);
-        m_presetNext.setBounds (area.removeFromLeft (26));
+        int btnW = 28;
+        int halfGap = gap / 2;
+        m_presetPrev.setBounds (area.removeFromLeft (btnW));
+        area.removeFromLeft (halfGap);
+        m_presetNext.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap);
 
-        m_presetName.setBounds (area.removeFromRight (150));
+        int presetNameW = 160;
+        m_presetName.setBounds (area.removeFromRight (presetNameW));
 
-        m_favorite.setBounds (area.removeFromLeft (26));
-        area.removeFromLeft (gap / 2);
-        m_save.setBounds (area.removeFromLeft (56));
-        area.removeFromLeft (gap / 2);
-        m_delete.setBounds (area.removeFromLeft (56));
-        area.removeFromLeft (gap / 2);
-        m_undo.setBounds (area.removeFromLeft (56));
-        area.removeFromLeft (gap / 2);
-        m_redo.setBounds (area.removeFromLeft (56));
-        area.removeFromLeft (gap);
-        m_randomize.setBounds (area.removeFromLeft (80));
+        int iconW = 26;
+        int txtW = 64;
+        m_favorite.setBounds (area.removeFromLeft (iconW));
+        area.removeFromLeft (halfGap);
+        m_save.setBounds (area.removeFromLeft (txtW));
+        area.removeFromLeft (halfGap);
+        m_delete.setBounds (area.removeFromLeft (txtW));
+        area.removeFromLeft (halfGap);
+        m_undo.setBounds (area.removeFromLeft (txtW));
+        area.removeFromLeft (halfGap);
+        m_redo.setBounds (area.removeFromLeft (txtW));
         area.removeFromLeft (gap);
 
-        m_voicesLabel.setBounds (area.removeFromRight (70));
+        m_randomize.setBounds (area.removeFromLeft (88));
+        area.removeFromLeft (gap);
+
+        m_voicesLabel.setBounds (area.removeFromRight (72));
         area.removeFromRight (gap);
-        m_polyphonyLabel.setBounds (area.removeFromRight (70));
+        m_polyphonyLabel.setBounds (area.removeFromRight (72));
         area.removeFromRight (gap);
 
-        m_settings.setBounds (area.removeFromRight (90));
+        m_settings.setBounds (area.removeFromRight (100));
     }
 
     void timerCallback() override
@@ -177,6 +189,7 @@ public:
 private:
     OmnivyAudioProcessor& m_processor;
 
+    WaveformComponent m_logoWaveform;
     juce::Label m_wordmark;
     juce::Label m_tagline;
     juce::TextButton m_presetPrev { "◀" };
@@ -270,6 +283,552 @@ private:
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TopBarComponent)
+};
+
+// ============================================================================
+// Faixa 2 — TabBarComponent
+// Seis abas com ícone, nome, formato chanfrado, destaque neon roxo ativo.
+// ============================================================================
+class TabButtonComponent : public juce::Button
+{
+public:
+    TabButtonComponent (const juce::String& icon, const juce::String& name)
+        : juce::Button (name), m_icon (icon), m_name (name), m_active (false)
+    {
+        setClickingTogglesState (true);
+        setToggleState (false, juce::dontSendNotification);
+        setWantsKeyboardFocus (false);
+    }
+
+    void setActive (bool active)
+    {
+        if (m_active != active)
+        {
+            m_active = active;
+            repaint();
+        }
+    }
+    bool isActive() const noexcept { return m_active; }
+
+    void paintButton (juce::Graphics& g, bool isMouseOver, bool /*isButtonDown*/) override
+    {
+        auto area = getLocalBounds().toFloat();
+
+        if (m_active)
+            g.setColour (PrimaryPurple);
+        else if (isMouseOver)
+            g.setColour (PrimaryPurple.withAlpha (0.18f));
+        else
+            g.setColour (PanelDark);
+
+        juce::Path shape;
+        float shear = 8.0f;
+        shape.addParallelogram (area, shear);
+        g.fillPath (shape);
+
+        if (!m_active)
+        {
+            g.setColour (Border);
+            g.strokePath (shape, juce::PathStrokeType ((float) BorderWidth));
+        }
+
+        g.setColour (m_active ? juce::Colours::white
+                              : (isMouseOver ? TextMain : TextSecondary));
+        g.setFont (uiFont (FontSizeLabel, juce::Font::bold));
+        auto text = m_icon + "  " + m_name;
+        g.drawFittedText (text, (int) area.getX(), (int) area.getY(),
+                          (int) area.getWidth(), (int) area.getHeight(),
+                          juce::Justification::centred, 1);
+    }
+
+private:
+    juce::String m_icon;
+    juce::String m_name;
+    bool m_active;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TabButtonComponent)
+};
+
+class TabBarComponent : public juce::Component
+{
+public:
+    TabBarComponent()
+    {
+        const struct { const char* icon; const char* name; } tabs[6] =
+        {
+            { "◁", "Oscillators" },
+            { "→", "Routing" },
+            { "≋", "Modulation" },
+            { "▭", "Filters & FX" },
+            { "◁○", "Visualizer" },
+            { "⚙", "Settings" },
+        };
+
+        for (int i = 0; i < 6; ++i)
+        {
+            m_buttons[i] = new TabButtonComponent (tabs[i].icon, tabs[i].name);
+            m_buttons[i]->setToggleState (i == 0, juce::dontSendNotification);
+            m_buttons[i]->onClick = [this, i] { selectTab (i); };
+            addAndMakeVisible (*m_buttons[i]);
+        }
+        m_activeTab = 0;
+    }
+
+    ~TabBarComponent() override = default;
+
+    int getActiveTab() const noexcept { return m_activeTab; }
+
+    using Callback = std::function<void(int)>;
+    void setOnTabChanged (Callback cb) { m_onTabChanged = std::move (cb); }
+
+    void paint (juce::Graphics& g) override
+    {
+        auto area = getLocalBounds().toFloat();
+        g.setColour (BackgroundMain);
+        g.fillRect (area);
+        g.setColour (Border);
+        g.fillRect (0, (int) area.getBottom() - 1, (int) area.getWidth(), 1);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced (4);
+        int tabW = area.getWidth() / 6;
+        for (int i = 0; i < 6; ++i)
+            m_buttons[i]->setBounds (area.removeFromLeft (tabW));
+    }
+
+    void selectTab (int index)
+    {
+        if (index < 0 || index >= 6 || index == m_activeTab)
+            return;
+        m_buttons[m_activeTab]->setToggleState (false, juce::dontSendNotification);
+        m_buttons[index]->setToggleState (true, juce::dontSendNotification);
+        m_activeTab = index;
+        if (m_onTabChanged)
+            m_onTabChanged (index);
+    }
+
+private:
+    TabButtonComponent* m_buttons[6] = { nullptr };
+    int m_activeTab = 0;
+    Callback m_onTabChanged;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TabBarComponent)
+};
+
+// ============================================================================
+// Faixa 4, coluna 1 — ModulationMatrixPanel
+// Tabela: Source | Destination | Amount | Curve | + | -
+// ============================================================================
+class ModulationMatrixPanel : public PanelComponent
+{
+public:
+    ModulationMatrixPanel (juce::AudioProcessorValueTreeState& /*apvts*/)
+        : PanelComponent ("Modulation Matrix", false)
+    {
+        setInterceptsMouseClicks (true, true);
+
+        m_addButton.setButtonText ("+");
+        m_addButton.setTooltip ("Adicionar roteamento de modulação");
+        m_addButton.onClick = [this] { /* preparada para implementação DSP */ };
+        addAndMakeVisible (m_addButton);
+
+        m_removeButton.setButtonText ("–");
+        m_removeButton.setTooltip ("Remover roteamento selecionado");
+        m_removeButton.setEnabled (false);
+        m_removeButton.onClick = [this] { /* preparada para implementação DSP */ };
+        addAndMakeVisible (m_removeButton);
+
+        m_note.setText ("Matriz de modulação preparada para o sistema real de modulação "
+                        "do Omnivy. Sem conexões funcionais até que o DSP as suporte.",
+                        juce::dontSendNotification);
+        m_note.setFont (uiFont (FontSizeMicro));
+        m_note.setColour (juce::Label::textColourId, TextMuted);
+        m_note.setJustificationType (juce::Justification::centred);
+        m_note.setEnabled (false);
+        addAndMakeVisible (m_note);
+    }
+
+    ~ModulationMatrixPanel() override = default;
+
+    void paint (juce::Graphics& g) override
+    {
+        PanelComponent::paint (g);
+
+        auto area = getLocalBounds().toFloat().reduced (10);
+        area.removeFromTop (44);
+
+        int colW = area.getWidth() / 5;
+        g.setColour (TextSecondary);
+        g.setFont (uiFont (FontSizeMicro));
+        g.drawText ("Source", area.getX(), area.getY(), colW, 16, juce::Justification::centred, true);
+        g.drawText ("Destination", area.getX() + colW, area.getY(), colW, 16, juce::Justification::centred, true);
+        g.drawText ("Amount", area.getX() + colW * 2, area.getY(), colW, 16, juce::Justification::centred, true);
+        g.drawText ("Curve", area.getX() + colW * 3, area.getY(), colW, 16, juce::Justification::centred, true);
+        g.drawText ("", area.getX() + colW * 4, area.getY(), colW, 16, juce::Justification::centred, true);
+
+        g.setColour (Border);
+        g.fillRect (area.getX(), area.getBottom() - 1, area.getWidth(), 1);
+
+        g.setColour (TextMuted);
+        g.drawText ("— sem modulações configuradas —",
+                    area.getX(), area.getBottom() + 6, area.getWidth(), 14,
+                    juce::Justification::centred, true);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced (10);
+        area.removeFromTop (44);
+        area.removeFromBottom (26);
+
+        m_addButton.setBounds (area.removeFromRight (30));
+        area.removeFromRight (8);
+        m_removeButton.setBounds (area.removeFromRight (30));
+
+        m_note.setBounds (area.removeFromBottom (22));
+    }
+
+private:
+    juce::TextButton m_addButton { "+" };
+    juce::TextButton m_removeButton { "–" };
+    juce::Label m_note;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ModulationMatrixPanel)
+};
+
+// ============================================================================
+// Faixa 4, coluna 4 — ArpeggiatorPanel
+// Abas: Arpeggiator | Clip
+// ============================================================================
+class ArpeggiatorPanel : public juce::Component, public juce::TabbedComponent::Listener
+{
+public:
+    ArpeggiatorPanel (juce::AudioProcessorValueTreeState& /*apvts*/)
+    {
+        m_tabbed.setTabBarDepth (36);
+        m_tabbed.addTab ("Arpeggiator", PanelDark, nullptr, true);
+        m_tabbed.addTab ("Clip", PanelDark, nullptr, false);
+        m_tabbed.addListener (this);
+        addAndMakeVisible (m_tabbed);
+
+        buildArpPage();
+        buildClipPage();
+
+        m_tabbed.setCurrentTabIndex (0);
+    }
+
+    ~ArpeggiatorPanel() override
+    {
+        m_tabbed.removeListener (this);
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+        auto area = getLocalBounds().toFloat();
+        g.setColour (ControlSurface);
+        g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+        g.setColour (Border);
+        g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced (10);
+        area.removeFromTop (40);
+        m_tabbed.setBounds (area);
+    }
+
+    void currentTabChanged (int newTabIndex, const juce::String& /*tabName*/) override
+    {
+        m_arpPage->setVisible (newTabIndex == 0);
+        m_clipPage->setVisible (newTabIndex == 1);
+        repaint();
+    }
+
+private:
+    juce::TabbedComponent m_tabbed { juce::TabbedButtonBar::TabsAtTop };
+    juce::Component* m_arpPage = nullptr;
+    juce::Component* m_clipPage = nullptr;
+
+    void buildArpPage()
+    {
+        m_arpPage = new juce::Component();
+        auto* page = m_arpPage;
+        page->setInterceptsMouseClicks (true, true);
+
+        auto makeLabel = [&] (const juce::String& text)
+        {
+            auto* l = new juce::Label (text, text);
+            l->setFont (uiFont (FontSizeMicro));
+            l->setColour (juce::Label::textColourId, TextSecondary);
+            l->setEnabled (false);
+            page->addAndMakeVisible (*l);
+            return l;
+        };
+
+        m_arpMode = new juce::ComboBox ("Mode");
+        m_arpMode->addItem ("Off", 1);
+        m_arpMode->addItem ("Up", 2);
+        m_arpMode->addItem ("Down", 3);
+        m_arpMode->addItem ("UpDown", 4);
+        m_arpMode->addItem ("Random", 5);
+        m_arpMode->setSelectedId (1);
+        m_arpMode->setEnabled (false);
+        page->addAndMakeVisible (*m_arpMode);
+
+        m_arpOctaves = new KnobComponent (dummyApvts(), "arpOctaves", "Octaves", "", KnobComponent::Size::Small, PrimaryPurple);
+        m_arpOctaves->setEnabled (false);
+        page->addAndMakeVisible (*m_arpOctaves);
+
+        m_arpRate = new KnobComponent (dummyApvts(), "arpRate", "Rate", "", KnobComponent::Size::Small, Osc2Colour);
+        m_arpRate->setEnabled (false);
+        page->addAndMakeVisible (*m_arpRate);
+
+        m_arpGate = new KnobComponent (dummyApvts(), "arpGate", "Gate", "", KnobComponent::Size::Small, Osc3Colour);
+        m_arpGate->setEnabled (false);
+        page->addAndMakeVisible (*m_arpGate);
+
+        m_arpSwing = new KnobComponent (dummyApvts(), "arpSwing", "Swing", "", KnobComponent::Size::Small, TextSecondary);
+        m_arpSwing->setEnabled (false);
+        page->addAndMakeVisible (*m_arpSwing);
+
+        m_arpPlay.setButtonText ("▶ Play");
+        m_arpPlay.setEnabled (false);
+        page->addAndMakeVisible (m_arpPlay);
+
+        makeLabel ("Modo");
+        makeLabel ("Oitavas");
+        makeLabel ("Taxa");
+        makeLabel ("Gate");
+        makeLabel ("Swing");
+
+        m_tabbed.getTabbedButtonBar()->addAndMakeVisible (*page);
+    }
+
+    void buildClipPage()
+    {
+        m_clipPage = new juce::Component();
+        auto* page = m_clipPage;
+        page->setInterceptsMouseClicks (true, true);
+
+        auto makeLabel = [&] (const juce::String& text)
+        {
+            auto* l = new juce::Label (text, text);
+            l->setFont (uiFont (FontSizeMicro));
+            l->setColour (juce::Label::textColourId, TextSecondary);
+            l->setEnabled (false);
+            page->addAndMakeVisible (*l);
+            return l;
+        };
+
+        m_clipMode = new juce::ComboBox ("Clip Mode");
+        m_clipMode->addItem ("Off", 1);
+        m_clipMode->addItem ("Step", 2);
+        m_clipMode->setSelectedId (1);
+        m_clipMode->setEnabled (false);
+        page->addAndMakeVisible (*m_clipMode);
+
+        m_clipPlay.setButtonText ("▶ Play");
+        m_clipPlay.setEnabled (false);
+        page->addAndMakeVisible (m_clipPlay);
+
+        makeLabel ("Modo de clip");
+
+        m_tabbed.getTabbedButtonBar()->addAndMakeVisible (*page);
+    }
+
+    static juce::AudioProcessorValueTreeState& dummyApvts()
+    {
+        static juce::AudioProcessor dummyProc (juce::AudioProcessor::BusesProperties());
+        static juce::AudioProcessorValueTreeState dummy (dummyProc, nullptr, "Dummy", {});
+        return dummy;
+    }
+
+    juce::ComboBox* m_arpMode = nullptr;
+    KnobComponent* m_arpOctaves = nullptr;
+    KnobComponent* m_arpRate = nullptr;
+    KnobComponent* m_arpGate = nullptr;
+    KnobComponent* m_arpSwing = nullptr;
+    juce::TextButton m_arpPlay { "▶ Play" };
+    juce::ComboBox* m_clipMode = nullptr;
+    juce::TextButton m_clipPlay { "▶ Play" };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ArpeggiatorPanel)
+};
+
+// ============================================================================
+// Faixa 5 — BottomBandComponent
+// Teclado MIDI + pitch/mod, Hold/Mono/Legato, Master com VU vertical, footer.
+// ============================================================================
+class BottomBandComponent : public juce::Component, private juce::Timer
+{
+public:
+    BottomBandComponent (OmnivyAudioProcessor& processor)
+        : m_processor (processor)
+    {
+        setInterceptsMouseClicks (true, true);
+
+        m_keyboardState.addListener (&m_midiCollector);
+        m_keyboard = new juce::MidiKeyboardComponent (m_keyboardState,
+                                                      juce::KeyboardComponentBase::horizontalKeyboard);
+        m_keyboard->setInterceptsMouseClicks (true, true);
+        addAndMakeVisible (*m_keyboard);
+
+        m_pitchBend.setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
+        m_pitchBend.setTextBoxStyle (juce::Slider::TextBoxRight, false, 40, 20);
+        m_pitchBend.setRange (-2.0, 2.0, 0.01);
+        m_pitchBend.setValue (0.0);
+        m_pitchBend.setTooltip ("Pitch Bend (±2 semitones)");
+        addAndMakeVisible (m_pitchBend);
+
+        m_modWheel.setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
+        m_modWheel.setTextBoxStyle (juce::Slider::TextBoxRight, false, 40, 20);
+        m_modWheel.setRange (0.0, 1.0, 0.01);
+        m_modWheel.setValue (0.0);
+        m_modWheel.setTooltip ("Mod Wheel");
+        addAndMakeVisible (m_modWheel);
+
+        m_hold.setButtonText ("Hold");
+        m_hold.setClickingTogglesState (true);
+        m_hold.setTooltip ("Hold (sustenta notas)");
+        addAndMakeVisible (m_hold);
+
+        m_mono.setButtonText ("Mono");
+        m_mono.setClickingTogglesState (true);
+        m_mono.setTooltip ("Mono (uma nota por vez)");
+        addAndMakeVisible (m_mono);
+
+        m_legato.setButtonText ("Legato");
+        m_legato.setClickingTogglesState (true);
+        m_legato.setTooltip ("Legato");
+        addAndMakeVisible (m_legato);
+
+        m_masterLabel.setText ("Master", juce::dontSendNotification);
+        m_masterLabel.setFont (uiFont (FontSizeLabel, juce::Font::bold));
+        m_masterLabel.setColour (juce::Label::textColourId, TextMain);
+        m_masterLabel.setJustificationType (juce::Justification::centred);
+        m_masterLabel.setEnabled (false);
+        addAndMakeVisible (m_masterLabel);
+
+        m_masterKnob = new KnobComponent (m_processor.apvts, params::MasterVolume,
+                                          "Volume", "", KnobComponent::Size::Medium, PrimaryPurple);
+        addAndMakeVisible (*m_masterKnob);
+
+        m_vuMeter.setColour (PrimaryPurple);
+        addAndMakeVisible (m_vuMeter);
+
+        startTimerHz (30);
+    }
+
+    ~BottomBandComponent() override = default;
+
+    void paint (juce::Graphics& g) override
+    {
+        auto area = getLocalBounds().toFloat();
+        g.setColour (PanelDark);
+        g.fillRoundedRectangle (area, (float) PanelCornerRadius);
+        g.setColour (Border);
+        g.drawRoundedRectangle (area, (float) PanelCornerRadius, (float) BorderWidth);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced (10);
+        const int gap = 10;
+
+        int wheelW = 34;
+        m_pitchBend.setBounds (area.removeFromLeft (wheelW));
+        area.removeFromLeft (gap / 2);
+        m_modWheel.setBounds (area.removeFromLeft (wheelW));
+        area.removeFromLeft (gap);
+
+        int btnW = 64;
+        m_hold.setBounds (area.removeFromLeft (btnW));
+        area.removeFromLeft (gap / 2);
+        m_mono.setBounds (area.removeFromLeft (btnW));
+        area.removeFromLeft (gap / 2);
+        m_legato.setBounds (area.removeFromLeft (btnW));
+        area.removeFromLeft (gap);
+
+        int keyboardW = area.getWidth() * 0.62f;
+        m_keyboard->setBounds (area.removeFromLeft (keyboardW));
+        area.removeFromLeft (gap);
+
+        int masterW = 110;
+        m_masterLabel.setBounds (area.removeFromRight (masterW));
+        m_masterKnob->setBounds (area.removeFromRight (masterW));
+        m_vuMeter.setBounds (area.removeFromRight (56));
+    }
+
+    void timerCallback() override
+    {
+        float peak = m_processor.getOutputPeak();
+        m_vuMeter.setLevel (peak);
+        m_vuMeter.repaint();
+    }
+
+    juce::MidiKeyboardState m_keyboardState;
+    juce::MidiMessageCollector m_midiCollector;
+    juce::MidiKeyboardComponent* m_keyboard = nullptr;
+
+    juce::Slider m_pitchBend { juce::Slider::LinearVertical, juce::Slider::TextBoxRight };
+    juce::Slider m_modWheel { juce::Slider::LinearVertical, juce::Slider::TextBoxRight };
+
+    juce::TextButton m_hold { "Hold" };
+    juce::TextButton m_mono { "Mono" };
+    juce::TextButton m_legato { "Legato" };
+
+    juce::Label m_masterLabel;
+    KnobComponent* m_masterKnob = nullptr;
+
+    class VUMeter : public juce::Component
+    {
+    public:
+        void setColour (juce::Colour c) { m_colour = c; repaint(); }
+        void setLevel (float level) { m_level = juce::jlimit (0.0f, 1.0f, level); repaint(); }
+
+        void paint (juce::Graphics& g) override
+        {
+            auto area = getLocalBounds().toFloat();
+            g.setColour (ControlSurface);
+            g.fillRoundedRectangle (area, 6.0f);
+            g.setColour (Border);
+            g.drawRoundedRectangle (area, 6.0f, 1.0f);
+
+            int segments = 12;
+            float segW = (area.getWidth() - 8.0f) / (float) segments;
+            float segH = area.getHeight() * 0.6f;
+            float y = area.getBottom() - segH - 4.0f;
+
+            int lit = juce::roundToInt (m_level * (float) segments);
+            for (int i = 0; i < segments; ++i)
+            {
+                bool on = i < lit;
+                juce::Colour c;
+                if (i < 6)       c = on ? Osc4Colour : Osc4Colour.withAlpha (0.15f);
+                else if (i < 10) c = on ? Osc5Colour : Osc5Colour.withAlpha (0.15f);
+                else             c = on ? PrimaryPurple : PrimaryPurple.withAlpha (0.15f);
+
+                g.setColour (c);
+                g.fillRoundedRectangle (4.0f + i * segW, y, segW - 4.0f, segH, 3.0f);
+            }
+
+            g.setColour (TextMuted);
+            g.setFont (uiFont (FontSizeMicro));
+            g.drawText ("VU", area.getX(), area.getY() + 2, area.getWidth(), 12,
+                        juce::Justification::centred, true);
+        }
+
+    private:
+        juce::Colour m_colour = PrimaryPurple;
+        float m_level = 0.0f;
+    };
+
+    VUMeter m_vuMeter;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BottomBandComponent)
 };
 
 // ============================================================================
@@ -378,22 +937,52 @@ private:
 OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (1200, 760);
+    setSize (1648, 920);
     setLookAndFeel (&m_lookAndFeel);
 
     using namespace omnivy::gui;
 
-    m_tabbed.setTabBarDepth (TabBarHeight);
-
+    // Faixa 1 — Top Bar.
     m_topBar = new TopBarComponent (audioProcessor);
     addAndMakeVisible (*m_topBar);
 
-    buildTabs();
-    m_tabbed.setCurrentTabIndex (TabOscillators);
-    addAndMakeVisible (m_tabbed);
+    // Faixa 2 — Tab Bar.
+    m_tabBar = new TabBarComponent();
+    m_tabBar->setOnTabChanged ([this] (int index) { tabSelected (index); });
+    addAndMakeVisible (*m_tabBar);
 
-    m_masterBand = new MasterBandComponent (audioProcessor);
-    addAndMakeVisible (*m_masterBand);
+    // Faixa 3 — Painéis superiores (quatro colunas).
+    m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
+    m_wavetablePanel = new WavetablePanel (audioProcessor.apvts);
+    m_routingPanel = new RoutingPanel (audioProcessor);
+    m_filterPanel = new FilterPanel (audioProcessor.apvts);
+
+    addAndMakeVisible (*m_oscPanel);
+    addAndMakeVisible (*m_wavetablePanel);
+    addAndMakeVisible (*m_routingPanel);
+    addAndMakeVisible (*m_filterPanel);
+
+    // Faixa 4 — Painéis inferiores (quatro colunas).
+    m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
+    m_visualizerPanel = new VisualizerPanel (audioProcessor.apvts);
+    m_arpPanel = new ArpeggiatorPanel (audioProcessor.apvts);
+
+    addAndMakeVisible (*m_modMatrixPanel);
+    addAndMakeVisible (*m_visualizerPanel);
+    addAndMakeVisible (*m_arpPanel);
+
+    m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
+    m_envTabbed->setTabBarDepth (36);
+    m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
+    m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
+    m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
+    addAndMakeVisible (*m_envTabbed);
+
+    // Faixa 5 — Teclado + Master + Footer.
+    m_bottomBand = new BottomBandComponent (audioProcessor);
+    addAndMakeVisible (*m_bottomBand);
+
+    m_activeTab = 0;
 }
 
 OmnivyAudioProcessorEditor::~OmnivyAudioProcessorEditor()
@@ -401,34 +990,48 @@ OmnivyAudioProcessorEditor::~OmnivyAudioProcessorEditor()
     setLookAndFeel (nullptr);
 }
 
-void OmnivyAudioProcessorEditor::buildTabs()
+void OmnivyAudioProcessorEditor::tabSelected (int index)
 {
-    using namespace omnivy::gui;
-
-    m_tabbed.addTab ("Osciladores", PanelDark,
-                     new OscillatorPanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Wavetable", PanelDark,
-                     new WavetablePanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Roteamento", PanelDark,
-                     new RoutingPanel (audioProcessor), true);
-    m_tabbed.addTab ("Filtro", PanelDark,
-                     new FilterPanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Envelope", PanelDark,
-                     new EnvelopePanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Visualizer", PanelDark,
-                     new VisualizerPanel (audioProcessor.apvts), true);
+    m_activeTab = index;
+    repaint();
 }
 
 void OmnivyAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (omnivy::gui::BackgroundMain);
+    g.fillAll (BackgroundMain);
 }
 
 void OmnivyAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    m_topBar->setBounds (area.removeFromTop (omnivy::gui::TopBarHeight));
-    m_masterBand->setBounds (area.removeFromBottom (86));
-    m_tabbed.setBounds (area);
+    m_topBar->setBounds (area.removeFromTop (TopBarHeight));
+    m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
+
+    int contentH = area.getHeight();
+    int topRowH = contentH / 2;
+    int bottomRowH = contentH - topRowH;
+
+    auto topRow = area.removeFromTop (topRowH);
+    int colW = topRow.getWidth() / 4;
+    int gap = 12;
+
+    m_oscPanel->setBounds    (topRow.removeFromLeft (colW));
+    topRow.removeFromLeft (gap);
+    m_wavetablePanel->setBounds (topRow.removeFromLeft (colW));
+    topRow.removeFromLeft (gap);
+    m_routingPanel->setBounds (topRow.removeFromLeft (colW));
+    topRow.removeFromLeft (gap);
+    m_filterPanel->setBounds (topRow.removeFromLeft (colW));
+
+    auto bottomRow = area.removeFromTop (bottomRowH);
+    m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_visualizerPanel->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
+
+    m_bottomBand->setBounds (area);
 }
