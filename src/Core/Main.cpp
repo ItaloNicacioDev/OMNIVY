@@ -53,8 +53,12 @@ public:
             editor->setSize (600, 400);
 
             // --- Seletor de entrada MIDI ---
-            midiInputSelector.addItemList (juce::MidiInput::getAvailableDevices(), 1);
-            if (midiInputSelector.getNumItems() > 0)
+            midiDevices = juce::MidiInput::getAvailableDevices();
+            juce::StringArray deviceNames;
+            for (const auto& d : midiDevices)
+                deviceNames.add (d.name);
+            midiInputSelector.addItemList (deviceNames, 1);
+            if (midiDevices.size() > 0)
             {
                 midiInputSelector.setSelectedId (1);
                 selectMidiInput (midiInputSelector.getSelectedItemIndex());
@@ -134,19 +138,22 @@ public:
     private:
         void selectMidiInput (int index)
         {
-            auto deviceNames = juce::MidiInput::getAvailableDevices();
-            if (index < 0 || index >= deviceNames.size())
+            if (index < 0 || index >= (int) midiDevices.size())
                 return;
 
-            auto deviceName = juce::String (deviceNames [(std::size_t) index]);
+            const auto& deviceInfo = midiDevices [(std::size_t) index];
+            const auto deviceName = deviceInfo.identifier;
 
             // Remove callback anterior (se houver).
-            audioDeviceManager.removeMidiInputCallback (midiInputSelector.getText().isNotEmpty()
-                                                            ? midiInputSelector.getText()
-                                                            : juce::String(), nullptr);
+            audioDeviceManager.removeMidiInputCallback (midiDevices.isEmpty()
+                                                            ? juce::String()
+                                                            : previousMidiDeviceIdentifier, nullptr);
 
             // Registra o coletor para o novo dispositivo MIDI (thread de mensagem).
-            audioDeviceManager.addMidiInputCallback (deviceName, &midiCollector);
+            if (deviceName.isNotEmpty())
+                audioDeviceManager.addMidiInputCallback (deviceName, &midiCollector);
+
+            previousMidiDeviceIdentifier = deviceName;
             midiInputSelector.setSelectedId (index + 1);
         }
         class ContentContainer : public juce::Component
