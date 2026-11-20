@@ -14,43 +14,44 @@ namespace gui {
 // -----------------------------------------------------------------------------
 // Superfícies
 // -----------------------------------------------------------------------------
-inline constexpr juce::Colour BackgroundMain    = juce::Colour (0x0A0A1Eu);  // #0A0A1E
-inline constexpr juce::Colour PanelDark         = juce::Colour (0x12122Bu);  // #12122B
-inline constexpr juce::Colour PanelLight        = juce::Colour (0x15152Fu);  // #15152F
-inline constexpr juce::Colour AreaInner         = juce::Colour (0x0C0C22u);  // #0C0C22
-inline constexpr juce::Colour ControlSurface    = juce::Colour (0x1A1A3Au);  // #1A1A3A
-inline constexpr juce::Colour Border            = juce::Colour (0x2A2A55u);  // #2A2A55
+inline const juce::Colour BackgroundMain    = juce::Colour (0x0A0A1Eu);  // #0A0A1E
+inline const juce::Colour PanelDark         = juce::Colour (0x12122Bu);  // #12122B
+inline const juce::Colour PanelLight        = juce::Colour (0x15152Fu);  // #15152F
+inline const juce::Colour AreaInner         = juce::Colour (0x0C0C22u);  // #0C0C22
+inline const juce::Colour ControlSurface    = juce::Colour (0x1A1A3Au);  // #1A1A3A
+inline const juce::Colour Border            = juce::Colour (0x2A2A55u);  // #2A2A55
 
 // -----------------------------------------------------------------------------
 // Identidade primária (roxos)
 // -----------------------------------------------------------------------------
-inline constexpr juce::Colour PrimaryPurple     = juce::Colour (0x8B5CF6u);  // #8B5CF6
-inline constexpr juce::Colour PrimaryPurpleDark = juce::Colour (0x6D28D9u);  // #6D28D9
-inline constexpr juce::Colour PrimaryPurpleLight = juce::Colour (0xA78BFau); // #A78BFA
-inline constexpr juce::Colour GlowActive        = juce::Colour (0x8B5CF6u).withAlpha (0.55f);
+inline const juce::Colour PrimaryPurple     = juce::Colour (0x8B5CF6u);  // #8B5CF6
+inline const juce::Colour PrimaryPurpleDark = juce::Colour (0x6D28D9u);  // #6D28D9
+inline const juce::Colour PrimaryPurpleLight = juce::Colour (0xA78BFau); // #A78BFA
+inline const juce::Colour GlowActive        = juce::Colour (0x8B5CF6u).withAlpha (0.55f);
 
 // Gradiente primário (6D28D9 → 8B5CF6)
 inline juce::ColourGradient primaryGradient()
 {
     return juce::ColourGradient (PrimaryPurpleDark, 0.0f, 0.0f,
-                                 PrimaryPurple,     1.0f, 0.0f);
+                                 PrimaryPurple,     1.0f, 0.0f,
+                                 false);
 }
 
 // -----------------------------------------------------------------------------
 // Cores semânticas (por fonte de modulação / oscilador)
 // -----------------------------------------------------------------------------
-inline constexpr juce::Colour Osc1Colour = juce::Colour (0x3B82F6u); // azul
-inline constexpr juce::Colour Osc2Colour = juce::Colour (0x22D3EEu); // ciano
-inline constexpr juce::Colour Osc3Colour = juce::Colour (0x2DD4BFu); // turquesa
-inline constexpr juce::Colour Osc4Colour = juce::Colour (0x22C55Eu); // verde
-inline constexpr juce::Colour Osc5Colour = juce::Colour (0xF59E0Bu); // âmbar
-inline constexpr juce::Colour Osc6Colour = juce::Colour (0xEC4899u); // rosa
+inline const juce::Colour Osc1Colour = juce::Colour (0x3B82F6u); // azul
+inline const juce::Colour Osc2Colour = juce::Colour (0x22D3EEu); // ciano
+inline const juce::Colour Osc3Colour = juce::Colour (0x2DD4BFu); // turquesa
+inline const juce::Colour Osc4Colour = juce::Colour (0x22C55Eu); // verde
+inline const juce::Colour Osc5Colour = juce::Colour (0xF59E0Bu); // âmbar
+inline const juce::Colour Osc6Colour = juce::Colour (0xEC4899u); // rosa
 
-inline constexpr juce::Colour LFO1Colour  = Osc1Colour;
-inline constexpr juce::Colour LFO2Colour  = Osc4Colour;
-inline constexpr juce::Colour Env1Colour  = juce::Colour (0xFACC15u); // amarelo
-inline constexpr juce::Colour Env2Colour  = juce::Colour (0x60A5FAu); // azul claro
-inline constexpr juce::Colour MacroColour = Osc6Colour;
+inline const juce::Colour LFO1Colour  = Osc1Colour;
+inline const juce::Colour LFO2Colour  = Osc4Colour;
+inline const juce::Colour Env1Colour  = juce::Colour (0xFACC15u); // amarelo
+inline const juce::Colour Env2Colour  = juce::Colour (0x60A5FAu); // azul claro
+inline const juce::Colour MacroColour = Osc6Colour;
 
 // Retorna a cor semántica de um oscilador (index 0..5 → OSC 1..6).
 inline juce::Colour oscillatorColour (int index)
@@ -75,9 +76,9 @@ inline constexpr float FontSizeLabel      = 13.0f;
 inline constexpr float FontSizeMicro      = 10.0f;
 inline constexpr float FontSizeValue      = 12.0f;
 
-inline constexpr juce::Colour TextMain      = juce::Colour (0xF2F3FFu);
-inline constexpr juce::Colour TextSecondary = juce::Colour (0xA5A8C8u);
-inline constexpr juce::Colour TextMuted     = juce::Colour (0x6E7099u);
+inline const juce::Colour TextMain      = juce::Colour (0xF2F3FFu);
+inline const juce::Colour TextSecondary = juce::Colour (0xA5A8C8u);
+inline const juce::Colour TextMuted     = juce::Colour (0x6E7099u);
 
 // Tenta usar Inter se disponível; caso contrário usa a fonte padrão da JUCE.
 inline juce::Font uiFont (float size, juce::Font::FontStyleFlags style = juce::Font::plain)
@@ -122,16 +123,10 @@ public:
     void drawIconButtonBackground (juce::Graphics& g, const juce::Rectangle<float>& area,
                                    bool isMouseOver, bool isToggleOn, bool isEnabled);
 
-    // --- Labels --------------------------------------------------------------
-    void drawLabel (juce::Graphics& g, int x, int y, int width, int height,
-                    const juce::String& text, const juce::Font& font,
-                    juce::Justification justification, juce::Colour colour) override;
-
-    // --- Abas ----------------------------------------------------------------
-    juce::Font getTabButtonFont (juce::TabBarButton&, int tabDepth) override;
-    int getTabButtonBestWidth (juce::TabBarButton&, int tabDepth) override;
-    void drawTabButton (juce::TabBarButton&, juce::Graphics&,
-                        bool isMouseOver, bool isTabFront) override;
+    // --- Abas (TabbedButtonBar::LookAndFeelMethods) --------------------------
+    void drawTabButton (juce::TabBarButton& button, juce::Graphics& g,
+                        bool isMouseOver, bool isMouseDown) override;
+    juce::Font getTabButtonFont (juce::TabBarButton& button, float height) override;
 };
 
 } // namespace gui
