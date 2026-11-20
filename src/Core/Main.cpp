@@ -60,7 +60,7 @@ public:
 
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
-            editor->setSize (600, 400);
+            editor->setSize (1200, 760);
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
@@ -86,13 +86,13 @@ public:
 
             // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
             auto* container = new ContentContainer (*editor, midiInputSelector, configButton, midiKeyboardComponent);
-            container->setSize (600, 460);
+            container->setSize (1200, 860);
 
             configButton.setButtonText ("Audio Setup...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
             setContentOwned (container, true);
-            setSize (600, 460);
+            setSize (1200, 860);
 
             centreWithSize (getWidth(), getHeight());
             logToFile ("Omnivy: window created and visible");
@@ -197,11 +197,17 @@ public:
             void resized() override
             {
                 auto area = getLocalBounds();
-                editor.setBounds (area.removeFromBottom (340));
-                area.removeFromTop (10);
-                midiSelector.setBounds (10, 350, 220, 24);
-                button.setBounds (240, 350, 200, 24);
-                keyboard.setBounds (10, 384, getWidth() - 20, 66);
+                int keyboardH = 76;
+                int topPadding = 10;
+
+                // Editor acima, teclado MIDI embaixo (preservado do Standalone original).
+                auto editorArea = area.removeFromTop (getHeight() - keyboardH - topPadding);
+                editor.setBounds (editorArea);
+
+                area.removeFromTop (topPadding);
+                midiSelector.setBounds (10, area.getY(), 220, 24);
+                button.setBounds (240, area.getY(), 200, 24);
+                keyboard.setBounds (10, area.getBottom() - keyboardH, getWidth() - 20, keyboardH);
             }
 
         private:
