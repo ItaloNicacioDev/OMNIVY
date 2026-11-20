@@ -403,17 +403,17 @@ void OmnivyAudioProcessorEditor::buildTabs()
 {
     using namespace omnivy::gui;
 
-    m_tabbed.addTab ("Osciladores", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Osciladores", PanelDark,
                      new OscillatorPanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Wavetable", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Wavetable", PanelDark,
                      new WavetablePanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Roteamento", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Roteamento", PanelDark,
                      new RoutingPanel (audioProcessor), true);
-    m_tabbed.addTab ("Filtro", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Filtro", PanelDark,
                      new FilterPanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Envelope", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Envelope", PanelDark,
                      new EnvelopePanel (audioProcessor.apvts), true);
-    m_tabbed.addTab ("Visualizer", omnivy::gui::PanelDark,
+    m_tabbed.addTab ("Visualizer", PanelDark,
                      new VisualizerPanel (audioProcessor.apvts), true);
 }
 
