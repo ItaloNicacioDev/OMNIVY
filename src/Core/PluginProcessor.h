@@ -40,9 +40,17 @@ public:
     // Test parameter (Phase 1 legacy): drives the engine's test tone.
     float testParameter = 0.5f;
 
+    // Leitura real do motor (para indicadores da UI).
+    int getPolyphony() const noexcept { return m_audioEngine.getPolyphony(); }
+    int getNumActiveVoices() const noexcept { return m_audioEngine.getNumActiveVoices(); }
+    float getOutputPeak() const noexcept { return m_audioEngine.getOutputPeak(); }
+
     // Host-automatable parameter tree. Layout is defined in SynthParameters.
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters",
         omnivy::SynthParameters::createParameterLayout() };
+
+    // --- Roteamento (message thread) ---
+    dsp::RoutingGraph& getRoutingGraph() noexcept { return m_audioEngine.getRoutingGraph(); }
 
 private:
     omnivy::SynthParameters m_synthParameters;
