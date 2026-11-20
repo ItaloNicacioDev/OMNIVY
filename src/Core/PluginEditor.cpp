@@ -15,6 +15,8 @@
 #include <memory>
 #include <random>
 
+#include "Parameters/ParameterIDs.h"
+
 namespace omnivy {
 namespace gui {
 
