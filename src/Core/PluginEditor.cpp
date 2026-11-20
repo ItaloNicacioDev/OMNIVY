@@ -25,13 +25,13 @@ namespace gui {
 // Faixa 1 — Barra superior: logo, presets, controles de arquivo e indicadores.
 // ============================================================================
 
-class TopBarComponent : public juce::Component
+class TopBarComponent : public juce::Component, private juce::Timer
 {
 public:
     TopBarComponent (OmnivyAudioProcessor& processor)
         : m_processor (processor)
     {
-        setInterceptsMouseClicks (true);
+        setInterceptsMouseClicks (true, true);
 
         m_wordmark.setText ("OMNIVY", juce::dontSendNotification);
         m_wordmark.setFont (uiFont (19.0f, juce::Font::bold));
@@ -123,7 +123,7 @@ public:
         g.setColour (BackgroundMain);
         g.fillRect (area);
         g.setColour (Border);
-        g.fillRect (0, (float) getHeight() - 1.0f, (float) getWidth(), 1.0f);
+        g.fillRect (0, (int) getHeight() - 1, getWidth(), 1);
     }
 
     void resized() override
@@ -203,8 +203,12 @@ private:
 
             juce::MemoryBlock block;
             m_processor.getStateInformation (block);
-            if (file.replaceWithMemoryBlock (block))
+            if (auto* stream = file.createOutputStream())
+            {
+                stream->write (block.getData(), static_cast<int> (block.getSize()));
+                stream->flush();
                 m_presetName.setText (file.getFileNameWithoutExtension(), juce::dontSendNotification);
+            }
         }
     }
 
@@ -279,14 +283,13 @@ private:
 // Faixa 5 (direita) — Volume master real + VU meter com pico real de saída.
 // ============================================================================
 
-class MasterBandComponent : public juce::Component,
-                            private juce::Timer
+class MasterBandComponent : public juce::Component, private juce::Timer
 {
 public:
     MasterBandComponent (OmnivyAudioProcessor& processor)
         : m_processor (processor)
     {
-        setInterceptsMouseClicks (true);
+        setInterceptsMouseClicks (true, true);
 
         m_volumeLabel.setText ("Master", juce::dontSendNotification);
         m_volumeLabel.setFont (uiFont (FontSizeLabel, juce::Font::bold));
@@ -391,7 +394,6 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     m_topBar = new TopBarComponent (audioProcessor);
     addAndMakeVisible (*m_topBar);
 
-    m_tabbed.addListener (this);
     buildTabs();
     m_tabbed.setCurrentTabIndex (TabOscillators);
     addAndMakeVisible (m_tabbed);
@@ -402,7 +404,6 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
 
 OmnivyAudioProcessorEditor::~OmnivyAudioProcessorEditor()
 {
-    m_tabbed.removeListener (this);
     setLookAndFeel (nullptr);
 }
 
@@ -422,18 +423,6 @@ void OmnivyAudioProcessorEditor::buildTabs()
                      new EnvelopePanel (audioProcessor.apvts), true);
     m_tabbed.addTab ("Visualizer", PanelDark,
                      new VisualizerPanel (audioProcessor.apvts), true);
-
-    updateTabStrip();
-}
-
-void OmnivyAudioProcessorEditor::currentTabChanged (int /*newTabIndex*/, juce::TabbedComponent* /*tabComponent*/)
-{
-    updateTabStrip();
-}
-
-void OmnivyAudioProcessorEditor::updateTabStrip()
-{
-    // O LookAndFeel cuida do destaque da aba ativa.
 }
 
 void OmnivyAudioProcessorEditor::paint (juce::Graphics& g)
