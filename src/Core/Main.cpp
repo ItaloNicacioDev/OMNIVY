@@ -27,8 +27,7 @@ public:
     }
 
     class OmnivyStandaloneWindow : public juce::DocumentWindow,
-                                   public juce::AudioIODeviceCallback,
-                                   public juce::MidiKeyboardStateListener
+                                   public juce::AudioIODeviceCallback
     {
     public:
         OmnivyStandaloneWindow (const juce::String& name)
@@ -137,20 +136,6 @@ public:
         void audioDeviceStopped() override
         {
             processor->releaseResources();
-        }
-
-        // --- juce::MidiKeyboardStateListener (teclado virtual / teclado do computador) ---
-
-        void handleNoteOn (juce::MidiKeyboardState* /*source*/, int midiChannel, int midiNoteNumber, float velocity) override
-        {
-            juce::MidiMessage m = juce::MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity);
-            midiCollector.addMessageToCollector (m);
-        }
-
-        void handleNoteOff (juce::MidiKeyboardState* /*source*/, int midiChannel, int midiNoteNumber, float velocity) override
-        {
-            juce::MidiMessage m = juce::MidiMessage::noteOff (midiChannel, midiNoteNumber, velocity);
-            midiCollector.addMessageToCollector (m);
         }
 
     private:
