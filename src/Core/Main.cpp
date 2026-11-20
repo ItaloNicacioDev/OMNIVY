@@ -18,6 +18,7 @@ public:
     void initialise (const juce::String& commandLine) override
     {
         juce::ignoreUnused (commandLine);
+        juce::Logger::writeToLog ("Omnivy: application initialise()");
 
         mainWindow = std::make_unique<OmnivyStandaloneWindow> ("Omnivy");
         mainWindow->setVisible (true);
@@ -25,6 +26,7 @@ public:
 
     void shutdown() override
     {
+        juce::Logger::writeToLog ("Omnivy: application shutdown()");
         mainWindow = nullptr; // destrói a janela, que libera o áudio
     }
 
@@ -43,6 +45,7 @@ public:
 
             // --- Audio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
             audioDeviceManager.initialise (0, 2, nullptr, true, {});
+            juce::Logger::writeToLog ("Omnivy: audioDeviceManager.initialise(0 in, 2 out) called");
 
             // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
             audioDeviceManager.addAudioCallback (this);
@@ -82,10 +85,12 @@ public:
             setSize (600, 460);
 
             centreWithSize (getWidth(), getHeight());
+            juce::Logger::writeToLog ("Omnivy: window created and visible");
         }
 
         ~OmnivyStandaloneWindow()
         {
+            juce::Logger::writeToLog ("Omnivy: ~OmnivyStandaloneWindow()");
             // Remove os callbacks de áudio e MIDI primeiro (para o callback de áudio,
             // que chama releaseResources no processador), depois destrói editor/processor.
             audioDeviceManager.removeAudioCallback (this);
@@ -98,6 +103,7 @@ public:
 
         void closeButtonPressed() override
         {
+            juce::Logger::writeToLog ("Omnivy: closeButtonPressed()");
             juce::JUCEApplication::getInstance()->systemRequestedQuit();
         }
 
@@ -130,6 +136,7 @@ public:
         void audioDeviceAboutToStart (juce::AudioIODevice* device) override
         {
             juce::ignoreUnused (device);
+            juce::Logger::writeToLog ("Omnivy: audioDeviceAboutToStart()");
             processor->prepareToPlay (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate(),
                                       audioDeviceManager.getCurrentAudioDevice()->getCurrentBufferSizeSamples());
             midiCollector.reset (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
@@ -137,6 +144,7 @@ public:
 
         void audioDeviceStopped() override
         {
+            juce::Logger::writeToLog ("Omnivy: audioDeviceStopped()");
             processor->releaseResources();
         }
 
