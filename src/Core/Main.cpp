@@ -60,7 +60,7 @@ public:
             configButton.setButtonText ("Configurar Áudio...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
-            setContentOwned (container, true);
+            setContentOwned (container);
             setSize (600, 440);
 
             centreWithSize (getWidth(), getHeight());
