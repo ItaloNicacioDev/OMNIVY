@@ -7,6 +7,8 @@
 #include "GUI/FilterPanel.h"
 #include "GUI/EnvelopePanel.h"
 #include "GUI/VisualizerPanel.h"
+#include "GUI/EnvelopeDisplay.h"
+#include "GUI/WaveformComponent.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
