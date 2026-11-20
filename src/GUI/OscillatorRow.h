@@ -63,9 +63,6 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> m_powerAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> m_engineAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> m_waveformAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>   m_levelAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>   m_octaveAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>   m_semitoneAttachment;
 
     void populateEngineCombo();
     void populateWaveformCombo();
