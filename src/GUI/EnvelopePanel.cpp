@@ -1,5 +1,7 @@
 #include "GUI/EnvelopePanel.h"
 
+#include "Parameters/ParameterIDs.h"
+
 namespace omnivy {
 namespace gui {
 
@@ -48,10 +50,14 @@ EnvelopePanel::~EnvelopePanel()
 
 void EnvelopePanel::parameterValueChanged (const juce::String& /*parameterID*/, float /*newValue*/)
 {
-    // Chamado quando o parâmetro muda (automação, MIDI, preset). refreshDisplay
-    // apenas lê valores atômicos e chama repaint (thread-safe), portanto é
-    // seguro mesmo se for invocado fora da thread de mensagem.
-    refreshDisplay();
+    // refreshDisplay() lê valores atômicos do APVTS e chama repaint(). repaint()
+    // é thread-safe, mas a leitura/gravação dos membros de UI deve ocorrer na
+    // thread de mensagem. Se a automação do host notificar na thread de áudio,
+    // adiamos a atualização para evitar data race com paint().
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+        refreshDisplay();
+    else
+        juce::MessageManager::getInstance()->callAsync ([this] { refreshDisplay(); });
 }
 
 void EnvelopePanel::refreshDisplay()
