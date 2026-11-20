@@ -150,6 +150,23 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
                 channelData[sample] *= smoothedMasterVolume;
         }
     }
+
+    // Observa o pico real da saída (apenas leitura, para o VU meter da UI).
+    float blockPeak = 0.0f;
+    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
+    {
+        const float* channelData = buffer.getReadPointer (channel);
+        for (int sample = 0; sample < numSamples; ++sample)
+            blockPeak = std::fmaxf (blockPeak, std::fabsf (channelData[sample]));
+    }
+    // Suaviza o pico para o VU não piscar excessivamente (ataque rápido, decay lento).
+    const float current = m_outputPeak.load ();
+    float smoothed = current;
+    if (blockPeak > current)
+        smoothed = blockPeak; // ataque imediato
+    else
+        smoothed = current * 0.95f + blockPeak * 0.05f; // decay suave
+    m_outputPeak.store (smoothed);
 }
 
 void AudioEngine::renderVoices (juce::AudioBuffer<float>& buffer)
