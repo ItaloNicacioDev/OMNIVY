@@ -1,6 +1,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/players/juce_AudioProcessorPlayer.h>
+#include <juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
