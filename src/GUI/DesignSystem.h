@@ -132,9 +132,6 @@ public:
     int getTabButtonBestWidth (juce::TabBarButton&, int tabDepth) override;
     void drawTabButton (juce::TabBarButton&, juce::Graphics&,
                         bool isMouseOver, bool isTabFront) override;
-
-private:
-    juce::Font m_font;
 };
 
 } // namespace gui
