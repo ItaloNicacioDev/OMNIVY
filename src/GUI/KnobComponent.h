@@ -67,9 +67,9 @@ public:
 private:
     // Slider funcional (invisível) que conduz o SliderAttachment e recebe
     // interações de mouse (arrasto vertical / rotativo).
+    TransparentSliderLookAndFeel m_transparentLA;
     juce::Slider m_slider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> m_attachment;
-    TransparentSliderLookAndFeel m_transparentLA;
 
     Size m_size;
     juce::Colour m_accent;
