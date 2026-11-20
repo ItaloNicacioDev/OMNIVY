@@ -71,7 +71,7 @@ public:
             addAndMakeVisible (midiInputSelector);
 
             // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
-            auto* container = new ContentContainer (*editor, midiInputSelector, configButton);
+            auto* container = new ContentContainer (*editor, midiInputSelector, configButton, midiKeyboardComponent);
             container->setSize (600, 460);
 
             configButton.setButtonText ("Audio Setup...");
