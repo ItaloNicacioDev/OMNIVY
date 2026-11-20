@@ -11,25 +11,25 @@ FilterPanel::FilterPanel (juce::AudioProcessorValueTreeState& apvts)
     m_enabledButton = new IconButtonComponent ("⏻", "Filtro ligar/desligar", PrimaryPurple);
     m_enabledButton->setToggleState (false, juce::dontSendNotification);
     m_enabledButton->onClick = [this] { repaint(); };
-    addAndMakeVisible (m_enabledButton);
+    addAndMakeVisible (*m_enabledButton);
 
     m_typeCombo = new juce::ComboBox ("Tipo de filtro");
     m_typeCombo->addItem ("Low Pass", 1);
     m_typeCombo->addItem ("High Pass", 2);
     m_typeCombo->addItem ("Band Pass", 3);
-    addAndMakeVisible (m_typeCombo);
+    addAndMakeVisible (*m_typeCombo);
 
     m_cutoffKnob = new KnobComponent (apvts, params::FilterCutoff, "Cutoff", "Hz",
                                       KnobComponent::Size::Medium, Osc2Colour);
-    addAndMakeVisible (m_cutoffKnob);
+    addAndMakeVisible (*m_cutoffKnob);
 
     m_resonanceKnob = new KnobComponent (apvts, params::FilterResonance, "Resonance", "",
                                          KnobComponent::Size::Medium, Osc2Colour);
-    addAndMakeVisible (m_resonanceKnob);
+    addAndMakeVisible (*m_resonanceKnob);
 
     m_keyTrackKnob = new KnobComponent (apvts, params::FilterKeyTrack, "Key Track", "",
                                         KnobComponent::Size::Small, TextSecondary);
-    addAndMakeVisible (m_keyTrackKnob);
+    addAndMakeVisible (*m_keyTrackKnob);
 
     m_enabledAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>
         (m_apvts, params::FilterEnabled, *m_enabledButton);
