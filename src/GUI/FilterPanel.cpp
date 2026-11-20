@@ -1,5 +1,7 @@
 #include "GUI/FilterPanel.h"
 
+#include "Parameters/ParameterIDs.h"
+
 namespace omnivy {
 namespace gui {
 
