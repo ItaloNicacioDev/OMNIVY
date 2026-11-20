@@ -887,13 +887,13 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     using namespace omnivy::gui;
 
     // Faixa 1 — Top Bar.
-    m_topBar = new TopBarComponent (audioProcessor);
-    addAndMakeVisible (*m_topBar);
+    // m_topBar = new TopBarComponent (audioProcessor);
+    // addAndMakeVisible (*m_topBar);
 
     // Faixa 2 — Tab Bar.
-    m_tabBar = new TabBarComponent();
-    m_tabBar->setOnTabChanged ([this] (int index) { tabSelected (index); });
-    addAndMakeVisible (*m_tabBar);
+    // m_tabBar = new TabBarComponent();
+    // m_tabBar->setOnTabChanged ([this] (int index) { tabSelected (index); });
+    // addAndMakeVisible (*m_tabBar);
 
     // Faixa 3 — Painéis superiores (quatro colunas).
     m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
@@ -949,8 +949,8 @@ void OmnivyAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    m_topBar->setBounds (area.removeFromTop (TopBarHeight));
-    m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
+    // m_topBar->setBounds (area.removeFromTop (TopBarHeight));
+    // m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
 
     int contentH = area.getHeight();
     int topRowH = contentH / 2;
@@ -977,7 +977,7 @@ void OmnivyAudioProcessorEditor::resized()
     // bottomRow.removeFromLeft (gap);
     // m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
 
-    m_bottomBand->setBounds (area);
+    // m_bottomBand->setBounds (area);
 }
 
 } // namespace gui
