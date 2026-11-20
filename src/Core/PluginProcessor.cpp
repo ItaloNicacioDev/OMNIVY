@@ -158,12 +158,23 @@ void OmnivyAudioProcessor::setStateInformation (const void* data, int sizeInByte
     if (sizeInBytes >= 4)
         testParameter = *reinterpret_cast<const float*> (d);
 
-    // Restaura a árvore de parâmetros, se presente no bloco.
+    // Restaura a árvore de parâmetros, se presente no bloco (após os 4 bytes
+    // do legacy testParameter). Em vez de substituir apvts.state (o que
+    // deixaria os parâmetros com referências pendentes), aplica cada
+    // propriedade carregada ao parâmetro correspondente, preservando a ligação
+    // ValueTree -> AudioProcessorParameter e notificando listeners/attachments.
     if (sizeInBytes > 4)
     {
         juce::ValueTree tree = juce::ValueTree::readFromData (d + 4, static_cast<size_t> (sizeInBytes - 4));
         if (tree.isValid())
-            apvts.state = tree;
+        {
+            const juce::NamedValueSet& props = tree.getProperties();
+            for (int i = 0; i < props.size(); ++i)
+            {
+                if (auto* param = apvts.getParameter (props.getName (i).toString()))
+                    param->setValue (static_cast<float> (props.getValue (i)));
+            }
+        }
     }
 }
 
