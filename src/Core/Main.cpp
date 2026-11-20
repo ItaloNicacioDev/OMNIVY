@@ -2,7 +2,6 @@
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h>
-#include <juce_audio_devices/midi_io/juce_MidiMessageCollector.h>
 #include <juce_audio_utils/gui/juce_KeyboardComponentBase.h>
 #include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 #include "PluginProcessor.h"
@@ -252,7 +251,7 @@ public:
         juce::Array<juce::MidiDeviceInfo> midiDevices;
         juce::String previousMidiDeviceIdentifier;
         juce::MidiKeyboardState midiKeyboardState;
-        juce::MidiKeyboardComponent midiKeyboardComponent { midiKeyboardState, juce::Orientation::horizontal };
+        juce::MidiKeyboardComponent midiKeyboardComponent { midiKeyboardState, juce::KeyboardComponentBase::horizontalKeyboard };
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyStandaloneWindow)
     };
