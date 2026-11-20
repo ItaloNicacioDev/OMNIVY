@@ -53,7 +53,6 @@ public:
             editor->setSize (600, 400);
 
             // --- Seletor de entrada MIDI ---
-            midiInputSelector.setLabel ("MIDI Input:");
             midiInputSelector.addItemList (juce::MidiInput::getAvailableDevices(), 1);
             if (midiInputSelector.getNumItems() > 0)
             {
@@ -101,11 +100,12 @@ public:
 
         // --- juce::AudioIODeviceCallback (chamado pela thread de áudio JUCE) ---
 
-        void audioDeviceIOCallback (const float** inputChannelData,
-                                    int numInputChannels,
-                                    float** outputChannelData,
-                                    int numOutputChannels,
-                                    int numSamples) override
+        void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
+                                               int numInputChannels,
+                                               float* const* outputChannelData,
+                                               int numOutputChannels,
+                                               int numSamples,
+                                               const juce::AudioIODeviceCallbackContext&) override
         {
             juce::AudioBuffer<float> buffer (outputChannelData, numOutputChannels, numSamples);
             juce::MidiBuffer midiBuffer;
@@ -138,7 +138,7 @@ public:
             if (index < 0 || index >= deviceNames.size())
                 return;
 
-            auto deviceName = deviceNames [(std::size_t) index];
+            auto deviceName = juce::String (deviceNames [(std::size_t) index]);
 
             // Remove callback anterior (se houver).
             audioDeviceManager.removeMidiInputCallback (midiInputSelector.getText().isNotEmpty()
