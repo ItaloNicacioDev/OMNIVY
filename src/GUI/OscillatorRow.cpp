@@ -47,23 +47,22 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     addAndMakeVisible (*m_waveformPreview);
 
     // Level — parâmetro real oscLevel.
-    m_levelKnob = new KnobComponent (apvts, oscLevel (oscillatorIndex),
+    m_levelKnob = new KnobComponent (apvts, params::oscLevel (oscillatorIndex),
                                      "Level", "", KnobComponent::Size::Small, m_stripeColour);
     addAndMakeVisible (*m_levelKnob);
 
     // Octave — parâmetro real oscOctave.
-    m_octaveKnob = new KnobComponent (apvts, oscOctave (oscillatorIndex),
+    m_octaveKnob = new KnobComponent (apvts, params::oscOctave (oscillatorIndex),
                                       "Oct", "", KnobComponent::Size::Small, TextSecondary);
     addAndMakeVisible (*m_octaveKnob);
 
     // Semitone — parâmetro real oscSemitone.
-    m_semitoneKnob = new KnobComponent (apvts, oscSemitone (oscillatorIndex),
+    m_semitoneKnob = new KnobComponent (apvts, params::oscSemitone (oscillatorIndex),
                                         "Semi", "", KnobComponent::Size::Small, TextSecondary);
     addAndMakeVisible (*m_semitoneKnob);
 
     // Chevron de seleção da linha (estado apenas da UI).
     m_chevronButton = new juce::TextButton ("›");
-    m_chevronButton->setFont (uiFont (14.0f, juce::Font::bold));
     m_chevronButton->setColour (juce::TextButton::buttonColourId, juce::Colours::transparentWhite);
     m_chevronButton->setColour (juce::TextButton::textColourOffId, TextMuted);
     m_chevronButton->setColour (juce::TextButton::textColourOnId, PrimaryPurple);
@@ -73,11 +72,11 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     // Attachments aos parâmetros reais do APVTS (não-knobs; os knobs criam
     // seu próprio SliderAttachment internamente no construtor).
     m_powerAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>
-        (m_apvts, oscActive (oscillatorIndex), *m_powerButton);
+        (m_apvts, params::oscActive (oscillatorIndex), *m_powerButton);
 
     m_engineAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
-        (m_apvts, oscEngine (oscillatorIndex), *m_engineCombo);
+        (m_apvts, params::oscEngine (oscillatorIndex), *m_engineCombo);
 
     m_waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
-        (m_apvts, oscWaveform (oscillatorIndex), *m_waveformCombo);
+        (m_apvts, params::oscWaveform (oscillatorIndex), *m_waveformCombo);
 }
