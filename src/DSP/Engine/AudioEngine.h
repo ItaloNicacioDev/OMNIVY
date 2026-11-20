@@ -46,6 +46,7 @@ public:
     int getNumActiveVoices() const noexcept;
     int getPolyphony() const noexcept { return m_voiceManager.getPolyphony(); }
     float getMasterVolume() const noexcept { return m_masterVolume.load(); }
+    float getOutputPeak() const noexcept { return m_outputPeak.load(); }  // nível real de saída (0..1+)
     double getSampleRate() const noexcept { return m_sampleRate; }
 
     void setTestToneLevel (float level);
@@ -68,6 +69,9 @@ private:
     // Master volume — acessado por thread de mensagem (setMasterVolume) e
     // thread de áudio (processBlock). Atômico para evitar data race.
     std::atomic<float> m_masterVolume { 0.7f };
+    // Pico de saída observado em cada processBlock (apenas leitura para VU).
+    // Atualizado na thread de áudio, lido pela thread da UI. Sem alocação.
+    std::atomic<float> m_outputPeak { 0.0f };
     float m_testToneLevel = 0.0f;
     float m_testPhase = 0.0f;
 
