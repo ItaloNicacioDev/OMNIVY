@@ -65,8 +65,8 @@ public:
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
             logToFile ("Omnivy: editor criado OK");
-            editor->setSize (1200, 760);
-            logToFile ("Omnivy: editor setSize OK");
+            // editor->setSize (1200, 760);  // Diagnóstico: setSize antes do pai causa crash no JUCE
+            logToFile ("Omnivy: editor setSize pulado");
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
