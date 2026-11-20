@@ -881,8 +881,11 @@ namespace gui {
 OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    logToFileProc ("OmnivyEditor: construtor INICIO");
     setSize (1648, 920);
+    logToFileProc ("OmnivyEditor: setSize OK");
     setLookAndFeel (&m_lookAndFeel);
+    logToFileProc ("OmnivyEditor: setLookAndFeel OK");
 
     using namespace omnivy::gui;
 
@@ -927,6 +930,7 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     // addAndMakeVisible (*m_bottomBand);
 
     m_activeTab = 0;
+    logToFileProc ("OmnivyEditor: construtor FIM OK");
 }
 
 OmnivyAudioProcessorEditor::~OmnivyAudioProcessorEditor()
