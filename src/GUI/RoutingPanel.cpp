@@ -2,6 +2,8 @@
 
 #include "PluginProcessor.h"
 
+#include "Parameters/ParameterIDs.h"
+
 #include "DSP/Routing/Connection.h"
 #include "DSP/Routing/RoutingGraph.h"
 
