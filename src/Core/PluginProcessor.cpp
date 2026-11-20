@@ -3,6 +3,14 @@
 
 #include <cmath>
 #include <juce_data_structures/juce_data_structures.h>
+#include <fstream>
+
+static void logToFileProc (const juce::String& message)
+{
+    std::ofstream logFile ("OmnivyProc_log.txt", std::ios::app);
+    logFile << message.toStdString() << "\n";
+    logFile.close();
+}
 
 OmnivyAudioProcessor::OmnivyAudioProcessor()
     : AudioProcessor (BusesProperties()
@@ -22,12 +30,17 @@ OmnivyAudioProcessor::~OmnivyAudioProcessor()
 
 void OmnivyAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    logToFileProc ("Omnivy: prepareToPlay INICIO");
     // Snapshot current host-automatable parameters into the DSP-friendly
     // structure, then hand it to the engine.
     m_synthParameters.updateFromValueTreeState (apvts);
+    logToFileProc ("Omnivy: prepareToPlay updateFromValueTreeState OK");
     m_audioEngine.setParameters (m_synthParameters);
+    logToFileProc ("Omnivy: prepareToPlay setParameters OK");
     m_audioEngine.setTestToneLevel (testParameter);
+    logToFileProc ("Omnivy: prepareToPlay setTestToneLevel OK");
     m_audioEngine.prepare (sampleRate, static_cast<int> (samplesPerBlock));
+    logToFileProc ("Omnivy: prepareToPlay m_audioEngine.prepare OK");
 }
 
 void OmnivyAudioProcessor::releaseResources()

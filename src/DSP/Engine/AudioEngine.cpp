@@ -22,33 +22,42 @@ AudioEngine::AudioEngine()
 
 void AudioEngine::prepare (double sampleRate, int samplesPerBlock)
 {
+    logToFileEngine ("AudioEngine::prepare: INICIO");
     m_sampleRate = sampleRate;
     m_samplesPerBlock = samplesPerBlock;
 
     // Build a single sine wavetable shared by any wavetable oscillators.
     m_wavetable.allocate (1, 2048);
+    logToFileEngine ("AudioEngine::prepare: wavetable allocate OK");
     dsp::WavetableGenerator::generateSine (m_wavetable, 0);
+    logToFileEngine ("AudioEngine::prepare: generateSine OK");
 
     m_voiceManager.setSampleRate (sampleRate);
+    logToFileEngine ("AudioEngine::prepare: setSampleRate OK");
     if (m_parameters != nullptr)
         m_voiceManager.setPolyphony (m_parameters->getPolyphony());
     else
         m_voiceManager.setPolyphony (16);
+    logToFileEngine ("AudioEngine::prepare: setPolyphony OK");
 
     // Bind all voice engines to the routing graph (node = voice*6 + slot).
     m_voiceManager.visitEngines ([this] (dsp::OscillatorEngine* engine, dsp::NodeId nodeId)
     {
         m_routingGraph.bindEngine (nodeId, engine);
     });
+    logToFileEngine ("AudioEngine::prepare: bindEngines OK");
 
     m_testPhase = 0.0f;
 
     // Inicializa o smoother do master volume com o valor atual.
     m_masterVolumeSmoother.setSampleRate (sampleRate);
+    logToFileEngine ("AudioEngine::prepare: smoother setSampleRate OK");
     m_masterVolumeSmoother.setSmoothTime (0.005f); // 5 ms
     m_masterVolumeSmoother.reset (m_masterVolume);
+    logToFileEngine ("AudioEngine::prepare: smoother reset OK");
 
     m_prepared = true;
+    logToFileEngine ("AudioEngine::prepare: FIM OK");
 }
 
 void AudioEngine::releaseResources()

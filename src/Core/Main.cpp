@@ -148,10 +148,21 @@ public:
         void audioDeviceAboutToStart (juce::AudioIODevice* device) override
         {
             juce::ignoreUnused (device);
-            logToFile ("Omnivy: audioDeviceAboutToStart()");
+            logToFile ("Omnivy: audioDeviceAboutToStart() INICIO");
+            auto audioDevice = audioDeviceManager.getCurrentAudioDevice();
+            logToFile ("Omnivy: audioDeviceAboutToStart() getCurrentAudioDevice OK");
+            logToFile ("Omnivy: audioDeviceAboutToStart() device = " + juce::String ((int64) (uintptr_t) audioDevice));
+            if (audioDevice != nullptr)
+            {
+                logToFile ("Omnivy: audioDeviceAboutToStart() sampleRate = " + juce::String (audioDevice->getCurrentSampleRate()));
+                logToFile ("Omnivy: audioDeviceAboutToStart() bufferSize = " + juce::String (audioDevice->getCurrentBufferSizeSamples()));
+            }
+            logToFile ("Omnivy: audioDeviceAboutToStart() chamando prepareToPlay");
             processor->prepareToPlay (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate(),
                                       audioDeviceManager.getCurrentAudioDevice()->getCurrentBufferSizeSamples());
+            logToFile ("Omnivy: audioDeviceAboutToStart() prepareToPlay OK");
             midiCollector.reset (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
+            logToFile ("Omnivy: audioDeviceAboutToStart() FIM OK");
         }
 
         void audioDeviceStopped() override
