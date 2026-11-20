@@ -46,3 +46,4 @@ scratch/
 *~
 OmnivyStandalone_log.txt
 build_msvc.bat
+diag.bat
