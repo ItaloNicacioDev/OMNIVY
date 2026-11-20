@@ -58,25 +58,19 @@ public:
             logToFile ("Omnivy: audioDeviceManager.initialise(0 in, 2 out) called");
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
-            logToFile ("Omnivy: criando processor");
             processor = std::make_unique<OmnivyAudioProcessor>();
-            logToFile ("Omnivy: processor criado OK");
 
             // --- Editor ---
-            logToFile ("Omnivy: criando editor");
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
-            logToFile ("Omnivy: editor criado OK");
-            // O editor já é dimensionado no construtor (1648 × 920); não redimensionar aqui.
+            editor->setSize (1200, 760);
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
-            logToFile ("Omnivy: midiKeyboardState listener OK");
 
             // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
             // DEVE ser chamado APÓS a criação do processor, pois audioDeviceAboutToStart()
             // invoca processor->prepareToPlay().
             audioDeviceManager.addAudioCallback (this);
-            logToFile ("Omnivy: audioCallback registrado OK");
 
             // --- Seletor de entrada MIDI ---
             midiDevices = juce::MidiInput::getAvailableDevices();
@@ -154,21 +148,10 @@ public:
         void audioDeviceAboutToStart (juce::AudioIODevice* device) override
         {
             juce::ignoreUnused (device);
-            logToFile ("Omnivy: audioDeviceAboutToStart() INICIO");
-            auto audioDevice = audioDeviceManager.getCurrentAudioDevice();
-            logToFile ("Omnivy: audioDeviceAboutToStart() getCurrentAudioDevice OK");
-            logToFile ("Omnivy: audioDeviceAboutToStart() device = " + juce::String (audioDevice != nullptr ? "valid" : "null"));
-            if (audioDevice != nullptr)
-            {
-                logToFile ("Omnivy: audioDeviceAboutToStart() sampleRate = " + juce::String (audioDevice->getCurrentSampleRate()));
-                logToFile ("Omnivy: audioDeviceAboutToStart() bufferSize = " + juce::String (audioDevice->getCurrentBufferSizeSamples()));
-            }
-            logToFile ("Omnivy: audioDeviceAboutToStart() chamando prepareToPlay");
+            logToFile ("Omnivy: audioDeviceAboutToStart()");
             processor->prepareToPlay (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate(),
                                       audioDeviceManager.getCurrentAudioDevice()->getCurrentBufferSizeSamples());
-            logToFile ("Omnivy: audioDeviceAboutToStart() prepareToPlay OK");
             midiCollector.reset (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
-            logToFile ("Omnivy: audioDeviceAboutToStart() FIM OK");
         }
 
         void audioDeviceStopped() override
