@@ -16,8 +16,16 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <cmath>
+#include <fstream>
 #include <memory>
 #include <random>
+
+static void logToFileProc (const juce::String& message)
+{
+    std::ofstream logFile ("OmnivyProc_log.txt", std::ios::app);
+    logFile << message.toStdString() << "\n";
+    logFile.close();
+}
 
 #include "Parameters/ParameterIDs.h"
 
@@ -882,8 +890,8 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     logToFileProc ("OmnivyEditor: construtor INICIO");
-    setSize (1648, 920);
-    logToFileProc ("OmnivyEditor: setSize OK");
+    // setSize (1648, 920);  // Diagnóstico: comentado para isolar crash
+    logToFileProc ("OmnivyEditor: setSize pulado");
     setLookAndFeel (&m_lookAndFeel);
     logToFileProc ("OmnivyEditor: setLookAndFeel OK");
 
