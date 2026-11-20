@@ -3,7 +3,15 @@
 #include "DSP/Wavetable/WavetableGenerator.h"
 
 #include <cmath>
+#include <fstream>
 #include <juce_dsp/juce_dsp.h>
+
+static void logToFileEngine (const juce::String& message)
+{
+    std::ofstream logFile ("OmnivyEngine_log.txt", std::ios::app);
+    logFile << message.toStdString() << "\n";
+    logFile.close();
+}
 
 namespace omnivy {
 
@@ -89,6 +97,7 @@ const dsp::SampleData* AudioEngine::acquireSample() noexcept
 
 void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    logToFileEngine ("processBlock: INICIO");
     juce::ScopedNoDenormals noDenormals;
 
     const int totalNumOutputChannels = buffer.getNumChannels();
@@ -97,31 +106,41 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     // Clear all output channels first.
     for (int ch = 0; ch < totalNumOutputChannels; ++ch)
         buffer.clear (ch, 0, numSamples);
+    logToFileEngine ("processBlock: clear outputs OK");
 
     if (!m_prepared)
+    {
+        logToFileEngine ("processBlock: nao preparado, retornando");
         return;
+    }
 
     // Adquire o snapshot do sample uma vez por bloco (RCU). O ponteiro é válido
     // durante todo o processBlock e é partilhado por todas as vozes/slots.
     m_currentSample = acquireSample();
+    logToFileEngine ("processBlock: acquireSample OK");
 
     // Define o sample em todos os engines granulares (no-op para engines não-granulares).
     m_voiceManager.visitEngines ([this] (dsp::OscillatorEngine* engine, dsp::NodeId)
     {
         engine->setGranularSample (m_currentSample);
     });
+    logToFileEngine ("processBlock: setGranularSample OK");
 
     handleMidi (midiMessages);
+    logToFileEngine ("processBlock: handleMidi OK");
 
     // Voice parameters (polyphony, per-osc, filter, envelope) applied each block.
     if (m_parameters != nullptr)
         m_voiceManager.updateParameters (*m_parameters);
+    logToFileEngine ("processBlock: updateParameters OK");
 
     // Apply routing modulation before rendering voices.
     m_routingGraph.applyModulations();
+    logToFileEngine ("processBlock: applyModulations OK");
 
     // Render voices into output channels 0 and 1.
     renderVoices (buffer);
+    logToFileEngine ("processBlock: renderVoices OK");
 
     // Legacy Phase 1 test tone: phase-continuous 440 Hz sine when enabled.
     if (m_testToneLevel > 0.0f)
@@ -150,6 +169,7 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
                 channelData[sample] *= smoothedMasterVolume;
         }
     }
+    logToFileEngine ("processBlock: master volume OK");
 
     // Observa o pico real da saída (apenas leitura, para o VU meter da UI).
     float blockPeak = 0.0f;
@@ -167,6 +187,8 @@ void AudioEngine::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     else
         smoothed = current * 0.95f + blockPeak * 0.05f; // decay suave
     m_outputPeak.store (smoothed);
+
+    logToFileEngine ("processBlock: FIM OK");
 }
 
 void AudioEngine::renderVoices (juce::AudioBuffer<float>& buffer)
