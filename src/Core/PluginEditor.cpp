@@ -14,8 +14,6 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_devices/juce_audio_devices.h>
-#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 
 #include <cmath>
 #include <memory>
@@ -493,11 +491,11 @@ public:
         g.drawText ("", area.getX() + colW * 4, area.getY(), colW, 16, juce::Justification::centred, true);
 
         g.setColour (Border);
-        g.fillRect (area.getX(), area.getBottom() - 1, area.getWidth(), 1);
+        g.fillRect ((int) area.getX(), (int) (area.getBottom() - 1), (int) area.getWidth(), 1);
 
         g.setColour (TextMuted);
         g.drawText ("— sem modulações configuradas —",
-                    area.getX(), area.getBottom() + 6, area.getWidth(), 14,
+                    (int) area.getX(), (int) (area.getBottom() + 6), (int) area.getWidth(), 14,
                     juce::Justification::centred, true);
     }
 
@@ -638,7 +636,9 @@ private:
 
 // ============================================================================
 // Faixa 5 — BottomBandComponent
-// Teclado MIDI + pitch/mod, Hold/Mono/Legato, Master com VU vertical, footer.
+// Hold/Mono/Legato, Master com VU vertical, footer.
+// (Teclado MIDI, Pitch Bend e Mod Wheel permanecem no Main.cpp do Standalone,
+//  como na implementação original.)
 // ============================================================================
 class BottomBandComponent : public juce::Component, private juce::Timer
 {
@@ -647,26 +647,6 @@ public:
         : m_processor (processor)
     {
         setInterceptsMouseClicks (true, true);
-
-        m_keyboardState.addListener (&m_midiCollector);
-        m_keyboard = new juce::MidiKeyboardComponent (m_keyboardState,
-                                                      juce::KeyboardComponentBase::horizontalKeyboard);
-        m_keyboard->setInterceptsMouseClicks (true, true);
-        addAndMakeVisible (*m_keyboard);
-
-        m_pitchBend.setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
-        m_pitchBend.setTextBoxStyle (juce::Slider::TextBoxRight, false, 40, 20);
-        m_pitchBend.setRange (-2.0, 2.0, 0.01);
-        m_pitchBend.setValue (0.0);
-        m_pitchBend.setTooltip ("Pitch Bend (±2 semitones)");
-        addAndMakeVisible (m_pitchBend);
-
-        m_modWheel.setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
-        m_modWheel.setTextBoxStyle (juce::Slider::TextBoxRight, false, 40, 20);
-        m_modWheel.setRange (0.0, 1.0, 0.01);
-        m_modWheel.setValue (0.0);
-        m_modWheel.setTooltip ("Mod Wheel");
-        addAndMakeVisible (m_modWheel);
 
         m_hold.setButtonText ("Hold");
         m_hold.setClickingTogglesState (true);
@@ -716,22 +696,12 @@ public:
         auto area = getLocalBounds().reduced (10);
         const int gap = 10;
 
-        int wheelW = 34;
-        m_pitchBend.setBounds (area.removeFromLeft (wheelW));
-        area.removeFromLeft (gap / 2);
-        m_modWheel.setBounds (area.removeFromLeft (wheelW));
-        area.removeFromLeft (gap);
-
         int btnW = 64;
         m_hold.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap / 2);
         m_mono.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap / 2);
         m_legato.setBounds (area.removeFromLeft (btnW));
-        area.removeFromLeft (gap);
-
-        int keyboardW = area.getWidth() * 0.62f;
-        m_keyboard->setBounds (area.removeFromLeft (keyboardW));
         area.removeFromLeft (gap);
 
         int masterW = 110;
@@ -746,17 +716,6 @@ public:
         m_vuMeter.setLevel (peak);
         m_vuMeter.repaint();
     }
-
-    juce::MidiKeyboardState m_keyboardState;
-    juce::MidiMessageCollector m_midiCollector;
-    juce::MidiKeyboardComponent* m_keyboard = nullptr;
-
-    juce::Slider m_pitchBend { juce::Slider::LinearVertical, juce::Slider::TextBoxRight };
-    juce::Slider m_modWheel { juce::Slider::LinearVertical, juce::Slider::TextBoxRight };
-
-    juce::TextButton m_hold { "Hold" };
-    juce::TextButton m_mono { "Mono" };
-    juce::TextButton m_legato { "Legato" };
 
     juce::Label m_masterLabel;
     KnobComponent* m_masterKnob = nullptr;
@@ -795,7 +754,7 @@ public:
 
             g.setColour (TextMuted);
             g.setFont (uiFont (FontSizeMicro));
-            g.drawText ("VU", area.getX(), area.getY() + 2, area.getWidth(), 12,
+            g.drawText ("VU", (int) area.getX(), (int) area.getY() + 2, (int) area.getWidth(), 12,
                         juce::Justification::centred, true);
         }
 
@@ -912,6 +871,9 @@ private:
 // OmnivyAudioProcessorEditor
 // ============================================================================
 
+namespace omnivy {
+namespace gui {
+
 OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -1013,3 +975,6 @@ void OmnivyAudioProcessorEditor::resized()
 
     m_bottomBand->setBounds (area);
 }
+
+} // namespace gui
+} // namespace omnivy
