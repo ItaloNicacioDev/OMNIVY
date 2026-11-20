@@ -161,11 +161,9 @@ void OmnivyAudioProcessor::setStateInformation (const void* data, int sizeInByte
     // Restaura a árvore de parâmetros, se presente no bloco.
     if (sizeInBytes > 4)
     {
-        if (auto tree = juce::ValueTree::readFromData (d + 4, static_cast<size_t> (sizeInBytes - 4)))
-        {
-            if (tree.isValid())
-                apvts.state = tree;
-        }
+        juce::ValueTree tree = juce::ValueTree::readFromData (d + 4, static_cast<size_t> (sizeInBytes - 4));
+        if (tree.isValid())
+            apvts.state = tree;
     }
 }
 
