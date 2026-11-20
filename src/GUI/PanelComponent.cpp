@@ -68,8 +68,7 @@ void IconButtonComponent::setToggleState (bool shouldBeOn, juce::NotificationTyp
     {
         m_toggleState = shouldBeOn;
         repaint();
-        if (notification != juce::dontSendNotification)
-            listeners.call ([this] (Listener& l) { l.buttonStateChanged (this); });
+        juce::Button::setToggleState (shouldBeOn, notification);
     }
 }
 
