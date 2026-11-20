@@ -2,6 +2,7 @@
 #include "PluginEditor.h"
 
 #include <cmath>
+#include <juce_data_structures/juce_data_structures.h>
 
 OmnivyAudioProcessor::OmnivyAudioProcessor()
     : AudioProcessor (BusesProperties()
@@ -143,17 +144,29 @@ void OmnivyAudioProcessor::changeProgramName (int index, const juce::String& new
 
 void OmnivyAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // Phase 1: save testParameter
     juce::MemoryOutputStream stream (destData, true);
+    // Mantém o legacy testParameter nos primeiros 4 bytes (compatibilidade).
     stream.writeFloat (testParameter);
+    // Persiste a árvore completa de parâmetros (todos os parâmetros reais do
+    // APVTS), para que salvar/carregar preset preserve o estado do sintetizador.
+    apvts.state.writeToStream (stream);
 }
 
 void OmnivyAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // Phase 1: restore testParameter
     const char* d = static_cast<const char*> (data);
     if (sizeInBytes >= 4)
         testParameter = *reinterpret_cast<const float*> (d);
+
+    // Restaura a árvore de parâmetros, se presente no bloco.
+    if (sizeInBytes > 4)
+    {
+        if (auto tree = juce::ValueTree::readFromData (d + 4, static_cast<size_t> (sizeInBytes - 4)))
+        {
+            if (tree.isValid())
+                apvts.state = tree;
+        }
+    }
 }
 
 // JUCE plugin factory entry point
