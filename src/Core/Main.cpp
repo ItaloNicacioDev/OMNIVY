@@ -2,6 +2,8 @@
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h>
+#include <juce_audio_devices/midi_io/juce_MidiMessageCollector.h>
+#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -46,7 +48,7 @@ public:
             audioDeviceManager.addAudioCallback (this);
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
-            midiKeyboardState.addListener (this);
+            midiKeyboardState.addListener (&midiCollector);
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
             processor = std::make_unique<OmnivyAudioProcessor>();
