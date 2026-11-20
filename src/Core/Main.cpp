@@ -1,5 +1,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -37,8 +38,7 @@ public:
             setResizable (true, false);
 
             // --- Áudio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
-            if (! audioDeviceManager.initialise (0, 2, nullptr, true, {}))
-                juce::Logger::writeToLog ("Omnivy: falha ao inicializar dispositivo de áudio padrão");
+            audioDeviceManager.initialise (0, 2, nullptr, true, {});
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
             processor = std::make_unique<OmnivyAudioProcessor>();
@@ -67,9 +67,8 @@ public:
         ~OmnivyStandaloneWindow()
         {
             // Para o callback de áudio (chama releaseResources) antes de destruir
-            // editor/processor, depois fecha o device manager.
+            // editor/processor.
             player = nullptr;
-            audioDeviceManager.stopAudioDevice();
         }
 
         void closeButtonPressed() override
