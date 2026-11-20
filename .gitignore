@@ -47,3 +47,5 @@ scratch/
 OmnivyStandalone_log.txt
 build_msvc.bat
 diag.bat
+OmnivyEngine_log.txt
+OmnivyProc_log.txt
