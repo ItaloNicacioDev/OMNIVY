@@ -32,7 +32,7 @@ juce::Colour typeColour (dsp::ConnectionType type)
 RoutingPanel::RoutingPanel (OmnivyAudioProcessor& processor)
     : m_processor (processor), m_graphCanvas (processor)
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
     addAndMakeVisible (m_graphCanvas);
 
     m_sourceCombo = new juce::ComboBox ("Origem");

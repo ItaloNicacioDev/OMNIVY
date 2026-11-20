@@ -8,7 +8,7 @@ namespace gui {
 VisualizerPanel::VisualizerPanel (juce::AudioProcessorValueTreeState& apvts)
     : m_apvts (apvts)
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     m_waveformPreview = new WaveformComponent();
     m_waveformPreview->setColour (Osc1Colour);
@@ -46,7 +46,7 @@ VisualizerPanel::~VisualizerPanel()
     m_apvts.removeParameterListener (params::EnvRelease, this);
 }
 
-void VisualizerPanel::parameterValueChanged (const juce::String& /*parameterID*/, float /*newValue*/)
+void VisualizerPanel::parameterChanged (const juce::String& /*parameterID*/, float /*newValue*/)
 {
     // refresh() lê parâmetros do APVTS e atualiza componentes de UI. Garante
     // execução na thread de mensagem para evitar data race com paint() quando

@@ -21,8 +21,8 @@ void OmnivyLookAndFeel::drawPanelBackground (juce::Graphics& g,
 
     // Corpo do painel com gradiente muito sutil para dar profundidade.
     juce::ColourGradient grad (PanelDark.withAlpha (0.95f), area.getTopLeft(),
-                               PanelLight.withAlpha (0.85f), area.getBottomRight());
-    grad.isRadial = false;
+                               PanelLight.withAlpha (0.85f), area.getBottomRight(),
+                               false);
     g.setGradientFill (grad);
     g.fillRoundedRectangle (area, (float) PanelCornerRadius);
 
@@ -58,36 +58,22 @@ void OmnivyLookAndFeel::drawIconButtonBackground (juce::Graphics& g,
     }
 }
 
-void OmnivyLookAndFeel::drawLabel (juce::Graphics& g, int x, int y, int width, int height,
-                                   const juce::String& text, const juce::Font& font,
-                                   juce::Justification justification, juce::Colour colour)
-{
-    g.setColour (colour);
-    g.setFont (font);
-    g.drawText (text, x, y, width, height, justification, false);
-}
-
-juce::Font OmnivyLookAndFeel::getTabButtonFont (juce::TabBarButton&, int /*tabDepth*/)
+juce::Font OmnivyLookAndFeel::getTabButtonFont (juce::TabBarButton&, float /*height*/)
 {
     return uiFont (FontSizeLabel, juce::Font::bold);
 }
 
-int OmnivyLookAndFeel::getTabButtonBestWidth (juce::TabBarButton& button, int /*tabDepth*/)
-{
-    auto textWidth = button.getFont().getStringWidth (button.getName()) + 24;
-    return jlimit (80, 200, (int) textWidth);
-}
-
 void OmnivyLookAndFeel::drawTabButton (juce::TabBarButton& button, juce::Graphics& g,
-                                       bool isMouseOver, bool isTabFront)
+                                       bool isMouseOver, bool isMouseDown)
 {
     auto area = button.getBounds().toFloat();
+    bool isFront = button.isCurrent();
 
-    if (isTabFront)
+    if (isFront)
     {
-        // Aba ativa: gradiente roxo, texto branco, glow discreto.
         juce::ColourGradient grad (PrimaryPurpleDark, area.getTopLeft(),
-                                   PrimaryPurple, area.getBottomRight());
+                                   PrimaryPurple, area.getBottomRight(),
+                                   false);
         g.setGradientFill (grad);
         g.fillRoundedRectangle (area, 6.0f);
 
@@ -98,7 +84,6 @@ void OmnivyLookAndFeel::drawTabButton (juce::TabBarButton& button, juce::Graphic
     }
     else
     {
-        // Aba inativa: painel escuro, texto secundário.
         g.setColour (PanelDark);
         g.fillRoundedRectangle (area, 6.0f);
         g.setColour (Border);
@@ -106,10 +91,16 @@ void OmnivyLookAndFeel::drawTabButton (juce::TabBarButton& button, juce::Graphic
         g.setColour (isMouseOver ? TextSecondary : TextMuted);
     }
 
-    g.setFont (getTabButtonFont (button, 0));
+    g.setFont (getTabButtonFont (button, area.getHeight()));
     g.drawText (button.getName(), (int) area.getX(), (int) area.getY(),
                 (int) area.getWidth(), (int) area.getHeight(),
                 juce::Justification::centred, true);
+}
+
+void OmnivyLookAndFeel::drawTabButtonText (juce::TabBarButton& button, juce::Graphics& g,
+                                           bool isMouseOver, bool isMouseDown)
+{
+    juce::ignoreUnused (button, isMouseOver, isMouseDown);
 }
 
 } // namespace gui

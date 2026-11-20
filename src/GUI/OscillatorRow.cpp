@@ -11,7 +11,7 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     : m_apvts (apvts), m_oscillatorIndex (oscillatorIndex),
       m_stripeColour (oscillatorColour (oscillatorIndex))
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     // Número do oscilador (esquerda).
     m_numberLabel.setText (juce::String (oscillatorIndex + 1), juce::dontSendNotification);

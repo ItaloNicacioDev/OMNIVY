@@ -8,7 +8,7 @@ namespace gui {
 FilterPanel::FilterPanel (juce::AudioProcessorValueTreeState& apvts)
     : PanelComponent ("Filtro & FX", false), m_apvts (apvts)
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     m_enabledButton = new IconButtonComponent ("⏻", "Filtro ligar/desligar", PrimaryPurple);
     m_enabledButton->setToggleState (false, juce::dontSendNotification);

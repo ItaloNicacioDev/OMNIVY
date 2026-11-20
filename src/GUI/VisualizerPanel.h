@@ -29,7 +29,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void parameterValueChanged (const juce::String& /*parameterID*/, float /*newValue*/) override;
+    void parameterChanged (const juce::String& /*parameterID*/, float /*newValue*/) override;
 
 private:
     juce::AudioProcessorValueTreeState& m_apvts;

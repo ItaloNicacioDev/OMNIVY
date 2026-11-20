@@ -7,7 +7,7 @@ namespace gui {
 
 EnvelopeDisplay::EnvelopeDisplay()
 {
-    setInterceptsMouseClicks (false);
+    setInterceptsMouseClicks (false, false);
 }
 
 void EnvelopeDisplay::setParameters (float attack, float decay, float sustain, float release)

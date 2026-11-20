@@ -7,7 +7,7 @@ namespace gui {
 
 WaveformComponent::WaveformComponent()
 {
-    setInterceptsMouseClicks (false);
+    setInterceptsMouseClicks (false, false);
     setSize (m_thumbW, m_thumbH);
 }
 

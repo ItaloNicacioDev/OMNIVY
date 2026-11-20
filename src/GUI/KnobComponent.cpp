@@ -23,7 +23,7 @@ KnobComponent::KnobComponent (juce::AudioProcessorValueTreeState& apvts,
     : m_size (knobSize), m_accent (accent), m_label (label), m_unit (unit)
 {
     setWantsKeyboardFocus (false);
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     // Slider funcional, invisível. Conduz o SliderAttachment e recebe o arrasto do mouse.
     m_slider.setSliderStyle (juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);

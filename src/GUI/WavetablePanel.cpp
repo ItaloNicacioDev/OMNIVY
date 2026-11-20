@@ -5,7 +5,7 @@ namespace gui {
 
 WavetablePanel::WavetablePanel (juce::AudioProcessorValueTreeState& /*apvts*/)
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     m_wavetableSelector = new juce::ComboBox ("Wavetable");
     m_wavetableSelector->addItem ("Sine (built-in)", 1);

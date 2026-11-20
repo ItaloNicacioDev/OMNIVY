@@ -8,7 +8,7 @@ namespace gui {
 EnvelopePanel::EnvelopePanel (juce::AudioProcessorValueTreeState& apvts)
     : PanelComponent ("Envelope", false), m_apvts (apvts)
 {
-    setInterceptsMouseClicks (true);
+    setInterceptsMouseClicks (true, true);
 
     m_attackKnob = new KnobComponent (apvts, params::EnvAttack, "Attack", "s",
                                       KnobComponent::Size::Medium, Env1Colour);
@@ -48,7 +48,7 @@ EnvelopePanel::~EnvelopePanel()
     m_apvts.removeParameterListener (params::EnvRelease, this);
 }
 
-void EnvelopePanel::parameterValueChanged (const juce::String& /*parameterID*/, float /*newValue*/)
+void EnvelopePanel::parameterChanged (const juce::String& /*parameterID*/, float /*newValue*/)
 {
     // refreshDisplay() lê valores atômicos do APVTS e chama repaint(). repaint()
     // é thread-safe, mas a leitura/gravação dos membros de UI deve ocorrer na
