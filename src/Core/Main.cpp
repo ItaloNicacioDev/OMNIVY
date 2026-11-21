@@ -5,6 +5,10 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_core/juce_core.h>
 
+#if JUCE_WINDOWS
+#include <windows.h>
+#endif
+
 class InstrumentedWindow : public juce::DocumentWindow
 {
 public:
