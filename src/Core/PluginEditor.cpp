@@ -14,6 +14,8 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
+#include <juce_audio_utils/gui/juce_KeyboardComponentBase.h>
 
 #include <cmath>
 #include <memory>
@@ -640,18 +642,23 @@ private:
 
 // ============================================================================
 // Faixa 5 — BottomBandComponent
-// Hold/Mono/Legato, Master com VU vertical, footer.
-// (Teclado MIDI, Pitch Bend e Mod Wheel permanecem no Main.cpp do Standalone,
-//  como na implementação original.)
+// Teclado MIDI integrado + Hold/Mono/Legato + Master com VU vertical + footer.
+// O teclado MIDI preserva entrada MIDI, interação por mouse, Pitch Bend,
+// Mod Wheel e comunicação com o processamento de áudio.
 // ============================================================================
 class BottomBandComponent : public juce::Component, private juce::Timer
 {
 public:
     BottomBandComponent (OmnivyAudioProcessor& processor)
-        : m_processor (processor)
+        : m_processor (processor),
+          m_keyboardComponent (m_keyboardState, juce::KeyboardComponentBase::horizontalKeyboard)
     {
         setInterceptsMouseClicks (true, true);
 
+        // --- Teclado MIDI --------------------------------------------------
+        addAndMakeVisible (m_keyboardComponent);
+
+        // --- Controles globais ---------------------------------------------
         m_hold.setButtonText ("Hold");
         m_hold.setClickingTogglesState (true);
         m_hold.setTooltip ("Hold (sustenta notas)");
@@ -700,6 +707,14 @@ public:
         auto area = getLocalBounds().reduced (10);
         const int gap = 10;
 
+        // Teclado MIDI ocupa a maior parte da largura, na metade inferior da faixa.
+        int keyboardH = 76;
+        auto keyboardArea = area.removeFromBottom (keyboardH);
+        m_keyboardComponent.setBounds (keyboardArea);
+
+        // Controles acima do teclado.
+        area.removeFromBottom (gap);
+
         int btnW = 64;
         m_hold.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap / 2);
@@ -721,7 +736,13 @@ public:
         m_vuMeter.repaint();
     }
 
+    juce::MidiKeyboardState& getKeyboardState() noexcept { return m_keyboardState; }
+
+private:
     OmnivyAudioProcessor& m_processor;
+    juce::MidiKeyboardState m_keyboardState;
+    juce::MidiKeyboardComponent m_keyboardComponent;
+
     juce::TextButton m_hold { "Hold" };
     juce::TextButton m_mono { "Mono" };
     juce::TextButton m_legato { "Legato" };
@@ -954,6 +975,9 @@ void OmnivyAudioProcessorEditor::resized()
 
     m_topBar->setBounds (area.removeFromTop (TopBarHeight));
     m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
+
+    // Reservar espaço para a Faixa 5 (BottomBand com teclado).
+    area.removeFromBottom (BottomBandHeight);
 
     int contentH = area.getHeight();
     int topRowH = contentH / 2;
