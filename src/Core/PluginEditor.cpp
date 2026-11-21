@@ -42,89 +42,89 @@ public:
 
         // --- Lado esquerdo: logotipo ---------------------------------------
         m_logoWaveform.setColour (PrimaryPurple);
-        m_logoWaveform.setSizeHint (120, 30);
+        m_logoWaveform.setSizeHint (200, 48);
         addAndMakeVisible (m_logoWaveform);
 
         m_wordmark.setText ("OMNIVY", juce::dontSendNotification);
-        m_wordmark.setFont (uiFont (22.0f, juce::Font::bold));
+        m_wordmark.setFont (uiFont (42.0f, juce::Font::bold));
         m_wordmark.setColour (juce::Label::textColourId, TextMain);
         m_wordmark.setJustificationType (juce::Justification::left);
         m_wordmark.setEnabled (false);
         addAndMakeVisible (m_wordmark);
 
         m_tagline.setText ("The Ultimate Synthesizer", juce::dontSendNotification);
-        m_tagline.setFont (uiFont (FontSizeMicro));
-        m_tagline.setColour (juce::Label::textColourId, TextMuted);
+        m_tagline.setFont (uiFont (16.0f));
+        m_tagline.setColour (juce::Label::textColourId, TextSecondary);
         m_tagline.setJustificationType (juce::Justification::left);
         m_tagline.setEnabled (false);
         addAndMakeVisible (m_tagline);
 
         // --- Centro: navegação de presets ----------------------------------
-        m_presetPrev.setButtonText ("◀");
+        m_presetPrev.setButtonText ("‹");
         m_presetPrev.setEnabled (false);
         m_presetPrev.setTooltip ("Nenhum sistema de presets implementado ainda.");
         m_presetPrev.setClickingTogglesState (false);
         addAndMakeVisible (m_presetPrev);
 
-        m_presetNext.setButtonText ("▶");
+        m_presetName.setText ("Atmospheric Dreamscape", juce::dontSendNotification);
+        m_presetName.setFont (uiFont (18.0f, juce::Font::bold));
+        m_presetName.setColour (juce::Label::textColourId, TextMain);
+        m_presetName.setJustificationType (juce::Justification::centred);
+        m_presetName.setEnabled (false);
+        addAndMakeVisible (m_presetName);
+
+        m_presetNext.setButtonText ("›");
         m_presetNext.setEnabled (false);
         m_presetNext.setTooltip ("Nenhum sistema de presets implementado ainda.");
         m_presetNext.setClickingTogglesState (false);
         addAndMakeVisible (m_presetNext);
 
-        m_presetName.setText ("Atmospheric Dreamscape", juce::dontSendNotification);
-        m_presetName.setFont (uiFont (FontSizeLabel, juce::Font::bold));
-        m_presetName.setColour (juce::Label::textColourId, TextSecondary);
-        m_presetName.setJustificationType (juce::Justification::centred);
-        m_presetName.setEnabled (false);
-        addAndMakeVisible (m_presetName);
-
         m_favorite.setToggleState (false, juce::dontSendNotification);
         m_favorite.setTooltip ("Favorito (apenas esta sessão).");
         addAndMakeVisible (m_favorite);
 
-        m_save.setButtonText ("Salvar");
-        m_save.setTooltip ("Salva o estado atual dos parâmetros em um arquivo .omnivy.");
+        m_save.setButtonText ("💾");
+        m_save.setTooltip ("Salva o estado atual dos parâmetros.");
         m_save.onClick = [this] { savePreset(); };
         addAndMakeVisible (m_save);
 
-        m_delete.setButtonText ("Excluir");
+        m_delete.setButtonText ("🗑");
         m_delete.setEnabled (false);
         m_delete.setTooltip ("Nenhum preset para excluir.");
         addAndMakeVisible (m_delete);
 
-        m_undo.setButtonText ("Desfazer");
+        m_undo.setButtonText ("↩");
         m_undo.setEnabled (false);
-        m_undo.setTooltip ("Undo/Redo não suportado nesta versão.");
+        m_undo.setTooltip ("Undo não suportado nesta versão.");
         addAndMakeVisible (m_undo);
 
-        m_redo.setButtonText ("Refazer");
+        m_redo.setButtonText ("↪");
         m_redo.setEnabled (false);
-        m_redo.setTooltip ("Undo/Redo não suportado nesta versão.");
+        m_redo.setTooltip ("Redo não suportado nesta versão.");
         addAndMakeVisible (m_redo);
 
-        m_randomize.setButtonText ("Randomizar");
-        m_randomize.setTooltip ("Atribui valores válidos aleatórios aos parâmetros do sintetizador.");
+        m_randomize.setButtonText ("🎲");
+        m_randomize.setTooltip ("Atribui valores válidos aleatórios aos parâmetros.");
         m_randomize.onClick = [this] { randomize(); };
         addAndMakeVisible (m_randomize);
 
         // --- Lado direito: indicadores e settings --------------------------
-        m_polyphonyLabel.setText ("Poly: --", juce::dontSendNotification);
-        m_polyphonyLabel.setFont (uiFont (FontSizeMicro));
-        m_polyphonyLabel.setColour (juce::Label::textColourId, TextMuted);
+        m_polyphonyLabel.setText ("Poly: 16", juce::dontSendNotification);
+        m_polyphonyLabel.setFont (uiFont (13.0f));
+        m_polyphonyLabel.setColour (juce::Label::textColourId, TextSecondary);
         m_polyphonyLabel.setJustificationType (juce::Justification::right);
         m_polyphonyLabel.setEnabled (false);
         addAndMakeVisible (m_polyphonyLabel);
 
         m_voicesLabel.setText ("Voices: 0", juce::dontSendNotification);
-        m_voicesLabel.setFont (uiFont (FontSizeMicro));
-        m_voicesLabel.setColour (juce::Label::textColourId, TextSecondary);
+        m_voicesLabel.setFont (uiFont (13.0f));
+        m_voicesLabel.setColour (juce::Label::textColourId, TextMuted);
         m_voicesLabel.setJustificationType (juce::Justification::right);
         m_voicesLabel.setEnabled (false);
         addAndMakeVisible (m_voicesLabel);
 
-        m_settings.setButtonText ("Configurações");
-        m_settings.setTooltip ("Abre informações de build (configurações em implementação).");
+        m_settings.setButtonText ("⚙");
+        m_settings.setTooltip ("Abre informações de build.");
         m_settings.onClick = [this] { showSettings(); };
         addAndMakeVisible (m_settings);
 
@@ -147,47 +147,47 @@ public:
         auto area = getLocalBounds().reduced (12);
         const int gap = 12;
 
-        // Esquerda: logo + nome + tagline.
-        int logoW = 140;
+        // Esquerda: logo + nome + tagline (empilhados verticalmente).
+        int logoW = 200;
         m_logoWaveform.setBounds (area.removeFromLeft (logoW));
         m_wordmark.setBounds (area.removeFromLeft (logoW));
         m_tagline.setBounds (area.removeFromLeft (logoW));
         area.removeFromLeft (gap);
 
-        // Centro: controles de preset.
-        int btnW = 28;
+        // Centro: navegação de preset com ‹ nome ★.
+        int btnW = 32;
         int halfGap = gap / 2;
         m_presetPrev.setBounds (area.removeFromLeft (btnW));
+        area.removeFromLeft (halfGap);
+        int presetW = 240;
+        m_presetName.setBounds (area.removeFromLeft (presetW));
         area.removeFromLeft (halfGap);
         m_presetNext.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap);
 
-        int presetNameW = 200;
-        m_presetName.setBounds (area.removeFromRight (presetNameW));
+        m_favorite.setBounds (area.removeFromLeft (28));
+        area.removeFromLeft (halfGap);
 
-        int iconW = 26;
-        int txtW = 64;
-        m_favorite.setBounds (area.removeFromLeft (iconW));
+        // Botões de ação como ícones.
+        int iconBtnW = 32;
+        m_save.setBounds (area.removeFromLeft (iconBtnW));
         area.removeFromLeft (halfGap);
-        m_save.setBounds (area.removeFromLeft (txtW));
+        m_delete.setBounds (area.removeFromLeft (iconBtnW));
         area.removeFromLeft (halfGap);
-        m_delete.setBounds (area.removeFromLeft (txtW));
+        m_undo.setBounds (area.removeFromLeft (iconBtnW));
         area.removeFromLeft (halfGap);
-        m_undo.setBounds (area.removeFromLeft (txtW));
+        m_redo.setBounds (area.removeFromLeft (iconBtnW));
         area.removeFromLeft (halfGap);
-        m_redo.setBounds (area.removeFromLeft (txtW));
+        m_randomize.setBounds (area.removeFromLeft (iconBtnW));
         area.removeFromLeft (gap);
 
-        m_randomize.setBounds (area.removeFromLeft (88));
-        area.removeFromLeft (gap);
-
-        // Direita: poly/voices + settings.
-        m_voicesLabel.setBounds (area.removeFromRight (72));
+        // Direita: readouts + settings.
+        m_voicesLabel.setBounds (area.removeFromRight (80));
         area.removeFromRight (gap);
-        m_polyphonyLabel.setBounds (area.removeFromRight (72));
+        m_polyphonyLabel.setBounds (area.removeFromRight (80));
         area.removeFromRight (gap);
 
-        m_settings.setBounds (area.removeFromRight (100));
+        m_settings.setBounds (area.removeFromRight (40));
     }
 
     void timerCallback() override
@@ -205,18 +205,18 @@ private:
     juce::Label m_wordmark;
     juce::Label m_tagline;
 
-    juce::TextButton m_presetPrev { "◀" };
-    juce::TextButton m_presetNext { "▶" };
+    juce::TextButton m_presetPrev { "‹" };
     juce::Label m_presetName;
-    IconButtonComponent m_favorite { "★", "Favorito", MacroColour };
-    juce::TextButton m_save { "Salvar" };
-    juce::TextButton m_delete { "Excluir" };
-    juce::TextButton m_undo { "Desfazer" };
-    juce::TextButton m_redo { "Refazer" };
-    juce::TextButton m_randomize { "Randomizar" };
+    juce::TextButton m_presetNext { "›" };
+    IconButtonComponent m_favorite { "★", "Favorito", PrimaryPurpleLight };
+    juce::TextButton m_save { "💾" };
+    juce::TextButton m_delete { "🗑" };
+    juce::TextButton m_undo { "↩" };
+    juce::TextButton m_redo { "↪" };
+    juce::TextButton m_randomize { "🎲" };
     juce::Label m_polyphonyLabel;
     juce::Label m_voicesLabel;
-    juce::TextButton m_settings { "Configurações" };
+    juce::TextButton m_settings { "⚙" };
 
     void savePreset()
     {
@@ -328,36 +328,31 @@ public:
         auto area = getLocalBounds().toFloat();
 
         if (m_active)
-            g.setColour (PrimaryPurple);
-        else if (isMouseOver)
-            g.setColour (PrimaryPurple.withAlpha (0.18f));
-        else
-            g.setColour (PanelDark);
-
-        juce::Path shape;
-        float shear = 8.0f;
-        auto x = area.getX();
-        auto y = area.getY();
-        auto w = area.getWidth();
-        auto h = area.getHeight();
-        juce::Point<float> pts[4] = {
-            { x + shear * 0.5f, y },
-            { x + w + shear * 0.5f, y },
-            { x + w - shear * 0.5f, y + h },
-            { x - shear * 0.5f, y + h }
-        };
-        shape.clear();
-        shape.startNewSubPath (pts[0]);
-        shape.lineTo (pts[1]);
-        shape.lineTo (pts[2]);
-        shape.lineTo (pts[3]);
-        shape.closeSubPath();
-        g.fillPath (shape);
-
-        if (!m_active)
         {
+            // Gradiente roxo para aba ativa.
+            juce::ColourGradient grad (PrimaryPurpleDark, area.getX(), area.getY(),
+                                       PrimaryPurple,     area.getX(), area.getBottom(),
+                                       false);
+            g.setGradientFill (grad);
+            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+
+            // Glow externo sutil.
+            g.setColour (GlowActive);
+            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.5f);
+        }
+        else if (isMouseOver)
+        {
+            g.setColour (PrimaryPurple.withAlpha (0.18f));
+            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
             g.setColour (Border);
-            g.strokePath (shape, juce::PathStrokeType ((float) BorderWidth));
+            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+        }
+        else
+        {
+            g.setColour (PanelDark);
+            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+            g.setColour (Border);
+            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
         }
 
         g.setColour (m_active ? juce::Colours::white
@@ -384,11 +379,11 @@ public:
     {
         const struct { const char* icon; const char* name; } tabs[6] =
         {
-            { "◁", "Oscillators" },
+            { "≋", "Oscillators" },
             { "→", "Routing" },
-            { "≋", "Modulation" },
+            { "∿", "Modulation" },
             { "▭", "Filters & FX" },
-            { "◁○", "Visualizer" },
+            { "▭○", "Visualizer" },
             { "⚙", "Settings" },
         };
 
@@ -414,8 +409,14 @@ public:
         auto area = getLocalBounds().toFloat();
         g.setColour (BackgroundMain);
         g.fillRect (area);
-        g.setColour (Border);
-        g.fillRect (0, (int) area.getBottom() - 1, (int) area.getWidth(), 1);
+
+        // Acento diagonal roxo na extremidade direita.
+        juce::Path accent;
+        accent.startNewSubPath (area.getRight() - 4.0f, area.getY());
+            accent.lineTo (area.getRight(), area.getY() + 16.0f);
+            accent.lineTo (area.getRight(), area.getBottom());
+        g.setColour (PrimaryPurple);
+        g.fillPath (accent);
     }
 
     void resized() override
