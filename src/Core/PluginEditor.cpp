@@ -16,16 +16,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <cmath>
-#include <fstream>
 #include <memory>
 #include <random>
-
-static void logToFileProc (const juce::String& message)
-{
-    std::ofstream logFile ("OmnivyProc_log.txt", std::ios::app);
-    logFile << message.toStdString() << "\n";
-    logFile.close();
-}
 
 #include "Parameters/ParameterIDs.h"
 
@@ -33,10 +25,11 @@ namespace omnivy {
 namespace gui {
 
 // ============================================================================
-// TopBarComponent
-// Faixa 1 — Barra superior: logo, presets, controles de arquivo e indicadores.
+// Faixa 1 — TopBarComponent
+// Cabeçalho: logo com waveform, nome "OMNIVY", tagline "The Ultimate Synthesizer",
+// navegação de presets, favorito, salvar/excluir/desfazer/refazer/randomize,
+// poly/voices, settings.
 // ============================================================================
-
 class TopBarComponent : public juce::Component, private juce::Timer
 {
 public:
@@ -51,7 +44,7 @@ public:
         addAndMakeVisible (m_logoWaveform);
 
         m_wordmark.setText ("OMNIVY", juce::dontSendNotification);
-        m_wordmark.setFont (uiFont (19.0f, juce::Font::bold));
+        m_wordmark.setFont (uiFont (22.0f, juce::Font::bold));
         m_wordmark.setColour (juce::Label::textColourId, TextMain);
         m_wordmark.setJustificationType (juce::Justification::left);
         m_wordmark.setEnabled (false);
@@ -64,17 +57,20 @@ public:
         m_tagline.setEnabled (false);
         addAndMakeVisible (m_tagline);
 
+        // --- Centro: navegação de presets ----------------------------------
         m_presetPrev.setButtonText ("◀");
         m_presetPrev.setEnabled (false);
         m_presetPrev.setTooltip ("Nenhum sistema de presets implementado ainda.");
+        m_presetPrev.setClickingTogglesState (false);
         addAndMakeVisible (m_presetPrev);
 
         m_presetNext.setButtonText ("▶");
         m_presetNext.setEnabled (false);
         m_presetNext.setTooltip ("Nenhum sistema de presets implementado ainda.");
+        m_presetNext.setClickingTogglesState (false);
         addAndMakeVisible (m_presetNext);
 
-        m_presetName.setText ("Estado atual", juce::dontSendNotification);
+        m_presetName.setText ("Atmospheric Dreamscape", juce::dontSendNotification);
         m_presetName.setFont (uiFont (FontSizeLabel, juce::Font::bold));
         m_presetName.setColour (juce::Label::textColourId, TextSecondary);
         m_presetName.setJustificationType (juce::Justification::centred);
@@ -110,6 +106,7 @@ public:
         m_randomize.onClick = [this] { randomize(); };
         addAndMakeVisible (m_randomize);
 
+        // --- Lado direito: indicadores e settings --------------------------
         m_polyphonyLabel.setText ("Poly: --", juce::dontSendNotification);
         m_polyphonyLabel.setFont (uiFont (FontSizeMicro));
         m_polyphonyLabel.setColour (juce::Label::textColourId, TextMuted);
@@ -148,12 +145,14 @@ public:
         auto area = getLocalBounds().reduced (12);
         const int gap = 12;
 
+        // Esquerda: logo + nome + tagline.
         int logoW = 140;
         m_logoWaveform.setBounds (area.removeFromLeft (logoW));
         m_wordmark.setBounds (area.removeFromLeft (logoW));
         m_tagline.setBounds (area.removeFromLeft (logoW));
         area.removeFromLeft (gap);
 
+        // Centro: controles de preset.
         int btnW = 28;
         int halfGap = gap / 2;
         m_presetPrev.setBounds (area.removeFromLeft (btnW));
@@ -161,7 +160,7 @@ public:
         m_presetNext.setBounds (area.removeFromLeft (btnW));
         area.removeFromLeft (gap);
 
-        int presetNameW = 160;
+        int presetNameW = 200;
         m_presetName.setBounds (area.removeFromRight (presetNameW));
 
         int iconW = 26;
@@ -180,6 +179,7 @@ public:
         m_randomize.setBounds (area.removeFromLeft (88));
         area.removeFromLeft (gap);
 
+        // Direita: poly/voices + settings.
         m_voicesLabel.setBounds (area.removeFromRight (72));
         area.removeFromRight (gap);
         m_polyphonyLabel.setBounds (area.removeFromRight (72));
@@ -202,6 +202,7 @@ private:
     WaveformComponent m_logoWaveform;
     juce::Label m_wordmark;
     juce::Label m_tagline;
+
     juce::TextButton m_presetPrev { "◀" };
     juce::TextButton m_presetNext { "▶" };
     juce::Label m_presetName;
@@ -333,11 +334,6 @@ public:
 
         juce::Path shape;
         float shear = 8.0f;
-        shape.addRectangle (area);
-        // Aplica cisalhamento manual (paralelogramo): desloca a linha superior para a direita
-        // e a inferior para a esquerda, mantendo o centro.
-        juce::Path skewed;
-        // Reconstruímos como um polígono de 4 pontos com cisalhamento.
         auto x = area.getX();
         auto y = area.getY();
         auto w = area.getWidth();
@@ -889,56 +885,51 @@ namespace gui {
 OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    logToFileProc ("OmnivyEditor: construtor INICIO");
-    // setSize (1648, 920);  // Diagnóstico: comentado para isolar crash
-    logToFileProc ("OmnivyEditor: setSize pulado");
     setLookAndFeel (&m_lookAndFeel);
-    logToFileProc ("OmnivyEditor: setLookAndFeel OK");
 
     using namespace omnivy::gui;
 
     // Faixa 1 — Top Bar.
-    // m_topBar = new TopBarComponent (audioProcessor);
-    // addAndMakeVisible (*m_topBar);
+    m_topBar = new TopBarComponent (audioProcessor);
+    addAndMakeVisible (*m_topBar);
 
     // Faixa 2 — Tab Bar.
-    // m_tabBar = new TabBarComponent();
-    // m_tabBar->setOnTabChanged ([this] (int index) { tabSelected (index); });
-    // addAndMakeVisible (*m_tabBar);
+    m_tabBar = new TabBarComponent();
+    m_tabBar->setOnTabChanged ([this] (int index) { tabSelected (index); });
+    addAndMakeVisible (*m_tabBar);
 
     // Faixa 3 — Painéis superiores (quatro colunas).
-    // m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
-    // m_wavetablePanel = new WavetablePanel (audioProcessor.apvts);
-    // m_routingPanel = new RoutingPanel (audioProcessor);
-    // m_filterPanel = new FilterPanel (audioProcessor.apvts);
+    m_oscPanel    = new OscillatorPanel (audioProcessor.apvts);
+    m_wavetablePanel = new WavetablePanel (audioProcessor.apvts);
+    m_routingPanel = new RoutingPanel (audioProcessor);
+    m_filterPanel = new FilterPanel (audioProcessor.apvts);
 
-    // addAndMakeVisible (*m_oscPanel);
-    // addAndMakeVisible (*m_wavetablePanel);
-    // addAndMakeVisible (*m_routingPanel);
-    // addAndMakeVisible (*m_filterPanel);
+    addAndMakeVisible (*m_oscPanel);
+    addAndMakeVisible (*m_wavetablePanel);
+    addAndMakeVisible (*m_routingPanel);
+    addAndMakeVisible (*m_filterPanel);
 
     // Faixa 4 — Painéis inferiores (quatro colunas).
-    // m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
-    // m_visualizerPanel = new VisualizerPanel (audioProcessor.apvts);
-    // m_arpPanel = new ArpeggiatorPanel (audioProcessor.apvts);
+    m_modMatrixPanel = new ModulationMatrixPanel (audioProcessor.apvts);
+    m_visualizerPanel = new VisualizerPanel (audioProcessor.apvts);
+    m_arpPanel = new ArpeggiatorPanel (audioProcessor.apvts);
 
-    // addAndMakeVisible (*m_modMatrixPanel);
-    // addAndMakeVisible (*m_visualizerPanel);
-    // addAndMakeVisible (*m_arpPanel);
+    addAndMakeVisible (*m_modMatrixPanel);
+    addAndMakeVisible (*m_visualizerPanel);
+    addAndMakeVisible (*m_arpPanel);
 
-    // m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
-    // m_envTabbed->setTabBarDepth (36);
-    // m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
-    // m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
-    // m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
-    // addAndMakeVisible (*m_envTabbed);
+    m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
+    m_envTabbed->setTabBarDepth (36);
+    m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
+    m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
+    m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
+    addAndMakeVisible (*m_envTabbed);
 
     // Faixa 5 — Teclado + Master + Footer.
-    // m_bottomBand = new BottomBandComponent (audioProcessor);
-    // addAndMakeVisible (*m_bottomBand);
+    m_bottomBand = new BottomBandComponent (audioProcessor);
+    addAndMakeVisible (*m_bottomBand);
 
     m_activeTab = 0;
-    logToFileProc ("OmnivyEditor: construtor FIM OK");
 }
 
 OmnivyAudioProcessorEditor::~OmnivyAudioProcessorEditor()
@@ -961,8 +952,8 @@ void OmnivyAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    // m_topBar->setBounds (area.removeFromTop (TopBarHeight));
-    // m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
+    m_topBar->setBounds (area.removeFromTop (TopBarHeight));
+    m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
 
     int contentH = area.getHeight();
     int topRowH = contentH / 2;
@@ -981,15 +972,15 @@ void OmnivyAudioProcessorEditor::resized()
     m_filterPanel->setBounds (topRow.removeFromLeft (colW));
 
     auto bottomRow = area.removeFromTop (bottomRowH);
-    // m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
-    // bottomRow.removeFromLeft (gap);
-    // m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
-    // bottomRow.removeFromLeft (gap);
-    // m_visualizerPanel->setBounds (bottomRow.removeFromLeft (colW));
-    // bottomRow.removeFromLeft (gap);
-    // m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
+    m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_visualizerPanel->setBounds (bottomRow.removeFromLeft (colW));
+    bottomRow.removeFromLeft (gap);
+    m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
 
-    // m_bottomBand->setBounds (area);
+    m_bottomBand->setBounds (area);
 }
 
 } // namespace gui
