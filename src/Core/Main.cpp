@@ -39,54 +39,51 @@ public:
                               juce::Desktop::getInstance().getDefaultLookAndFeel()
                                   .findColour (juce::ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
-        {
-            setUsingNativeTitleBar (true);
-            setResizable (true, false);
-
-            // --- Audio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
-            audioDeviceManager.initialise (0, 2, nullptr, true, {});
-
-            // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
-            processor = std::make_unique<OmnivyAudioProcessor>();
-
-            // --- Editor ---
-            editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
-            // editor->setSize (1200, 760);  // Diagnóstico: setSize antes do pai causa crash no JUCE
-
-            // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
-            midiKeyboardState.addListener (&midiCollector);
-
-            // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
-            // DEVE ser chamado APÓS a criação do processor, pois audioDeviceAboutToStart()
-            // invoca processor->prepareToPlay().
-            audioDeviceManager.addAudioCallback (this);
-
-            // --- Seletor de entrada MIDI ---
-            midiDevices = juce::MidiInput::getAvailableDevices();
-            juce::StringArray deviceNames;
-            for (const auto& d : midiDevices)
-                deviceNames.add (d.name);
-            midiInputSelector.addItemList (deviceNames, 1);
-            if (midiDevices.size() > 0)
             {
-                midiInputSelector.setSelectedId (1);
-                selectMidiInput (midiInputSelector.getSelectedItemIndex());
+                setUsingNativeTitleBar (true);
+                setResizable (true, false);
+
+                // --- Audio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
+                audioDeviceManager.initialise (0, 2, nullptr, true, {});
+
+                // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
+                processor = std::make_unique<OmnivyAudioProcessor>();
+
+                // --- Editor ---
+                editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
+
+                // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
+                midiKeyboardState.addListener (&midiCollector);
+
+                // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
+                audioDeviceManager.addAudioCallback (this);
+
+                // --- Seletor de entrada MIDI ---
+                midiDevices = juce::MidiInput::getAvailableDevices();
+                juce::StringArray deviceNames;
+                for (const auto& d : midiDevices)
+                    deviceNames.add (d.name);
+                midiInputSelector.addItemList (deviceNames, 1);
+                if (midiDevices.size() > 0)
+                {
+                    midiInputSelector.setSelectedId (1);
+                    selectMidiInput (midiInputSelector.getSelectedItemIndex());
+                }
+                midiInputSelector.onChange = [this] { selectMidiInput (midiInputSelector.getSelectedItemIndex()); };
+                addAndMakeVisible (&midiInputSelector);
+
+                // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
+                auto* container = new ContentContainer (*editor, midiInputSelector, configButton);
+                container->setSize (1648, 920);
+
+                configButton.setButtonText ("Audio Setup...");
+                configButton.onClick = [this] { showAudioDeviceDialog(); };
+
+                setContentOwned (container, true);
+                setSize (1648, 920);
+
+                centreWithSize (getWidth(), getHeight());
             }
-            midiInputSelector.onChange = [this] { selectMidiInput (midiInputSelector.getSelectedItemIndex()); };
-            addAndMakeVisible (&midiInputSelector);
-
-            // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
-            auto* container = new ContentContainer (*editor, midiInputSelector, configButton);
-            container->setSize (1648, 920);
-
-            configButton.setButtonText ("Audio Setup...");
-            configButton.onClick = [this] { showAudioDeviceDialog(); };
-
-            setContentOwned (container, true);
-            setSize (1648, 920);
-
-            centreWithSize (getWidth(), getHeight());
-        }
 
         ~OmnivyStandaloneWindow()
         {
