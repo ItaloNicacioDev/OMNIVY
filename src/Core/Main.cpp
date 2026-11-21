@@ -76,14 +76,14 @@ public:
             addAndMakeVisible (&midiInputSelector);
 
             // --- Container com editor + seletor MIDI + botão de configuração de áudio ---
-            auto* container = new ContentContainer (*editor, midiInputSelector, configButton, midiKeyboardComponent);
-            container->setSize (1648, 1006);
+            auto* container = new ContentContainer (*editor, midiInputSelector, configButton);
+            container->setSize (1648, 920);
 
             configButton.setButtonText ("Audio Setup...");
             configButton.onClick = [this] { showAudioDeviceDialog(); };
 
             setContentOwned (container, true);
-            setSize (1648, 1006);
+            setSize (1648, 920);
 
             centreWithSize (getWidth(), getHeight());
         }
@@ -170,37 +170,31 @@ public:
         public:
             ContentContainer (juce::AudioProcessorEditor& ed,
                               juce::ComboBox& midiSel,
-                              juce::TextButton& btn,
-                              juce::MidiKeyboardComponent& keybd)
-                : editor (ed), midiSelector (midiSel), button (btn), keyboard (keybd)
+                              juce::TextButton& btn)
+                : editor (ed), midiSelector (midiSel), button (btn)
             {
                 addAndMakeVisible (editor);
                 addAndMakeVisible (midiSelector);
                 addAndMakeVisible (button);
-                addAndMakeVisible (keyboard);
             }
 
             void resized() override
             {
                 auto area = getLocalBounds();
-                int keyboardH = 76;
                 int topPadding = 10;
 
-                // Editor acima, teclado MIDI embaixo (preservado do Standalone original).
-                auto editorArea = area.removeFromTop (getHeight() - keyboardH - topPadding);
-                editor.setBounds (editorArea);
+                // Editor ocupa toda a área; teclado MIDI integrado na Faixa 5 do editor.
+                editor.setBounds (area.removeFromTop (getHeight() - topPadding));
 
                 area.removeFromTop (topPadding);
                 midiSelector.setBounds (10, area.getY(), 220, 24);
                 button.setBounds (240, area.getY(), 200, 24);
-                keyboard.setBounds (10, area.getBottom() - keyboardH, getWidth() - 20, keyboardH);
             }
 
         private:
             juce::AudioProcessorEditor& editor;
             juce::ComboBox& midiSelector;
             juce::TextButton& button;
-            juce::MidiKeyboardComponent& keyboard;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentContainer)
         };
@@ -261,7 +255,6 @@ public:
         juce::Array<juce::MidiDeviceInfo> midiDevices;
         juce::String previousMidiDeviceIdentifier;
         juce::MidiKeyboardState midiKeyboardState;
-        juce::MidiKeyboardComponent midiKeyboardComponent { midiKeyboardState, juce::KeyboardComponentBase::horizontalKeyboard };
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OmnivyStandaloneWindow)
     };
