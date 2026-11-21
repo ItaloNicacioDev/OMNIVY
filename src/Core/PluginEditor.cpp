@@ -14,8 +14,8 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 #include <juce_audio_utils/gui/juce_KeyboardComponentBase.h>
+#include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
 
 #include <cmath>
 #include <memory>
@@ -650,13 +650,14 @@ class BottomBandComponent : public juce::Component, private juce::Timer
 {
 public:
     BottomBandComponent (OmnivyAudioProcessor& processor)
-        : m_processor (processor),
-          m_keyboardComponent (m_keyboardState, juce::KeyboardComponentBase::horizontalKeyboard)
+        : m_processor (processor)
     {
         setInterceptsMouseClicks (true, true);
 
         // --- Teclado MIDI --------------------------------------------------
-        addAndMakeVisible (m_keyboardComponent);
+        m_keyboardComponent = std::make_unique<juce::MidiKeyboardComponent> (
+            m_keyboardState, juce::KeyboardComponentBase::horizontalKeyboard);
+        addAndMakeVisible (*m_keyboardComponent);
 
         // --- Controles globais ---------------------------------------------
         m_hold.setButtonText ("Hold");
@@ -710,7 +711,7 @@ public:
         // Teclado MIDI ocupa a maior parte da largura, na metade inferior da faixa.
         int keyboardH = 76;
         auto keyboardArea = area.removeFromBottom (keyboardH);
-        m_keyboardComponent.setBounds (keyboardArea);
+        m_keyboardComponent->setBounds (keyboardArea);
 
         // Controles acima do teclado.
         area.removeFromBottom (gap);
@@ -741,7 +742,7 @@ public:
 private:
     OmnivyAudioProcessor& m_processor;
     juce::MidiKeyboardState m_keyboardState;
-    juce::MidiKeyboardComponent m_keyboardComponent;
+    std::unique_ptr<juce::MidiKeyboardComponent> m_keyboardComponent;
 
     juce::TextButton m_hold { "Hold" };
     juce::TextButton m_mono { "Mono" };
