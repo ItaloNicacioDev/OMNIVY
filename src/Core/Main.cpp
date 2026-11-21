@@ -4,18 +4,10 @@
 #include <juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h>
 #include <juce_audio_utils/gui/juce_KeyboardComponentBase.h>
 #include <juce_audio_utils/gui/juce_MidiKeyboardComponent.h>
-#include <fstream>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 using namespace omnivy::gui;
-
-static void logToFile (const juce::String& message)
-{
-    std::ofstream logFile ("OmnivyStandalone_log.txt", std::ios::app);
-    logFile << message.toStdString() << "\n";
-    logFile.close();
-}
 
 class OmnivyStandaloneApplication : public juce::JUCEApplication
 {
@@ -28,7 +20,6 @@ public:
     void initialise (const juce::String& commandLine) override
     {
         juce::ignoreUnused (commandLine);
-        logToFile ("Omnivy: application initialise()");
 
         mainWindow = std::make_unique<OmnivyStandaloneWindow> ("Omnivy");
         mainWindow->setVisible (true);
@@ -36,7 +27,6 @@ public:
 
     void shutdown() override
     {
-        logToFile ("Omnivy: application shutdown()");
         mainWindow = nullptr; // destrói a janela, que libera o áudio
     }
 
@@ -55,28 +45,21 @@ public:
 
             // --- Audio: inicializa o device manager (0 entrada, 2 saídas estéreo) ---
             audioDeviceManager.initialise (0, 2, nullptr, true, {});
-            logToFile ("Omnivy: audioDeviceManager.initialise(0 in, 2 out) called");
 
             // --- Processor (mesmo do VST3; nenhum novo motor DSP) ---
-            logToFile ("Omnivy: criando processor");
             processor = std::make_unique<OmnivyAudioProcessor>();
-            logToFile ("Omnivy: processor criado OK");
 
             // --- Editor ---
             editor = std::make_unique<OmnivyAudioProcessorEditor> (*processor);
-            logToFile ("Omnivy: editor criado OK");
             // editor->setSize (1200, 760);  // Diagnóstico: setSize antes do pai causa crash no JUCE
-            logToFile ("Omnivy: editor setSize pulado");
 
             // Registra listener do teclado virtual (injeta Note On/Off no coletor de MIDI).
             midiKeyboardState.addListener (&midiCollector);
-            logToFile ("Omnivy: midiKeyboardState listener OK");
 
             // Registra a janela como callback de áudio (chama audioDeviceIOCallback na thread de áudio).
             // DEVE ser chamado APÓS a criação do processor, pois audioDeviceAboutToStart()
             // invoca processor->prepareToPlay().
             audioDeviceManager.addAudioCallback (this);
-            logToFile ("Omnivy: audioCallback registrado OK");
 
             // --- Seletor de entrada MIDI ---
             midiDevices = juce::MidiInput::getAvailableDevices();
@@ -103,12 +86,10 @@ public:
             setSize (1648, 1006);
 
             centreWithSize (getWidth(), getHeight());
-            logToFile ("Omnivy: window created and visible");
         }
 
         ~OmnivyStandaloneWindow()
         {
-            logToFile ("Omnivy: ~OmnivyStandaloneWindow()");
             // Remove os callbacks de áudio e MIDI primeiro (para o callback de áudio,
             // que chama releaseResources no processador), depois destrói editor/processor.
             audioDeviceManager.removeAudioCallback (this);
@@ -121,7 +102,6 @@ public:
 
         void closeButtonPressed() override
         {
-            logToFile ("Omnivy: closeButtonPressed()");
             juce::JUCEApplication::getInstance()->systemRequestedQuit();
         }
 
@@ -154,7 +134,6 @@ public:
         void audioDeviceAboutToStart (juce::AudioIODevice* device) override
         {
             juce::ignoreUnused (device);
-            logToFile ("Omnivy: audioDeviceAboutToStart()");
             processor->prepareToPlay (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate(),
                                       audioDeviceManager.getCurrentAudioDevice()->getCurrentBufferSizeSamples());
             midiCollector.reset (audioDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
@@ -162,7 +141,6 @@ public:
 
         void audioDeviceStopped() override
         {
-            logToFile ("Omnivy: audioDeviceStopped()");
             processor->releaseResources();
         }
 
