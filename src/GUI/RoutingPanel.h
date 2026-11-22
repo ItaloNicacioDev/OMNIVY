@@ -58,6 +58,7 @@ private:
     juce::TextButton* m_addButton = nullptr;
     juce::TextButton* m_clearButton = nullptr;
     juce::Label m_statusLabel;
+    juce::Label m_titleLabel;
 
     void populateNodeCombo (juce::ComboBox&);
     void addConnection();
