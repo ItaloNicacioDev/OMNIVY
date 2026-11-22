@@ -101,7 +101,7 @@ void OscillatorRowComponent::resized()
     int labelW = 24;
     int btnW = 28;
     int comboW = 110;
-    int previewW = 72;
+    int previewW = 80;
     int knobW = 46;
     int gap = 6;
     int chevronW = 24;
@@ -122,11 +122,6 @@ void OscillatorRowComponent::resized()
     area.removeFromLeft (gap);
 
     m_levelKnob->setBounds (area.removeFromLeft (knobW));
-    area.removeFromLeft (gap);
-    m_octaveKnob->setBounds (area.removeFromLeft (knobW));
-    area.removeFromLeft (gap);
-    m_semitoneKnob->setBounds (area.removeFromLeft (knobW));
-    area.removeFromLeft (gap);
 
     m_chevronButton->setBounds (area.removeFromLeft (chevronW));
 }
