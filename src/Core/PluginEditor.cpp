@@ -40,20 +40,20 @@ public:
     {
         setInterceptsMouseClicks (true, true);
 
-        // --- Lado esquerdo: logotipo ---------------------------------------
+        // --- Lado esquerdo: logotipo -------------------------------------
         m_logoWaveform.setColour (PrimaryPurple);
         m_logoWaveform.setSizeHint (200, 48);
         addAndMakeVisible (m_logoWaveform);
 
-        m_wordmark.setText ("OMNIVY", juce::dontSendNotification);
-        m_wordmark.setFont (uiFont (42.0f, juce::Font::bold));
+        m_wordmark.setText ("Omnivy", juce::dontSendNotification);
+        m_wordmark.setFont (uiFont (FontSizeLogo, juce::Font::bold));
         m_wordmark.setColour (juce::Label::textColourId, TextMain);
         m_wordmark.setJustificationType (juce::Justification::left);
         m_wordmark.setEnabled (false);
         addAndMakeVisible (m_wordmark);
 
         m_tagline.setText ("The Ultimate Synthesizer", juce::dontSendNotification);
-        m_tagline.setFont (uiFont (16.0f));
+        m_tagline.setFont (uiFont (FontSizeSubtitle));
         m_tagline.setColour (juce::Label::textColourId, TextSecondary);
         m_tagline.setJustificationType (juce::Justification::left);
         m_tagline.setEnabled (false);
@@ -136,58 +136,77 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto area = getLocalBounds().toFloat();
-        g.setColour (BackgroundMain);
+        g.setColour (WindowBgTop);
         g.fillRect (area);
-        g.setColour (Border);
+        g.setColour (WindowBorder);
         g.fillRect (0, (int) getHeight() - 1, getWidth(), 1);
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (12);
-        const int gap = 12;
+        auto area = getLocalBounds().toFloat();
+        const int gap = (int) (12.0f * getWidth() / 1672.0f);
 
         // Esquerda: logo + nome + tagline (empilhados verticalmente).
-        int logoW = 200;
-        m_logoWaveform.setBounds (area.removeFromLeft (logoW));
-        m_wordmark.setBounds (area.removeFromLeft (logoW));
-        m_tagline.setBounds (area.removeFromLeft (logoW));
-        area.removeFromLeft (gap);
+        // Logo: 200×48 na base 1672×941 → escala proporcional.
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
 
-        // Centro: navegação de preset com ‹ nome ★.
-        int btnW = 32;
-        int halfGap = gap / 2;
-        m_presetPrev.setBounds (area.removeFromLeft (btnW));
-        area.removeFromLeft (halfGap);
-        int presetW = 240;
-        m_presetName.setBounds (area.removeFromLeft (presetW));
-        area.removeFromLeft (halfGap);
-        m_presetNext.setBounds (area.removeFromLeft (btnW));
-        area.removeFromLeft (gap);
+        // --- Área esquerda: logo + wordmark + tagline ----------------------
+        int logoW = (int) (200.0f * sx);
+        int logoH = (int) (48.0f * sy);
+        int wordmarkH = (int) (FontSizeLogo * 1.2f * sy);
+        int taglineH = (int) (FontSizeSubtitle * 1.2f * sy);
 
-        m_favorite.setBounds (area.removeFromLeft (28));
-        area.removeFromLeft (halfGap);
+        m_logoWaveform.setBounds ((int) area.getX(), (int) area.getY(), logoW, logoH);
+        m_wordmark.setBounds ((int) area.getX(), (int) area.getY() + logoH + (int) (4.0f * sy),
+                              logoW, wordmarkH);
+        m_tagline.setBounds ((int) area.getX(), (int) area.getY() + logoH + (int) (4.0f * sy) + wordmarkH,
+                             logoW, taglineH);
 
-        // Botões de ação como ícones.
-        int iconBtnW = 32;
-        m_save.setBounds (area.removeFromLeft (iconBtnW));
-        area.removeFromLeft (halfGap);
-        m_delete.setBounds (area.removeFromLeft (iconBtnW));
-        area.removeFromLeft (halfGap);
-        m_undo.setBounds (area.removeFromLeft (iconBtnW));
-        area.removeFromLeft (halfGap);
-        m_redo.setBounds (area.removeFromLeft (iconBtnW));
-        area.removeFromLeft (halfGap);
-        m_randomize.setBounds (area.removeFromLeft (iconBtnW));
-        area.removeFromLeft (gap);
+        float leftEnd = area.getX() + logoW + (int) (12.0f * sx);
 
-        // Direita: readouts + settings.
-        m_voicesLabel.setBounds (area.removeFromRight (80));
-        area.removeFromRight (gap);
-        m_polyphonyLabel.setBounds (area.removeFromRight (80));
-        area.removeFromRight (gap);
+        // --- Área centro: navegação de preset ------------------------------
+        float centerX = leftEnd;
+        int btnW = (int) (32.0f * sx);
+        int halfGap = (int) (6.0f * sx);
+        int iconBtnW = (int) (32.0f * sx);
 
-        m_settings.setBounds (area.removeFromRight (40));
+        m_presetPrev.setBounds ((int) centerX, (int) area.getY(), btnW, (int) area.getHeight());
+        centerX += btnW + halfGap;
+        int presetW = (int) (240.0f * sx);
+        m_presetName.setBounds ((int) centerX, (int) area.getY(), presetW, (int) area.getHeight());
+        centerX += presetW + halfGap;
+        m_presetNext.setBounds ((int) centerX, (int) area.getY(), btnW, (int) area.getHeight());
+        centerX += btnW + (int) (12.0f * sx);
+
+        m_favorite.setBounds ((int) centerX, (int) area.getY(), (int) (28.0f * sx), (int) area.getHeight());
+        centerX += (int) (28.0f * sx) + halfGap;
+
+        m_save.setBounds ((int) centerX, (int) area.getY(), iconBtnW, (int) area.getHeight());
+        centerX += iconBtnW + halfGap;
+        m_delete.setBounds ((int) centerX, (int) area.getY(), iconBtnW, (int) area.getHeight());
+        centerX += iconBtnW + halfGap;
+        m_undo.setBounds ((int) centerX, (int) area.getY(), iconBtnW, (int) area.getHeight());
+        centerX += iconBtnW + halfGap;
+        m_redo.setBounds ((int) centerX, (int) area.getY(), iconBtnW, (int) area.getHeight());
+        centerX += iconBtnW + halfGap;
+        m_randomize.setBounds ((int) centerX, (int) area.getY(), iconBtnW, (int) area.getHeight());
+        centerX += iconBtnW + (int) (12.0f * sx);
+
+        // --- Área direita: readouts + settings -----------------------------
+        int voicesW = (int) (80.0f * sx);
+        int polyW = (int) (80.0f * sx);
+        int settingsW = 40;
+
+        float rightX = area.getRight();
+        m_settings.setBounds ((int) (rightX - settingsW), (int) area.getY(), settingsW, (int) area.getHeight());
+        rightX -= settingsW + (int) (12.0f * sx);
+
+        m_polyphonyLabel.setBounds ((int) (rightX - polyW), (int) area.getY(), polyW, (int) area.getHeight());
+        rightX -= polyW + (int) (12.0f * sx);
+
+        m_voicesLabel.setBounds ((int) (rightX - voicesW), (int) area.getY(), voicesW, (int) area.getHeight());
     }
 
     void timerCallback() override
