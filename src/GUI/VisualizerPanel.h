@@ -44,9 +44,12 @@ private:
         void paint (juce::Graphics& g) override
         {
             auto area = getLocalBounds().toFloat();
-            g.setColour (ControlSurface);
+            juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                         PanelBottom, area.getX(), area.getBottom(),
+                                         false);
+            g.setGradientFill (bgGrad);
             g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-            g.setColour (Border);
+            g.setColour (PanelBorder);
             g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
             // Título.
@@ -82,8 +85,6 @@ private:
                 g.setGradientFill (barGrad);
                 g.fillRoundedRectangle (bar, 2.0f);
             }
-
-            // Sem métricas de CPU disponíveis nesta versão do JUCE.
         }
         void resized() override {}
     };
@@ -95,9 +96,12 @@ private:
         void paint (juce::Graphics& g) override
         {
             auto area = getLocalBounds().toFloat();
-            g.setColour (ControlSurface);
+            juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                         PanelBottom, area.getX(), area.getBottom(),
+                                         false);
+            g.setGradientFill (bgGrad);
             g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-            g.setColour (Border);
+            g.setColour (PanelBorder);
             g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
             g.setColour (TextMain);
@@ -131,9 +135,12 @@ private:
         void paint (juce::Graphics& g) override
         {
             auto area = getLocalBounds().toFloat();
-            g.setColour (ControlSurface);
+            juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                         PanelBottom, area.getX(), area.getBottom(),
+                                         false);
+            g.setGradientFill (bgGrad);
             g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-            g.setColour (Border);
+            g.setColour (PanelBorder);
             g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
             g.setColour (TextMain);
