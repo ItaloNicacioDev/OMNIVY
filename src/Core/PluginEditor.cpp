@@ -1258,21 +1258,51 @@ void OmnivyAudioProcessorEditor::paint (juce::Graphics& g)
 
 void OmnivyAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds();
+    auto area = getLocalBounds().toFloat();
+    float w = area.getWidth();
+    float h = area.getHeight();
 
-    m_topBar->setBounds (area.removeFromTop (TopBarHeight));
-    m_tabBar->setBounds (area.removeFromTop (TabBarHeight));
+    // Usa layout proporcional baseado na base 1672×941, escalado para o tamanho atual.
+    // Não chama scaled() aqui porque scaled() precisa de currentWidth/currentHeight,
+    // que já são w e h. Usamos fatores diretos para evitar chamada redundante.
 
-    // Reservar espaço para a Faixa 5 (BottomBand com teclado).
-    area.removeFromBottom (BottomBandHeight);
+    float sx = w / 1672.0f;
+    float sy = h / 941.0f;
 
-    int contentH = area.getHeight();
-    int topRowH = contentH / 2;
-    int bottomRowH = contentH - topRowH;
+    auto scaleY = [&] (float baseY, float baseH) {
+        return juce::Rectangle<float> (0, baseY * sy, w, baseH * sy);
+    };
 
-    auto topRow = area.removeFromTop (topRowH);
+    auto scaleX = [&] (float baseX, float baseW) {
+        return juce::Rectangle<float> (baseX * sx, 0, baseW * sx, h);
+    };
+
+    // Faixa 1 — Top Bar (0–95 na base)
+    m_topBar->setBounds (scaleY (0, TopBarHeight).toNearestInt());
+
+    // Faixa 2 — Tab Bar (97–147 na base, height = 50)
+    m_tabBar->setBounds (scaleY (97, TabBarHeight).toNearestInt());
+
+    // Reservar espaço para a Faixa 5 (BottomBand com teclado) — 755–890 na base
+    float bottomBandY = 755.0f * sy;
+    float bottomBandH = BottomBandHeight * sy;
+    area.removeFromBottom ((int) bottomBandH);
+
+    // Área restante para as faixas 3 e 4 (painéis)
+    float contentTop = 147.0f * sy;
+    float contentH = bottomBandY - contentTop;
+    auto contentArea = scaleY (contentTop / sy, contentH / sy).toNearestInt();
+    // Ajustar para o retângulo real da janela:
+    contentArea.setY ((int) contentTop);
+    contentArea.setHeight ((int) contentH);
+
+    int contentHpx = contentArea.getHeight();
+    int topRowH = contentHpx / 2;
+    int bottomRowH = contentHpx - topRowH;
+
+    auto topRow = contentArea.removeFromTop (topRowH);
     int colW = topRow.getWidth() / 4;
-    int gap = 12;
+    int gap = (int) (12.0f * sx);
 
     m_oscPanel->setBounds    (topRow.removeFromLeft (colW));
     topRow.removeFromLeft (gap);
@@ -1282,7 +1312,7 @@ void OmnivyAudioProcessorEditor::resized()
     topRow.removeFromLeft (gap);
     m_filterPanel->setBounds (topRow.removeFromLeft (colW));
 
-    auto bottomRow = area.removeFromTop (bottomRowH);
+    auto bottomRow = contentArea.removeFromTop (bottomRowH);
     m_modMatrixPanel->setBounds (bottomRow.removeFromLeft (colW));
     bottomRow.removeFromLeft (gap);
     m_envTabbed->setBounds (bottomRow.removeFromLeft (colW));
@@ -1291,7 +1321,8 @@ void OmnivyAudioProcessorEditor::resized()
     bottomRow.removeFromLeft (gap);
     m_arpPanel->setBounds (bottomRow.removeFromLeft (colW));
 
-    m_bottomBand->setBounds (area);
+    // Faixa 5 — BottomBand (755–890 na base)
+    m_bottomBand->setBounds (juce::Rectangle<int> (0, (int) bottomBandY, (int) w, (int) bottomBandH));
 }
 
 } // namespace gui
