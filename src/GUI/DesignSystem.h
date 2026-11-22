@@ -63,7 +63,12 @@ inline const juce::Colour Env1Colour  = juce::Colour (0xFACC15u); // amarelo
 inline const juce::Colour Env2Colour  = juce::Colour (0x60A5FAu); // azul claro
 inline const juce::Colour MacroColour = Osc6Colour;
 
-// Retorna a cor semántica de um oscilador (index 0..5 → OSC 1..6).
+// Aliases para compatibilidade com código existente
+inline const juce::Colour BackgroundMain = WindowBgTop;
+inline const juce::Colour PanelDark      = PanelTop;
+inline const juce::Colour ControlSurface = FieldBg;
+
+// Retorna a cor semântica de um oscilador (index 0..5 → OSC 1..6).
 inline juce::Colour oscillatorColour (int index)
 {
     switch (index)
