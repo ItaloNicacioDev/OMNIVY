@@ -658,17 +658,25 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto area = getLocalBounds().toFloat();
-        g.setColour (ControlSurface);
+        juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                     PanelBottom, area.getX(), area.getBottom(),
+                                     false);
+        g.setGradientFill (bgGrad);
         g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-        g.setColour (Border);
+        g.setColour (PanelBorder);
         g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (10);
-        area.removeFromTop (40);
-        m_tabbed.setBounds (area);
+        auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
+
+        area = area.reduced (10.0f * sx, 0);
+        area.removeFromTop ((int) (40.0f * sy));
+        m_tabbed.setTabBarDepth ((int) (36.0f * sy));
+        m_tabbed.setBounds (area.toNearestInt());
     }
 
 private:
@@ -885,54 +893,63 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto area = getLocalBounds().toFloat();
-        g.setColour (PanelDark);
+        juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                     PanelBottom, area.getX(), area.getBottom(),
+                                     false);
+        g.setGradientFill (bgGrad);
         g.fillRoundedRectangle (area, (float) PanelCornerRadius);
-        g.setColour (Border);
+        g.setColour (PanelBorder);
         g.drawRoundedRectangle (area, (float) PanelCornerRadius, (float) BorderWidth);
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (10);
-        const int gap = 10;
+        auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
+
+        area = area.reduced (10.0f * sx, 0);
+        const int gap = (int) (10.0f * sx);
 
         // Tabs do teclado no topo.
-        m_keyboardTabs->setBounds (area.removeFromTop (24));
+        int tabBarDepth = (int) (24.0f * sy);
+        m_keyboardTabs->setTabBarDepth (tabBarDepth);
+        m_keyboardTabs->setBounds (area.removeFromTop (tabBarDepth).toNearestInt());
         area.removeFromTop (gap);
 
         // Teclado MIDI ocupa a maior parte da largura, na parte inferior.
-        int keyboardH = 76;
-        auto keyboardArea = area.removeFromBottom (keyboardH);
+        int keyboardH = (int) (76.0f * sy);
+        auto keyboardArea = area.removeFromBottom (keyboardH).toNearestInt();
 
         // Pitch Bend à esquerda do teclado, Mod Wheel à direita.
-        int wheelW = 30;
+        int wheelW = (int) (30.0f * sx);
         m_pitchBend->setBounds (keyboardArea.removeFromLeft (wheelW));
-        keyboardArea.removeFromLeft (gap / 2);
+        keyboardArea.removeFromLeft ((int) (gap * 0.5f));
         m_modWheel->setBounds (keyboardArea.removeFromRight (wheelW));
-        keyboardArea.removeFromRight (gap / 2);
+        keyboardArea.removeFromRight ((int) (gap * 0.5f));
         m_keyboardComponent->setBounds (keyboardArea);
 
         // Controles acima do teclado.
         area.removeFromBottom (gap);
 
-        int btnW = 64;
-        m_hold.setBounds (area.removeFromLeft (btnW));
-        area.removeFromLeft (gap / 2);
-        m_mono.setBounds (area.removeFromLeft (btnW));
-        area.removeFromLeft (gap / 2);
-        m_legato.setBounds (area.removeFromLeft (btnW));
+        int btnW = (int) (64.0f * sx);
+        m_hold.setBounds (area.removeFromLeft (btnW).toNearestInt());
+        area.removeFromLeft ((int) (gap * 0.5f));
+        m_mono.setBounds (area.removeFromLeft (btnW).toNearestInt());
+        area.removeFromLeft ((int) (gap * 0.5f));
+        m_legato.setBounds (area.removeFromLeft (btnW).toNearestInt());
         area.removeFromLeft (gap);
 
-        int masterW = 110;
-        m_masterLabel.setBounds (area.removeFromRight (masterW));
-        m_masterKnob->setBounds (area.removeFromRight (masterW));
-        m_vuMeter.setBounds (area.removeFromRight (56));
+        int masterW = (int) (110.0f * sx);
+        m_masterLabel.setBounds (area.removeFromRight (masterW).toNearestInt());
+        m_masterKnob->setBounds (area.removeFromRight (masterW).toNearestInt());
+        m_vuMeter.setBounds (area.removeFromRight ((int) (56.0f * sx)).toNearestInt());
 
         // Footer com versão e tagline na parte inferior.
-        int footerH = 14;
-        auto footerArea = area.removeFromBottom (footerH);
-        m_footerVersion.setBounds (footerArea.removeFromLeft (200));
-        m_footerTagline.setBounds (footerArea.removeFromRight (200));
+        int footerH = (int) (14.0f * sy);
+        auto footerArea = area.removeFromBottom (footerH).toNearestInt();
+        m_footerVersion.setBounds (footerArea.removeFromLeft ((int) (200.0f * sx)));
+        m_footerTagline.setBounds (footerArea.removeFromRight ((int) (200.0f * sx)));
     }
 
     void timerCallback() override
