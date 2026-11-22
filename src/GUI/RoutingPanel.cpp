@@ -35,16 +35,16 @@ RoutingPanel::RoutingPanel (OmnivyAudioProcessor& processor)
     setInterceptsMouseClicks (true, true);
     addAndMakeVisible (m_graphCanvas);
 
-    m_sourceCombo = new juce::ComboBox ("Origem");
+    m_sourceCombo = new juce::ComboBox ("Source");
     populateNodeCombo (*m_sourceCombo);
     addAndMakeVisible (*m_sourceCombo);
 
-    m_destCombo = new juce::ComboBox ("Destino");
+    m_destCombo = new juce::ComboBox ("Destination");
     populateNodeCombo (*m_destCombo);
     addAndMakeVisible (*m_destCombo);
 
-    m_typeCombo = new juce::ComboBox ("Tipo");
-    m_typeCombo->addItem ("Áudio", 1);
+    m_typeCombo = new juce::ComboBox ("Type");
+    m_typeCombo->addItem ("Audio", 1);
     m_typeCombo->addItem ("FM", 2);
     m_typeCombo->addItem ("PM", 3);
     m_typeCombo->addItem ("Ring", 4);
@@ -52,27 +52,34 @@ RoutingPanel::RoutingPanel (OmnivyAudioProcessor& processor)
     m_typeCombo->setSelectedId (1);
     addAndMakeVisible (*m_typeCombo);
 
-    m_gainSlider = new juce::Slider ("Ganho");
+    m_gainSlider = new juce::Slider ("Gain");
     m_gainSlider->setSliderStyle (juce::Slider::SliderStyle::LinearHorizontal);
     m_gainSlider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
     m_gainSlider->setRange (0.0, 1.0, 0.01);
     m_gainSlider->setValue (1.0);
-    m_gainSlider->setTooltip ("Ganho da nova conexão de roteamento.");
+    m_gainSlider->setTooltip ("Gain of the new routing connection.");
     addAndMakeVisible (*m_gainSlider);
 
-    m_addButton = new juce::TextButton ("Adicionar");
+    m_addButton = new juce::TextButton ("Add");
     m_addButton->onClick = [this] { addConnection(); };
     addAndMakeVisible (*m_addButton);
 
-    m_clearButton = new juce::TextButton ("Limpar");
+    m_clearButton = new juce::TextButton ("Clear");
     m_clearButton->onClick = [this] { clearConnections(); };
     addAndMakeVisible (*m_clearButton);
 
-    m_statusLabel.setText ("Nenhuma conexão", juce::dontSendNotification);
+    m_statusLabel.setText ("No connections", juce::dontSendNotification);
     m_statusLabel.setFont (uiFont (FontSizeMicro));
     m_statusLabel.setColour (juce::Label::textColourId, TextMuted);
     m_statusLabel.setEnabled (false);
     addAndMakeVisible (m_statusLabel);
+
+    m_titleLabel.setText ("Routing Graph", juce::dontSendNotification);
+    m_titleLabel.setFont (uiFont (FontSizeLabel, juce::Font::bold));
+    m_titleLabel.setColour (juce::Label::textColourId, TextMain);
+    m_titleLabel.setJustificationType (juce::Justification::left);
+    m_titleLabel.setEnabled (false);
+    addAndMakeVisible (m_titleLabel);
 
     startTimerHz (15);
 }
@@ -96,6 +103,8 @@ void RoutingPanel::populateNodeCombo (juce::ComboBox& combo)
 void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
+
+    // Fundo do grafo.
     g.setColour (AreaInner);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
     g.setColour (Border);
@@ -104,17 +113,24 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
     auto& graph = processor.getRoutingGraph();
 
     int numNodes = omnivy::params::NumOscillators;
-    float nodeRadius = 22.0f;
     float centerY = area.getCentreY();
-    float startX = area.getX() + 60.0f;
-    float step = (area.getWidth() - 120.0f) / (float) (numNodes - 1);
 
-    // Posições dos nós.
-    juce::Point<float> nodePos[omnivy::params::NumOscillators];
+    // --- Posições das fontes (lado esquerdo) ---------------------------------
+    float sourceStartX = area.getX() + 20.0f;
+    float sourceStep = (area.getWidth() * 0.35f - 40.0f) / (float) (numNodes - 1);
+    juce::Point<float> sourcePos[omnivy::params::NumOscillators];
     for (int i = 0; i < numNodes; ++i)
-        nodePos[i] = { startX + i * step, centerY };
+        sourcePos[i] = { sourceStartX + i * sourceStep, centerY };
 
-    // Desenha conexões (curvas) — trás da frente dos nós.
+    // --- Posições dos nós de processamento (centro-direita) ------------------
+    float mixX = area.getRight() - 140.0f;
+    float filterX = area.getRight() - 80.0f;
+    float fxX = area.getRight() - 20.0f;
+    juce::Point<float> mixPos { mixX, centerY };
+    juce::Point<float> filterPos { filterX, centerY };
+    juce::Point<float> fxPos { fxX, centerY };
+
+    // --- Desenha conexões das fontes para o Mix ------------------------------
     for (int src = 0; src < numNodes; ++src)
     {
         auto outgoing = graph.getOutgoingConnections (src);
@@ -126,52 +142,128 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
             if (dst < 0 || dst >= numNodes)
                 continue;
 
+            // Conexão da fonte para o nó Mix (curva Bézier).
             auto c = typeColour (conn->getType());
             juce::Path curve;
-            curve.startNewSubPath (nodePos[src]);
-            // Ponto de controle acima da linha para formar um arco.
-            juce::Point<float> cp ((nodePos[src].getX() + nodePos[dst].getX()) * 0.5f,
-                                   centerY - 60.0f);
-            curve.quadraticTo (cp, nodePos[dst]);
+            curve.startNewSubPath (sourcePos[src]);
+            curve.cubicTo (sourcePos[src].getX() + 60.0f, centerY - 30.0f,
+                           mixPos.getX() - 60.0f, centerY + 30.0f,
+                           mixPos.getX(), mixPos.getY());
 
             g.setColour (c.withAlpha (0.5f));
             g.strokePath (curve, juce::PathStrokeType (2.0f));
-
-            // Seta no destino.
-            g.setColour (c);
-            g.fillEllipse (nodePos[dst].getX() - 3.0f, nodePos[dst].getY() - 3.0f, 6.0f, 6.0f);
         }
     }
 
-    // Desenha nós.
+    // --- Conexões da cadeia: Mix → Filter → FX -------------------------------
+    juce::Path chainCurve;
+    chainCurve.startNewSubPath (mixPos.getX() + 22.0f, mixPos.getY());
+    chainCurve.lineTo (filterPos.getX() - 22.0f, filterPos.getY());
+    g.setColour (PrimaryPurpleLight);
+    g.strokePath (chainCurve, juce::PathStrokeType (2.0f));
+
+    juce::Path chainCurve2;
+    chainCurve2.startNewSubPath (filterPos.getX() + 22.0f, filterPos.getY());
+    chainCurve2.lineTo (fxPos.getX() - 22.0f, fxPos.getY());
+    g.setColour (PrimaryPurpleLight);
+    g.strokePath (chainCurve2, juce::PathStrokeType (2.0f));
+
+    // --- Desenha nós de fonte (pílulas com ponto de cor) ----------------------
     for (int i = 0; i < numNodes; ++i)
     {
-        bool hasAny = graph.getNumConnections() > 0
-            && (graph.getOutgoingConnections (i).size() > 0
-                || graph.getIncomingConnections (i).size() > 0);
-        g.setColour (oscillatorColour (i));
-        if (hasAny)
-            g.setColour (oscillatorColour (i).brighter (0.3f));
-        g.fillEllipse (nodePos[i].getX() - nodeRadius, nodePos[i].getY() - nodeRadius,
-                       nodeRadius * 2.0f, nodeRadius * 2.0f);
-        g.setColour (Border);
-        g.drawEllipse (nodePos[i].getX() - nodeRadius, nodePos[i].getY() - nodeRadius,
-                       nodeRadius * 2.0f, nodeRadius * 2.0f, 1.5f);
+        auto c = oscillatorColour (i);
+        float pillW = 56.0f;
+        float pillH = 20.0f;
+        juce::Rectangle<float> pill (sourcePos[i].getX() - pillW * 0.5f,
+                                     sourcePos[i].getY() - pillH * 0.5f,
+                                     pillW, pillH);
 
+        // Fundo da pílula.
+        g.setColour (ControlSurface);
+        g.fillRoundedRectangle (pill, pillH * 0.5f);
+        g.setColour (c);
+        g.drawRoundedRectangle (pill, pillH * 0.5f, 1.5f);
+
+        // Ponto de cor à esquerda da pílula.
+        g.setColour (c);
+        g.fillEllipse (pill.getX() - 6.0f, pill.getCentreY() - 4.0f, 8.0f, 8.0f);
+
+        // Texto do oscilador.
         g.setColour (TextMain);
-        g.setFont (uiFont (12.0f, juce::Font::bold));
-        g.drawText (juce::String (i + 1),
-                    (int) (nodePos[i].getX() - 10), (int) (nodePos[i].getY() - 10),
-                    20, 20, juce::Justification::centred, true);
+        g.setFont (uiFont (11.0f, juce::Font::bold));
+        g.drawText ("OSC " + juce::String (i + 1),
+                    (int) pill.getX(), (int) (pill.getY() - pillH * 0.5f + 2),
+                    (int) pill.getWidth(), (int) pillH,
+                    juce::Justification::centred, true);
     }
 
-    // Labels dos nós abaixo.
+    // --- Nó Mix (roxo, maior) --------------------------------------------------
+    float mixRadius = 22.0f;
+    juce::Rectangle<float> mixRect (mixPos.getX() - mixRadius, mixPos.getY() - mixRadius,
+                                    mixRadius * 2.0f, mixRadius * 2.0f);
+    juce::ColourGradient mixGrad (PrimaryPurpleDark, mixRect.getX(), mixRect.getY(),
+                                  PrimaryPurple, mixRect.getRight(), mixRect.getBottom(),
+                                  false);
+    g.setGradientFill (mixGrad);
+    g.fillRoundedRectangle (mixRect, 8.0f);
+    g.setColour (PrimaryPurpleLight);
+    g.drawRoundedRectangle (mixRect, 8.0f, 1.5f);
+    g.setColour (juce::Colours::white);
+    g.setFont (uiFont (12.0f, juce::Font::bold));
+    g.drawText ("Mix", (int) mixRect.getX(), (int) mixRect.getY(),
+                (int) mixRect.getWidth(), (int) mixRect.getHeight(),
+                juce::Justification::centred, true);
+
+    // --- Nó Filter (azul escuro) -----------------------------------------------
+    float filterRadius = 18.0f;
+    juce::Rectangle<float> filterRect (filterPos.getX() - filterRadius, filterPos.getY() - filterRadius,
+                                       filterRadius * 2.0f, filterRadius * 2.0f);
+    juce::ColourGradient filterGrad (juce::Colour (0x1A2350u), filterRect.getX(), filterRect.getY(),
+                                     juce::Colour (0x3B82F6u), filterRect.getRight(), filterRect.getBottom(),
+                                     false);
+    g.setGradientFill (filterGrad);
+    g.fillRoundedRectangle (filterRect, 6.0f);
+    g.setColour (juce::Colour (0x60A5FAu));
+    g.drawRoundedRectangle (filterRect, 6.0f, 1.5f);
+    g.setColour (juce::Colours::white);
+    g.setFont (uiFont (11.0f, juce::Font::bold));
+    g.drawText ("Filter", (int) filterRect.getX(), (int) filterRect.getY(),
+                (int) filterRect.getWidth(), (int) filterRect.getHeight(),
+                juce::Justification::centred, true);
+
+    // --- Nó FX (azul) ----------------------------------------------------------
+    float fxRadius = 18.0f;
+    juce::Rectangle<float> fxRect (fxPos.getX() - fxRadius, fxPos.getY() - fxRadius,
+                                   fxRadius * 2.0f, fxRadius * 2.0f);
+    juce::ColourGradient fxGrad (juce::Colour (0x1A2350u), fxRect.getX(), fxRect.getY(),
+                                 juce::Colour (0x3B82F6u), fxRect.getRight(), fxRect.getBottom(),
+                                 false);
+    g.setGradientFill (fxGrad);
+    g.fillRoundedRectangle (fxRect, 6.0f);
+    g.setColour (juce::Colour (0x60A5FAu));
+    g.drawRoundedRectangle (fxRect, 6.0f, 1.5f);
+    g.setColour (juce::Colours::white);
+    g.setFont (uiFont (11.0f, juce::Font::bold));
+    g.drawText ("FX", (int) fxRect.getX(), (int) fxRect.getY(),
+                (int) fxRect.getWidth(), (int) fxRect.getHeight(),
+                juce::Justification::centred, true);
+
+    // --- Setas direcionais na cadeia -------------------------------------------
+    // Seta Mix → Filter.
+    g.setColour (PrimaryPurpleLight);
+    g.fillEllipse (filterPos.getX() - filterRadius - 4.0f, filterPos.getY() - 3.0f, 6.0f, 6.0f);
+    // Seta Filter → FX.
+    g.fillEllipse (fxPos.getX() - fxRadius - 4.0f, fxPos.getY() - 3.0f, 6.0f, 6.0f);
+
+    // --- Labels dos nós abaixo -------------------------------------------------
     g.setColour (TextSecondary);
     g.setFont (uiFont (FontSizeMicro));
-    for (int i = 0; i < numNodes; ++i)
-        g.drawText ("OSC " + juce::String (i + 1),
-                    (int) (nodePos[i].getX() - 30), (int) (centerY + nodeRadius + 6),
-                    60, 14, juce::Justification::centred, true);
+    g.drawText ("Mix", (int) (mixPos.getX() - 20), (int) (mixPos.getY() + mixRadius + 4), 40, 14,
+                juce::Justification::centred, true);
+    g.drawText ("Filter", (int) (filterPos.getX() - 25), (int) (filterPos.getY() + filterRadius + 4), 50, 14,
+                juce::Justification::centred, true);
+    g.drawText ("FX", (int) (fxPos.getX() - 10), (int) (fxPos.getY() + fxRadius + 4), 20, 14,
+                juce::Justification::centred, true);
 }
 
 void RoutingPanel::paint (juce::Graphics& g)
@@ -186,15 +278,22 @@ void RoutingPanel::paint (juce::Graphics& g)
 void RoutingPanel::resized()
 {
     auto area = getLocalBounds().reduced (12);
-    area.removeFromTop (44);
-
-    // Grafo ocupa a maior parte.
-    m_graphCanvas.setBounds (area.removeFromLeft (area.getWidth() * 0.62f));
-    area.removeFromLeft (14);
-
-    int h = 26;
-    int gap = 8;
+    const int gap = 8;
     int labelW = 60;
+
+    // Título à esquerda do cabeçalho.
+    m_titleLabel.setBounds (area.removeFromLeft (120));
+    area.removeFromLeft (gap);
+
+    // Botão Clear no canto superior direito do cabeçalho.
+    m_clearButton->setBounds (area.removeFromRight (60));
+    area.removeFromRight (gap);
+
+    area.removeFromTop (44 - 24); // restante do cabeçalho (título + Clear já ocupam 24px)
+
+    // Grafo ocupa a maior parte (esquerda e centro).
+    m_graphCanvas.setBounds (area.removeFromLeft (area.getWidth() * 0.72f));
+    area.removeFromLeft (14);
 
     m_sourceCombo->setBounds (area.removeFromLeft (labelW));
     m_sourceCombo->setEditableText (false);
@@ -208,8 +307,6 @@ void RoutingPanel::resized()
     area.removeFromLeft (gap);
 
     m_addButton->setBounds (area.removeFromLeft (70));
-    area.removeFromLeft (gap);
-    m_clearButton->setBounds (area.removeFromLeft (70));
 
     m_statusLabel.setBounds (area.removeFromBottom (20));
 }
