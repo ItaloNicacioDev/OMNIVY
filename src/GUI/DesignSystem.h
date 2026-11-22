@@ -18,6 +18,7 @@ inline const juce::Colour WindowBgTop    = juce::Colour (0x0A0A1Eu);  // #0A0A1E
 inline const juce::Colour WindowBgMid    = juce::Colour (0x0D0D26u);  // #0D0D26
 inline const juce::Colour WindowBgBottom = juce::Colour (0x0A0A1Cu);  // #0A0A1C
 inline const juce::Colour WindowBorder   = juce::Colour (0x2A2A55u);  // #2A2A55
+inline const juce::Colour Border         = juce::Colour (0x2A2A55u);  // #2A2A55 (alias para compatibilidade)
 
 // -----------------------------------------------------------------------------
 // Superfícies dos painéis
@@ -172,19 +173,19 @@ public:
     // --- ComboBox ------------------------------------------------------------
     void drawComboBoxBackground (juce::Graphics& g, int width, int height,
                                  bool isMouseDown, int buttonX, int buttonY, int buttonW,
-                                 int buttonH, juce::ComboBox& box) override;
-    void drawPopupMenuBackground (juce::Graphics& g, int width, int height) override;
+                                 int buttonH, juce::ComboBox& box);
+    void drawPopupMenuBackground (juce::Graphics& g, int width, int height);
     void drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
                             bool isSelected, int i, int totalItems,
                             const juce::String& text, const juce::String& shortcut,
-                            bool isDisabled, bool isChecked, bool possibleSubmenu) override;
+                            bool isDisabled, bool isChecked, bool possibleSubmenu);
 
     // --- MIDI Keyboard -------------------------------------------------------
-    void drawKeyboardBackground (juce::Graphics& g, const juce::Rectangle<int>& area) override;
+    void drawKeyboardBackground (juce::Graphics& g, const juce::Rectangle<int>& area);
     void drawWhiteKey (juce::Graphics& g, const juce::Rectangle<int>& area,
-                       float keyWidth, float keyHeight, float keyY, int keyIndex) override;
+                       float keyWidth, float keyHeight, float keyY, int keyIndex);
     void drawBlackKey (juce::Graphics& g, const juce::Rectangle<int>& area,
-                       float keyWidth, float keyHeight, float keyY, int keyIndex) override;
+                       float keyWidth, float keyHeight, float keyY, int keyIndex);
 };
 
 } // namespace gui
