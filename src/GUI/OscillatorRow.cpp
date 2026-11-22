@@ -43,23 +43,13 @@ OscillatorRowComponent::OscillatorRowComponent (juce::AudioProcessorValueTreeSta
     // Pré-visualização da forma de onda.
     m_waveformPreview = new WaveformComponent();
     m_waveformPreview->setColour (m_stripeColour);
-    m_waveformPreview->setSizeHint (64, 40);
+    m_waveformPreview->setSizeHint (80, 50);
     addAndMakeVisible (*m_waveformPreview);
 
     // Level — parâmetro real oscLevel.
     m_levelKnob = new KnobComponent (apvts, params::oscLevel (oscillatorIndex),
                                      "Level", "", KnobComponent::Size::Small, m_stripeColour);
     addAndMakeVisible (*m_levelKnob);
-
-    // Octave — parâmetro real oscOctave.
-    m_octaveKnob = new KnobComponent (apvts, params::oscOctave (oscillatorIndex),
-                                      "Oct", "", KnobComponent::Size::Small, TextSecondary);
-    addAndMakeVisible (*m_octaveKnob);
-
-    // Semitone — parâmetro real oscSemitone.
-    m_semitoneKnob = new KnobComponent (apvts, params::oscSemitone (oscillatorIndex),
-                                        "Semi", "", KnobComponent::Size::Small, TextSecondary);
-    addAndMakeVisible (*m_semitoneKnob);
 
     // Chevron de seleção da linha (estado apenas da UI).
     m_chevronButton = new juce::TextButton ("›");
