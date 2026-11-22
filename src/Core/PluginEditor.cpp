@@ -345,42 +345,45 @@ public:
     void paintButton (juce::Graphics& g, bool isMouseOver, bool /*isButtonDown*/) override
     {
         auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
+
+        // Forma de paralelogramo (cantos inclinados) — estilo da referência.
+        float shear = 8.0f * sx;
+        juce::Path shape;
+        shape.startNewSubPath (area.getX() + shear * 0.5f, area.getY());
+        shape.lineTo (area.getRight() + shear * 0.5f, area.getY());
+        shape.lineTo (area.getRight() - shear * 0.5f, area.getBottom());
+        shape.lineTo (area.getX() - shear * 0.5f, area.getBottom());
+        shape.closeSubPath();
 
         if (m_active)
         {
-            // Gradiente roxo para aba ativa.
             juce::ColourGradient grad (PrimaryPurpleDark, area.getX(), area.getY(),
                                        PrimaryPurple,     area.getX(), area.getBottom(),
                                        false);
             g.setGradientFill (grad);
-            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-
-            // Glow externo sutil.
-            g.setColour (GlowActive);
-            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.5f);
+            g.fillPath (shape);
+            g.setColour (juce::Colours::white);
         }
         else if (isMouseOver)
         {
             g.setColour (PrimaryPurple.withAlpha (0.18f));
-            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-            g.setColour (Border);
-            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+            g.fillPath (shape);
+            g.setColour (TextMain);
         }
         else
         {
             g.setColour (PanelDark);
-            g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-            g.setColour (Border);
-            g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+            g.fillPath (shape);
+            g.setColour (FieldBorder);
+            g.strokePath (shape, juce::PathStrokeType ((float) BorderWidth));
+            g.setColour (TextSecondary);
         }
 
-        g.setColour (m_active ? juce::Colours::white
-                              : (isMouseOver ? TextMain : TextSecondary));
         g.setFont (uiFont (FontSizeLabel, juce::Font::bold));
         auto text = m_icon + "  " + m_name;
-        g.drawFittedText (text, (int) area.getX(), (int) area.getY(),
-                          (int) area.getWidth(), (int) area.getHeight(),
-                          juce::Justification::centred, 1);
+        g.drawFittedText (text, area.toNearestInt(), juce::Justification::centred, 1);
     }
 
 private:
@@ -426,24 +429,33 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto area = getLocalBounds().toFloat();
-        g.setColour (BackgroundMain);
+        g.setColour (WindowBgTop);
         g.fillRect (area);
 
         // Acento diagonal roxo na extremidade direita.
+        float sx = getWidth() / 1672.0f;
         juce::Path accent;
-        accent.startNewSubPath (area.getRight() - 4.0f, area.getY());
-            accent.lineTo (area.getRight(), area.getY() + 16.0f);
-            accent.lineTo (area.getRight(), area.getBottom());
+        accent.startNewSubPath (area.getRight() - 4.0f * sx, area.getY());
+        accent.lineTo (area.getRight(), area.getY() + 16.0f * getHeight() / 941.0f);
+        accent.lineTo (area.getRight(), area.getBottom());
         g.setColour (PrimaryPurple);
         g.fillPath (accent);
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (4);
-        int tabW = area.getWidth() / 6;
+        auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
+
+        int tabBarH = (int) (TabBarHeight * sy);
+        int tabY = (int) (97.0f * sy);
+        setBounds ((int) area.getX(), tabY, (int) area.getWidth(), tabBarH);
+
+        area = getLocalBounds().toFloat().reduced (4.0f * sx, 0);
+        int tabW = (int) (area.getWidth() / 6.0f);
         for (int i = 0; i < 6; ++i)
-            m_buttons[i]->setBounds (area.removeFromLeft (tabW));
+            m_buttons[i]->setBounds (area.removeFromLeft (tabW).toNearestInt());
     }
 
     void selectTab (int index)
@@ -504,24 +516,28 @@ public:
     {
         PanelComponent::paint (g);
 
-        auto area = getLocalBounds().toFloat().reduced (10);
-        area.removeFromTop (44);
+        auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
+
+        area = area.reduced (10.0f * sx, 0);
+        area.removeFromTop ((int) (44.0f * sy));
 
         // Cabeçalho da tabela.
         g.setColour (TextSecondary);
         g.setFont (uiFont (FontSizeMicro));
-        float colW[] = { 40.0f, 150.0f, 80.0f, 80.0f, 20.0f };
+        float colW[] = { 40.0f * sx, 150.0f * sx, 80.0f * sx, 80.0f * sx, 20.0f * sx };
         float colX = area.getX();
-        g.drawText ("●", (int) colX, (int) area.getY(), (int) colW[0], 16,
+        g.drawText ("●", (int) colX, (int) area.getY(), (int) colW[0], (int) (16.0f * sy),
                     juce::Justification::centred, true);
         g.drawText ("Source -> Destination", (int) (colX + colW[0]), (int) area.getY(),
-                    (int) colW[1], 16, juce::Justification::centred, true);
+                    (int) colW[1], (int) (16.0f * sy), juce::Justification::centred, true);
         g.drawText ("Amount", (int) (colX + colW[0] + colW[1]), (int) area.getY(),
-                    (int) colW[2], 16, juce::Justification::centredRight, true);
+                    (int) colW[2], (int) (16.0f * sy), juce::Justification::centredRight, true);
         g.drawText ("Curve", (int) (colX + colW[0] + colW[1] + colW[2]), (int) area.getY(),
-                    (int) colW[3], 16, juce::Justification::centred, true);
+                    (int) colW[3], (int) (16.0f * sy), juce::Justification::centred, true);
 
-        g.setColour (Border);
+        g.setColour (PanelBorder);
         g.fillRect ((int) area.getX(), (int) (area.getBottom() - 1), (int) area.getWidth(), 1);
 
         // Linhas da matriz (dados reais do sistema de modulação).
@@ -541,18 +557,19 @@ public:
             { Osc6Colour,  "Macro 1", "-> Mix",       "+50.0 %" },
         };
 
-        float rowH = 20.0f;
-        float y = area.getY() + 22.0f;
+        float rowH = (int) (20.0f * sy);
+        float y = area.getY() + (int) (22.0f * sy);
 
         for (auto& row : rows)
         {
             // Ponto de cor da fonte.
             g.setColour (row.colour);
-            g.fillEllipse ((int) (colX + 8.0f), (int) (y + 6.0f), 8.0f, 8.0f);
+            g.fillEllipse ((int) (colX + 8.0f * sx), (int) (y + 6.0f * sy),
+                           (int) (8.0f * sx), (int) (8.0f * sy));
 
             // Texto Source → Destination.
             g.setColour (TextMain);
-            g.setFont (uiFont (11.0f));
+            g.setFont (uiFont (11.0f * sy));
             g.drawText (row.source + " → " + row.destination,
                         (int) (colX + colW[0]), (int) y,
                         (int) colW[1], (int) rowH, juce::Justification::left, true);
@@ -565,16 +582,16 @@ public:
 
             // Mini curva.
             juce::Path curve;
-            float curveX = colX + colW[0] + colW[1] + colW[2] + 10.0f;
+            float curveX = colX + colW[0] + colW[1] + colW[2] + (10.0f * sx);
             float curveY = y + rowH * 0.5f;
-            curve.startNewSubPath (curveX - 10.0f, curveY);
-            curve.cubicTo (curveX, curveY - 6.0f, curveX + 10.0f, curveY + 6.0f,
-                           curveX + 20.0f, curveY);
+            curve.startNewSubPath (curveX - 10.0f * sx, curveY);
+            curve.cubicTo (curveX, curveY - 6.0f * sy, curveX + 10.0f * sx, curveY + 6.0f * sy,
+                           curveX + 20.0f * sx, curveY);
             g.setColour (row.colour.withAlpha (0.6f));
             g.strokePath (curve, juce::PathStrokeType (1.5f));
 
             // Separador.
-            g.setColour (Border.withAlpha (0.5f));
+            g.setColour (PanelBorder.withAlpha (0.5f));
             g.fillRect ((int) colX, (int) (y + rowH), (int) area.getWidth(), 1);
 
             y += rowH;
@@ -585,20 +602,27 @@ public:
         {
             g.setColour (TextMuted);
             g.drawText ("— sem modulações configuradas —",
-                        (int) colX, (int) y, (int) area.getWidth(), 14,
+                        (int) colX, (int) y, (int) area.getWidth(), (int) (14.0f * sy),
                         juce::Justification::centred, true);
         }
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced (10);
-        area.removeFromTop (44);
-        area.removeFromBottom (26);
+        auto area = getLocalBounds().toFloat();
+        float sx = getWidth() / 1672.0f;
+        float sy = getHeight() / 941.0f;
 
-        m_addButton.setBounds (area.removeFromRight (30));
-        area.removeFromRight (8);
-        m_removeButton.setBounds (area.removeFromRight (30));
+        area = area.reduced (10.0f * sx, 0);
+        area.removeFromTop ((int) (44.0f * sy));
+        area.removeFromBottom ((int) (26.0f * sy));
+
+        int btnW = (int) (30.0f * sx);
+        int gap = (int) (8.0f * sx);
+
+        m_addButton.setBounds (area.removeFromRight (btnW).toNearestInt());
+        area.removeFromRight (gap);
+        m_removeButton.setBounds (area.removeFromRight (btnW).toNearestInt());
     }
 
 private:

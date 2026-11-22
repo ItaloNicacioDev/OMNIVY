@@ -95,35 +95,39 @@ void OscillatorRowComponent::paint (juce::Graphics& g)
 
 void OscillatorRowComponent::resized()
 {
-    auto area = getLocalBounds().reduced (4);
-    area.removeFromLeft (6); // faixa lateral
+    auto area = getLocalBounds().toFloat();
+    float sx = getWidth() / 1672.0f;
+    float sy = getHeight() / 941.0f;
 
-    int labelW = 24;
-    int btnW = 28;
-    int comboW = 110;
-    int previewW = 80;
-    int knobW = 46;
-    int gap = 6;
-    int chevronW = 24;
+    area = area.reduced (4.0f * sx, 0);
+    area.removeFromLeft (6.0f * sx); // faixa lateral
 
-    m_numberLabel.setBounds (area.removeFromLeft (labelW));
+    int labelW   = (int) (24.0f * sx);
+    int btnW     = (int) (28.0f * sx);
+    int comboW   = (int) (110.0f * sx);
+    int previewW = (int) (80.0f * sx);
+    int knobW    = (int) (46.0f * sx);
+    int gap      = (int) (6.0f * sx);
+    int chevronW = (int) (24.0f * sx);
+
+    m_numberLabel.setBounds (area.removeFromLeft (labelW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_powerButton->setBounds (area.removeFromLeft (btnW));
+    m_powerButton->setBounds (area.removeFromLeft (btnW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_engineCombo->setBounds (area.removeFromLeft (comboW));
+    m_engineCombo->setBounds (area.removeFromLeft (comboW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_waveformCombo->setBounds (area.removeFromLeft (comboW));
+    m_waveformCombo->setBounds (area.removeFromLeft (comboW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_waveformPreview->setBounds (area.removeFromLeft (previewW));
+    m_waveformPreview->setBounds (area.removeFromLeft (previewW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_levelKnob->setBounds (area.removeFromLeft (knobW));
+    m_levelKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
 
-    m_chevronButton->setBounds (area.removeFromLeft (chevronW));
+    m_chevronButton->setBounds (area.removeFromLeft (chevronW).toNearestInt());
 }
 
 void OscillatorRowComponent::setSelected (bool selected)

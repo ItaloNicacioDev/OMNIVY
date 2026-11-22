@@ -104,10 +104,13 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
 
-    // Fundo do grafo.
-    g.setColour (AreaInner);
+    // Fundo do grafo (PanelTop → PanelBottom).
+    juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                 PanelBottom, area.getX(), area.getBottom(),
+                                 false);
+    g.setGradientFill (bgGrad);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-    g.setColour (Border);
+    g.setColour (PanelBorder);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
     auto& graph = processor.getRoutingGraph();
@@ -116,16 +119,16 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
     float centerY = area.getCentreY();
 
     // --- Posições das fontes (lado esquerdo) ---------------------------------
-    float sourceStartX = area.getX() + 20.0f;
-    float sourceStep = (area.getWidth() * 0.35f - 40.0f) / (float) (numNodes - 1);
+    float sourceStartX = area.getX() + 20.0f * getWidth() / 1672.0f;
+    float sourceStep = (area.getWidth() * 0.35f - 40.0f * getWidth() / 1672.0f) / (float) (numNodes - 1);
     juce::Point<float> sourcePos[omnivy::params::NumOscillators];
     for (int i = 0; i < numNodes; ++i)
         sourcePos[i] = { sourceStartX + i * sourceStep, centerY };
 
     // --- Posições dos nós de processamento (centro-direita) ------------------
-    float mixX = area.getRight() - 140.0f;
-    float filterX = area.getRight() - 80.0f;
-    float fxX = area.getRight() - 20.0f;
+    float mixX = area.getRight() - 140.0f * getWidth() / 1672.0f;
+    float filterX = area.getRight() - 80.0f * getWidth() / 1672.0f;
+    float fxX = area.getRight() - 20.0f * getWidth() / 1672.0f;
     juce::Point<float> mixPos { mixX, centerY };
     juce::Point<float> filterPos { filterX, centerY };
     juce::Point<float> fxPos { fxX, centerY };
@@ -172,8 +175,8 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
     for (int i = 0; i < numNodes; ++i)
     {
         auto c = oscillatorColour (i);
-        float pillW = 56.0f;
-        float pillH = 20.0f;
+        float pillW = 56.0f * getWidth() / 1672.0f;
+        float pillH = 20.0f * getHeight() / 941.0f;
         juce::Rectangle<float> pill (sourcePos[i].getX() - pillW * 0.5f,
                                      sourcePos[i].getY() - pillH * 0.5f,
                                      pillW, pillH);
@@ -198,7 +201,7 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
     }
 
     // --- Nó Mix (roxo, maior) --------------------------------------------------
-    float mixRadius = 22.0f;
+    float mixRadius = 22.0f * getWidth() / 1672.0f;
     juce::Rectangle<float> mixRect (mixPos.getX() - mixRadius, mixPos.getY() - mixRadius,
                                     mixRadius * 2.0f, mixRadius * 2.0f);
     juce::ColourGradient mixGrad (PrimaryPurpleDark, mixRect.getX(), mixRect.getY(),
@@ -215,15 +218,15 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
                 juce::Justification::centred, true);
 
     // --- Nó Filter (azul escuro) -----------------------------------------------
-    float filterRadius = 18.0f;
+    float filterRadius = 18.0f * getWidth() / 1672.0f;
     juce::Rectangle<float> filterRect (filterPos.getX() - filterRadius, filterPos.getY() - filterRadius,
                                        filterRadius * 2.0f, filterRadius * 2.0f);
-    juce::ColourGradient filterGrad (juce::Colour (0x1A2350u), filterRect.getX(), filterRect.getY(),
-                                     juce::Colour (0x3B82F6u), filterRect.getRight(), filterRect.getBottom(),
+    juce::ColourGradient filterGrad (PrimaryPurpleDark, filterRect.getX(), filterRect.getY(),
+                                     PrimaryPurple, filterRect.getRight(), filterRect.getBottom(),
                                      false);
     g.setGradientFill (filterGrad);
     g.fillRoundedRectangle (filterRect, 6.0f);
-    g.setColour (juce::Colour (0x60A5FAu));
+    g.setColour (PrimaryPurpleLight);
     g.drawRoundedRectangle (filterRect, 6.0f, 1.5f);
     g.setColour (juce::Colours::white);
     g.setFont (uiFont (11.0f, juce::Font::bold));
@@ -232,15 +235,15 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
                 juce::Justification::centred, true);
 
     // --- Nó FX (azul) ----------------------------------------------------------
-    float fxRadius = 18.0f;
+    float fxRadius = 18.0f * getWidth() / 1672.0f;
     juce::Rectangle<float> fxRect (fxPos.getX() - fxRadius, fxPos.getY() - fxRadius,
                                    fxRadius * 2.0f, fxRadius * 2.0f);
-    juce::ColourGradient fxGrad (juce::Colour (0x1A2350u), fxRect.getX(), fxRect.getY(),
-                                 juce::Colour (0x3B82F6u), fxRect.getRight(), fxRect.getBottom(),
+    juce::ColourGradient fxGrad (PrimaryPurpleDark, fxRect.getX(), fxRect.getY(),
+                                 PrimaryPurple, fxRect.getRight(), fxRect.getBottom(),
                                  false);
     g.setGradientFill (fxGrad);
     g.fillRoundedRectangle (fxRect, 6.0f);
-    g.setColour (juce::Colour (0x60A5FAu));
+    g.setColour (PrimaryPurpleLight);
     g.drawRoundedRectangle (fxRect, 6.0f, 1.5f);
     g.setColour (juce::Colours::white);
     g.setFont (uiFont (11.0f, juce::Font::bold));
@@ -269,46 +272,53 @@ void RoutingPanel::GraphCanvas::paint (juce::Graphics& g)
 void RoutingPanel::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
-    g.setColour (ControlSurface);
+    juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                 PanelBottom, area.getX(), area.getBottom(),
+                                 false);
+    g.setGradientFill (bgGrad);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-    g.setColour (Border);
+    g.setColour (PanelBorder);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 }
 
 void RoutingPanel::resized()
 {
-    auto area = getLocalBounds().reduced (12);
-    const int gap = 8;
-    int labelW = 60;
+    auto area = getLocalBounds().toFloat();
+    float sx = getWidth() / 1672.0f;
+    float sy = getHeight() / 941.0f;
+
+    area = area.reduced (12.0f * sx, 0);
+    const int gap = (int) (8.0f * sx);
+    int labelW = (int) (60.0f * sx);
 
     // Título à esquerda do cabeçalho.
-    m_titleLabel.setBounds (area.removeFromLeft (120));
+    m_titleLabel.setBounds (area.removeFromLeft ((int) (120.0f * sx)).toNearestInt());
     area.removeFromLeft (gap);
 
     // Botão Clear no canto superior direito do cabeçalho.
-    m_clearButton->setBounds (area.removeFromRight (60));
+    m_clearButton->setBounds (area.removeFromRight ((int) (60.0f * sx)).toNearestInt());
     area.removeFromRight (gap);
 
-    area.removeFromTop (44 - 24); // restante do cabeçalho (título + Clear já ocupam 24px)
+    area.removeFromTop ((int) ((44.0f - 24.0f) * sy)); // restante do cabeçalho
 
     // Grafo ocupa a maior parte (esquerda e centro).
-    m_graphCanvas.setBounds (area.removeFromLeft (area.getWidth() * 0.72f));
-    area.removeFromLeft (14);
+    m_graphCanvas.setBounds (area.removeFromLeft (area.getWidth() * 0.72f).toNearestInt());
+    area.removeFromLeft ((int) (14.0f * sx));
 
-    m_sourceCombo->setBounds (area.removeFromLeft (labelW));
+    m_sourceCombo->setBounds (area.removeFromLeft (labelW).toNearestInt());
     m_sourceCombo->setEditableText (false);
     area.removeFromLeft (gap);
-    m_destCombo->setBounds (area.removeFromLeft (labelW));
+    m_destCombo->setBounds (area.removeFromLeft (labelW).toNearestInt());
     area.removeFromLeft (gap);
-    m_typeCombo->setBounds (area.removeFromLeft (labelW));
-    area.removeFromLeft (gap);
-
-    m_gainSlider->setBounds (area.removeFromLeft (90));
+    m_typeCombo->setBounds (area.removeFromLeft (labelW).toNearestInt());
     area.removeFromLeft (gap);
 
-    m_addButton->setBounds (area.removeFromLeft (70));
+    m_gainSlider->setBounds (area.removeFromLeft ((int) (90.0f * sx)).toNearestInt());
+    area.removeFromLeft (gap);
 
-    m_statusLabel.setBounds (area.removeFromBottom (20));
+    m_addButton->setBounds (area.removeFromLeft ((int) (70.0f * sx)).toNearestInt());
+
+    m_statusLabel.setBounds (area.removeFromBottom ((int) (20.0f * sy)).toNearestInt());
 }
 
 void RoutingPanel::addConnection()

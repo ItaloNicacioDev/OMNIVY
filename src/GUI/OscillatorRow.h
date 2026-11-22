@@ -53,8 +53,6 @@ private:
     juce::ComboBox* m_waveformCombo = nullptr;
     WaveformComponent* m_waveformPreview = nullptr;
     KnobComponent* m_levelKnob = nullptr;
-    KnobComponent* m_octaveKnob = nullptr;
-    KnobComponent* m_semitoneKnob = nullptr;
     juce::TextButton* m_chevronButton = nullptr;
 
     // Labels.

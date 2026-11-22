@@ -84,14 +84,14 @@ void WavetablePanel::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
 
-    // Fundo do painel com gradiente sutil.
-    juce::ColourGradient bgGrad (PanelDark, area.getX(), area.getY(),
-                                 BackgroundMain, area.getRight(), area.getBottom(),
+    // Fundo do painel com gradiente sutil (PanelTop → PanelBottom).
+    juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                 PanelBottom, area.getX(), area.getBottom(),
                                  false);
     g.setGradientFill (bgGrad);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
 
-    g.setColour (Border);
+    g.setColour (PanelBorder);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
     // Desenha malha 3D (wireframe da wavetable) com profundidade e perspectiva.
@@ -163,40 +163,45 @@ void WavetablePanel::paint (juce::Graphics& g)
 
 void WavetablePanel::resized()
 {
-    auto area = getLocalBounds().reduced (16);
-    const int gap = 10;
+    auto area = getLocalBounds().toFloat();
+    float sx = getWidth() / 1672.0f;
+    float sy = getHeight() / 941.0f;
+
+    area = area.reduced (16.0f * sx, 0);
+    const int gap = (int) (10.0f * sx);
 
     // Cabeçalho: dropdown + 4 icon buttons.
-    int headerH = 36;
+    int headerH = (int) (36.0f * sy);
     auto headerArea = area.removeFromTop (headerH);
 
-    int selectorW = 150;
-    m_wavetableSelector->setBounds (headerArea.removeFromLeft (selectorW));
+    int selectorW = (int) (150.0f * sx);
+    m_wavetableSelector->setBounds (headerArea.removeFromLeft (selectorW).toNearestInt());
     headerArea.removeFromLeft (gap);
 
-    int btnW = 32;
-    m_wavetableAddButton->setBounds (headerArea.removeFromLeft (btnW));
-    headerArea.removeFromLeft (gap / 2);
-    m_wavetableRefreshButton->setBounds (headerArea.removeFromLeft (btnW));
-    headerArea.removeFromLeft (gap / 2);
-    m_wavetableCopyButton->setBounds (headerArea.removeFromLeft (btnW));
-    headerArea.removeFromLeft (gap / 2);
-    m_wavetableDeleteButton->setBounds (headerArea.removeFromLeft (btnW));
+    int btnW = (int) (32.0f * sx);
+    m_wavetableAddButton->setBounds (headerArea.removeFromLeft (btnW).toNearestInt());
+    headerArea.removeFromLeft ((int) (gap * 0.5f));
+    m_wavetableRefreshButton->setBounds (headerArea.removeFromLeft (btnW).toNearestInt());
+    headerArea.removeFromLeft ((int) (gap * 0.5f));
+    m_wavetableCopyButton->setBounds (headerArea.removeFromLeft (btnW).toNearestInt());
+    headerArea.removeFromLeft ((int) (gap * 0.5f));
+    m_wavetableDeleteButton->setBounds (headerArea.removeFromLeft (btnW).toNearestInt());
 
-    // Área central (wireframe 3D) — ocupa o meio.
-    m_waveformPreview->setBounds (area.removeFromLeft (area.getWidth() * 0.62f));
+    // Área central (wireframe 3D) — ocupa 62% da largura.
+    float centralW = area.getWidth() * 0.62f;
+    m_waveformPreview->setBounds (area.removeFromLeft (centralW).toNearestInt());
     area.removeFromLeft (gap);
 
     // Coluna direita: 3 knobs Morph / Phase / Warp.
-    int knobW = 72;
-    m_morphKnob->setBounds (area.removeFromLeft (knobW));
+    int knobW = (int) (72.0f * sx);
+    m_morphKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
     area.removeFromLeft (gap);
-    m_phaseKnob->setBounds (area.removeFromLeft (knobW));
+    m_phaseKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
     area.removeFromLeft (gap);
-    m_warpKnob->setBounds (area.removeFromLeft (knobW));
+    m_warpKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
 
     // Nota informativa no rodapé.
-    m_infoLabel.setBounds (area.removeFromBottom (22));
+    m_infoLabel.setBounds (area.removeFromBottom ((int) (22.0f * sy)).toNearestInt());
 }
 
 } // namespace gui

@@ -129,35 +129,41 @@ void FilterPanel::paint (juce::Graphics& g)
 
 void FilterPanel::resized()
 {
-    auto area = getLocalBounds().reduced (10);
-    const int gap = 10;
+    auto area = getLocalBounds().toFloat();
+    float sx = getWidth() / 1672.0f;
+    float sy = getHeight() / 941.0f;
 
-    area.removeFromTop (44); // espaço do título do PanelComponent
+    area = area.reduced (10.0f * sx, 0);
+    const int gap = (int) (10.0f * sx);
 
-    m_enabledButton->setBounds (area.removeFromLeft (32));
+    area.removeFromTop ((int) (44.0f * sy)); // espaço do título do PanelComponent
+
+    int btnW = (int) (32.0f * sx);
+    m_enabledButton->setBounds (area.removeFromLeft (btnW).toNearestInt());
     area.removeFromLeft (gap);
-    m_typeCombo->setBounds (area.removeFromLeft (120));
+    int comboW = (int) (120.0f * sx);
+    m_typeCombo->setBounds (area.removeFromLeft (comboW).toNearestInt());
     area.removeFromLeft (gap);
 
-    int knobW = 110;
-    m_cutoffKnob->setBounds (area.removeFromLeft (knobW));
+    int knobW = (int) (110.0f * sx);
+    m_cutoffKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
     area.removeFromLeft (gap);
-    m_resonanceKnob->setBounds (area.removeFromLeft (knobW));
+    m_resonanceKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
     area.removeFromLeft (gap);
-    m_keyTrackKnob->setBounds (area.removeFromLeft (56));
-
-    area.removeFromTop (gap);
-    int fxBtnW = 70;
-    m_fxDriveButton->setBounds (area.removeFromLeft (fxBtnW));
-    area.removeFromLeft (gap / 2);
-    m_fxDelayButton->setBounds (area.removeFromLeft (fxBtnW));
-    area.removeFromLeft (gap / 2);
-    m_fxReverbButton->setBounds (area.removeFromLeft (fxBtnW));
+    m_keyTrackKnob->setBounds (area.removeFromLeft ((int) (56.0f * sx)).toNearestInt());
 
     area.removeFromTop (gap);
-    m_fxDriveKnob->setBounds (area.removeFromLeft (knobW));
+    int fxBtnW = (int) (70.0f * sx);
+    m_fxDriveButton->setBounds (area.removeFromLeft (fxBtnW).toNearestInt());
+    area.removeFromLeft ((int) (gap * 0.5f));
+    m_fxDelayButton->setBounds (area.removeFromLeft (fxBtnW).toNearestInt());
+    area.removeFromLeft ((int) (gap * 0.5f));
+    m_fxReverbButton->setBounds (area.removeFromLeft (fxBtnW).toNearestInt());
+
+    area.removeFromTop (gap);
+    m_fxDriveKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
     area.removeFromLeft (gap);
-    m_fxDelayKnob->setBounds (area.removeFromLeft (knobW));
+    m_fxDelayKnob->setBounds (area.removeFromLeft (knobW).toNearestInt());
 }
 
 } // namespace gui
