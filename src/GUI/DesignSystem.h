@@ -26,6 +26,7 @@ inline const juce::Colour Border         = juce::Colour (0x2A2A55u);  // #2A2A55
 inline const juce::Colour PanelTop     = juce::Colour (0x14142Fu);  // #14142F
 inline const juce::Colour PanelBottom  = juce::Colour (0x101028u);  // #101028
 inline const juce::Colour PanelLight   = juce::Colour (0x15152Fu);  // #15152F (alias para compatibilidade)
+inline const juce::Colour AreaInner    = juce::Colour (0x0C0C22u);  // #0C0C22 (alias para compatibilidade)
 inline const juce::Colour PanelBorder  = juce::Colour (0x2B2B58u);  // #2B2B58
 inline const juce::Colour PanelBorderAlpha = juce::Colour (0x2B2B58u).withAlpha (0.9f);
 inline const juce::Colour FieldBg      = juce::Colour (0x0E0E24u);  // #0E0E24 (dropdowns/displays)
