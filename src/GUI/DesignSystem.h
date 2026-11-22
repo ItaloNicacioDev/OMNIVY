@@ -168,31 +168,6 @@ public:
     void drawTabButton (juce::TabBarButton& button, juce::Graphics& g,
                         bool isMouseOver, bool isMouseDown) override;
     juce::Font getTabButtonFont (juce::TabBarButton& button, float height) override;
-
-    // --- Slider --------------------------------------------------------------
-    void drawLinearSliderBackground (juce::Graphics& g, int x, int y, int width, int height,
-                                     float sliderPos, float minSliderPos, float maxSliderPos,
-                                     const juce::Slider::SliderStyle, juce::Slider& slider) override;
-    void drawLinearSliderThumb (juce::Graphics& g, int x, int y, int width, int height,
-                                float sliderPos, float minSliderPos, float maxSliderPos,
-                                const juce::Slider::SliderStyle, juce::Slider& slider) override;
-
-    // --- ComboBox ------------------------------------------------------------
-    void drawComboBoxBackground (juce::Graphics& g, int width, int height,
-                                 bool isMouseDown, int buttonX, int buttonY, int buttonW,
-                                 int buttonH, juce::ComboBox& box);
-    void drawPopupMenuBackground (juce::Graphics& g, int width, int height);
-    void drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
-                            bool isSelected, int i, int totalItems,
-                            const juce::String& text, const juce::String& shortcut,
-                            bool isDisabled, bool isChecked, bool possibleSubmenu);
-
-    // --- MIDI Keyboard -------------------------------------------------------
-    void drawKeyboardBackground (juce::Graphics& g, const juce::Rectangle<int>& area);
-    void drawWhiteKey (juce::Graphics& g, const juce::Rectangle<int>& area,
-                       float keyWidth, float keyHeight, float keyY, int keyIndex);
-    void drawBlackKey (juce::Graphics& g, const juce::Rectangle<int>& area,
-                       float keyWidth, float keyHeight, float keyY, int keyIndex);
 };
 
 } // namespace gui
