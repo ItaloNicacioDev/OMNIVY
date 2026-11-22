@@ -34,6 +34,15 @@ private:
     KnobComponent* m_resonanceKnob = nullptr;
     KnobComponent* m_keyTrackKnob = nullptr;
 
+    // Segmented control FX (Drive / Delay / Reverb).
+    juce::TextButton* m_fxDriveButton = nullptr;
+    juce::TextButton* m_fxDelayButton = nullptr;
+    juce::TextButton* m_fxReverbButton = nullptr;
+
+    // Knobs extras abaixo do gráfico de resposta.
+    KnobComponent* m_fxDriveKnob = nullptr;
+    KnobComponent* m_fxDelayKnob = nullptr;
+
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> m_enabledAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> m_typeAttachment;
 
