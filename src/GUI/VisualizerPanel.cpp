@@ -63,15 +63,24 @@ void VisualizerPanel::refresh()
 void VisualizerPanel::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
-    g.setColour (ControlSurface);
+    juce::ColourGradient bgGrad (PanelTop, area.getX(), area.getY(),
+                                 PanelBottom, area.getX(), area.getBottom(),
+                                 false);
+    g.setGradientFill (bgGrad);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
-    g.setColour (Border);
+    g.setColour (PanelBorder);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 }
 
 void VisualizerPanel::resized()
 {
-    m_visualizerTabs->setBounds (getLocalBounds());
+    auto area = getLocalBounds().toFloat();
+    float sx = getWidth() / 1672.0f;
+    float sy = getHeight() / 941.0f;
+
+    int tabBarDepth = (int) (36.0f * sy);
+    m_visualizerTabs->setTabBarDepth (tabBarDepth);
+    m_visualizerTabs->setBounds (area.toNearestInt());
 }
 
 } // namespace gui
