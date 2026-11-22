@@ -968,6 +968,119 @@ private:
 namespace omnivy {
 namespace gui {
 
+// ============================================================================
+// LFOPanelComponent — Visualização de LFO com forma de onda, rate, depth, phase.
+// ============================================================================
+class LFOPanelComponent : public juce::Component
+{
+public:
+    LFOPanelComponent()
+    {
+        setInterceptsMouseClicks (true, true);
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+        auto area = getLocalBounds().toFloat();
+        g.setColour (ControlSurface);
+        g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+        g.setColour (Border);
+        g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+
+        // Título.
+        g.setColour (TextMain);
+        g.setFont (uiFont (FontSizePanelTitle, juce::Font::bold));
+        g.drawText ("LFOs", (int) area.getX(), (int) area.getY() + 8,
+                    (int) area.getWidth(), 20, juce::Justification::left, true);
+
+        // Forma de onda LFO (senoidal animada visualmente).
+        auto waveArea = area.reduced (16).toFloat();
+        waveArea.removeFromTop (30);
+
+        juce::Path wavePath;
+        wavePath.startNewSubPath (waveArea.getX(), waveArea.getCentreY());
+        int samples = 64;
+        for (int i = 0; i <= samples; ++i)
+        {
+            float x = waveArea.getX() + (i / (float) samples) * waveArea.getWidth();
+            float y = waveArea.getCentreY() + std::sin (i / (float) samples * juce::MathConstants<float>::pi * 2.0f) * waveArea.getHeight() * 0.3f;
+            wavePath.lineTo (x, y);
+        }
+        g.setColour (Osc1Colour.withAlpha (0.7f));
+        g.strokePath (wavePath, juce::PathStrokeType (2.0f));
+
+        // Labels.
+        g.setColour (TextSecondary);
+        g.setFont (uiFont (FontSizeMicro));
+        g.drawText ("Rate", (int) waveArea.getX(), (int) (waveArea.getBottom() + 4), 40, 14,
+                    juce::Justification::left, true);
+        g.drawText ("Depth", (int) (waveArea.getCentreX() - 20), (int) (waveArea.getBottom() + 4), 40, 14,
+                    juce::Justification::centred, true);
+        g.drawText ("Phase", (int) (waveArea.getRight() - 40), (int) (waveArea.getBottom() + 4), 40, 14,
+                    juce::Justification::right, true);
+    }
+
+    void resized() override {}
+};
+
+// ============================================================================
+// SequencerPanelComponent — Grade de passos (16 steps) com valores por passo.
+// ============================================================================
+class SequencerPanelComponent : public juce::Component
+{
+public:
+    SequencerPanelComponent()
+    {
+        setInterceptsMouseClicks (true, true);
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+        auto area = getLocalBounds().toFloat();
+        g.setColour (ControlSurface);
+        g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+        g.setColour (Border);
+        g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+
+        // Título.
+        g.setColour (TextMain);
+        g.setFont (uiFont (FontSizePanelTitle, juce::Font::bold));
+        g.drawText ("Sequencer", (int) area.getX(), (int) area.getY() + 8,
+                    (int) area.getWidth(), 20, juce::Justification::left, true);
+
+        // Grade de passos.
+        auto stepArea = area.reduced (16).toFloat();
+        stepArea.removeFromTop (30);
+
+        int numSteps = 16;
+        float stepW = stepArea.getWidth() / (float) numSteps;
+        float stepH = stepArea.getHeight() * 0.6f;
+        float stepY = stepArea.getCentreY() - stepH * 0.5f;
+
+        for (int i = 0; i < numSteps; ++i)
+        {
+            float x = stepArea.getX() + i * stepW;
+            bool active = (i % 4) == 0; // padrão visual: passos 0, 4, 8, 12 ativos
+
+            juce::Rectangle<float> stepRect (x, stepY, stepW - 2.0f, stepH);
+            g.setColour (active ? PrimaryPurple : Border.withAlpha (0.3f));
+            g.fillRoundedRectangle (stepRect, 4.0f);
+            g.setColour (Border);
+            g.drawRoundedRectangle (stepRect, 4.0f, 1.0f);
+        }
+
+        // Labels.
+        g.setColour (TextSecondary);
+        g.setFont (uiFont (FontSizeMicro));
+        g.drawText ("Steps: 16", (int) stepArea.getX(), (int) (stepArea.getBottom() + 4), 60, 14,
+                    juce::Justification::left, true);
+        g.drawText ("Rate: 1/16", (int) (stepArea.getRight() - 60), (int) (stepArea.getBottom() + 4), 60, 14,
+                    juce::Justification::right, true);
+    }
+
+    void resized() override {}
+};
+
 OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -1007,8 +1120,8 @@ OmnivyAudioProcessorEditor::OmnivyAudioProcessorEditor (OmnivyAudioProcessor& p)
     m_envTabbed = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
     m_envTabbed->setTabBarDepth (36);
     m_envTabbed->addTab ("Envelopes", PanelDark, new EnvelopePanel (audioProcessor.apvts), true);
-    m_envTabbed->addTab ("LFOs", PanelDark, new juce::Component(), false);
-    m_envTabbed->addTab ("Sequencer", PanelDark, new juce::Component(), false);
+    m_envTabbed->addTab ("LFOs", PanelDark, new LFOPanelComponent(), false);
+    m_envTabbed->addTab ("Sequencer", PanelDark, new SequencerPanelComponent(), false);
     addAndMakeVisible (*m_envTabbed);
 
     // Faixa 5 — Teclado + Master + Footer.
