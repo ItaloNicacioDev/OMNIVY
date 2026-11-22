@@ -94,56 +94,71 @@ void WavetablePanel::paint (juce::Graphics& g)
     g.setColour (Border);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
 
-    // Desenha grid de perspectiva (wireframe 3D simplificado) na área central.
-    auto wireArea = getLocalBounds().reduced (20).toFloat();
+    // Desenha malha 3D (wireframe da wavetable) com profundidade e perspectiva.
+    auto wireArea = area.reduced (20).toFloat();
     wireArea.removeFromTop (44); // espaço do cabeçalho
     wireArea.removeFromBottom (30); // espaço do footer
 
-    int cols = 12;
-    int rows = 6;
-    float cellW = wireArea.getWidth() / (float) cols;
-    float cellH = wireArea.getHeight() / (float) rows;
+    int cols = 16;
+    int rows = 8;
+    float cellW = wireArea.getWidth() / (float) (cols - 1);
+    float cellH = wireArea.getHeight() / (float) (rows - 1);
 
-    g.setColour (Border.withAlpha (0.3f));
+    g.setColour (Border.withAlpha (0.25f));
 
-    // Linhas verticais (perspectiva leve).
-    for (int c = 0; c <= cols; ++c)
+    // Linhas verticais da malha (perspectiva 3D).
+    for (int c = 0; c < cols; ++c)
     {
         float x = wireArea.getX() + c * cellW;
         float topY = wireArea.getY();
         float bottomY = wireArea.getBottom();
-        // Leve curva para simular perspectiva 3D.
-        float curve = std::sin (juce::MathConstants<float>::pi * c / (float) cols) * 6.0f;
-        g.drawLine (x - curve * 0.5f, topY, x + curve * 0.5f, bottomY, 1.0f);
+        // Perspectiva: curvar levemente as linhas verticais.
+        float curve = std::sin (juce::MathConstants<float>::pi * c / (float) (cols - 1)) * 8.0f;
+        g.drawLine (x - curve * 0.3f, topY, x + curve * 0.3f, bottomY, 1.0f);
     }
 
     // Linhas horizontais com onda senoidal (wireframe da wavetable).
-    for (int r = 0; r <= rows; ++r)
+    for (int r = 0; r < rows; ++r)
     {
         float y = wireArea.getY() + r * cellH;
         juce::Path wavePath;
         wavePath.startNewSubPath (wireArea.getX(), y);
-        for (int c = 0; c <= cols; ++c)
+        for (int c = 0; c < cols; ++c)
         {
             float x = wireArea.getX() + c * cellW;
-            float waveY = y + std::sin (juce::MathConstants<float>::pi * 2.0f * c / (float) cols + r * 0.5f) * 8.0f;
+            float waveY = y + std::sin (juce::MathConstants<float>::pi * 2.0f * c / (float) (cols - 1) + r * 0.3f) * wireArea.getHeight() * 0.12f;
             wavePath.lineTo (x, waveY);
         }
-        g.setColour (PrimaryPurple.withAlpha (0.6f));
+        // Gradiente de cor ao longo das linhas.
+        float alpha = 0.3f + 0.4f * (r / (float) (rows - 1));
+        g.setColour (PrimaryPurple.withAlpha (alpha));
         g.strokePath (wavePath, juce::PathStrokeType (1.5f));
     }
 
-    // Nós de controle na curva principal.
+    // Nós de controle na curva principal (linha do meio).
+    int mainRow = rows / 2;
     g.setColour (PrimaryPurpleLight);
     for (int n = 0; n <= 4; ++n)
     {
         float nx = wireArea.getX() + (n / 4.0f) * wireArea.getWidth();
-        float ny = wireArea.getCentreY() + std::sin (n * juce::MathConstants<float>::pi / 2.0f) * 12.0f;
-        g.fillEllipse (nx - 4.0f, ny - 4.0f, 8.0f, 8.0f);
+        float ny = wireArea.getCentreY() + std::sin (n * juce::MathConstants<float>::pi / 2.0f) * wireArea.getHeight() * 0.12f;
+        g.fillEllipse (nx - 5.0f, ny - 5.0f, 10.0f, 10.0f);
         g.setColour (Border);
-        g.drawEllipse (nx - 4.0f, ny - 4.0f, 8.0f, 8.0f, 1.0f);
+        g.drawEllipse (nx - 5.0f, ny - 5.0f, 10.0f, 10.0f, 1.5f);
         g.setColour (PrimaryPurpleLight);
     }
+
+    // Destacar a linha central com uma curva mais grossa.
+    juce::Path mainCurve;
+    mainCurve.startNewSubPath (wireArea.getX(), wireArea.getCentreY());
+    for (int c = 0; c < cols; ++c)
+    {
+        float x = wireArea.getX() + c * cellW;
+        float waveY = wireArea.getCentreY() + std::sin (juce::MathConstants<float>::pi * 2.0f * c / (float) (cols - 1)) * wireArea.getHeight() * 0.12f;
+        mainCurve.lineTo (x, waveY);
+    }
+    g.setColour (PrimaryPurple);
+    g.strokePath (mainCurve, juce::PathStrokeType (2.5f));
 }
 
 void WavetablePanel::resized()
