@@ -10,23 +10,18 @@ VisualizerPanel::VisualizerPanel (juce::AudioProcessorValueTreeState& apvts)
 {
     setInterceptsMouseClicks (true, true);
 
-    m_waveformPreview = new WaveformComponent();
-    m_waveformPreview->setColour (Osc1Colour);
-    m_waveformPreview->setSizeHint (260, 140);
-    addAndMakeVisible (*m_waveformPreview);
+    m_visualizerTabs = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
+    m_visualizerTabs->setTabBarDepth (36);
 
-    m_envelopeDisplay = new EnvelopeDisplay();
-    m_envelopeDisplay->setColour (Env1Colour);
-    addAndMakeVisible (*m_envelopeDisplay);
+    m_spectrumView = new SpectrumView();
+    m_scopeView = new ScopeView();
+    m_view3D = new View3D();
 
-    m_scopeNote.setText ("Escopo e espectro de áudio em tempo real dependem de uma "
-                         "captura de buffer de saída ainda não implementada no DSP.",
-                         juce::dontSendNotification);
-    m_scopeNote.setFont (uiFont (FontSizeMicro));
-    m_scopeNote.setColour (juce::Label::textColourId, TextMuted);
-    m_scopeNote.setJustificationType (juce::Justification::centred);
-    m_scopeNote.setEnabled (false);
-    addAndMakeVisible (m_scopeNote);
+    m_visualizerTabs->addTab ("Spectrum", PanelDark, m_spectrumView, true);
+    m_visualizerTabs->addTab ("Scope", PanelDark, m_scopeView, false);
+    m_visualizerTabs->addTab ("3D", PanelDark, m_view3D, false);
+
+    addAndMakeVisible (*m_visualizerTabs);
 
     m_apvts.addParameterListener (params::oscWaveform (0), this);
     m_apvts.addParameterListener (params::EnvAttack, this);
@@ -59,15 +54,10 @@ void VisualizerPanel::parameterChanged (const juce::String& /*parameterID*/, flo
 
 void VisualizerPanel::refresh()
 {
-    if (auto* p = m_apvts.getParameter (params::oscWaveform (0)))
-        m_waveformPreview->setWaveform (static_cast<dsp::Waveform> (
-            static_cast<int> (*m_apvts.getRawParameterValue (params::oscWaveform (0)))));
-
-    m_envelopeDisplay->setParameters (
-        *m_apvts.getRawParameterValue (params::EnvAttack),
-        *m_apvts.getRawParameterValue (params::EnvDecay),
-        *m_apvts.getRawParameterValue (params::EnvSustain),
-        *m_apvts.getRawParameterValue (params::EnvRelease));
+    // Atualiza visualizações baseadas em parâmetros reais do APVTS.
+    m_spectrumView->repaint();
+    m_scopeView->repaint();
+    m_view3D->repaint();
 }
 
 void VisualizerPanel::paint (juce::Graphics& g)
@@ -81,16 +71,7 @@ void VisualizerPanel::paint (juce::Graphics& g)
 
 void VisualizerPanel::resized()
 {
-    auto area = getLocalBounds().reduced (16);
-    area.removeFromTop (44);
-
-    int half = area.getWidth() / 2;
-    m_waveformPreview->setBounds (area.removeFromLeft (half));
-    area.removeFromLeft (16);
-    m_envelopeDisplay->setBounds (area.removeFromLeft (half));
-    area.removeFromTop (16);
-
-    m_scopeNote.setBounds (area.removeFromBottom (30));
+    m_visualizerTabs->setBounds (getLocalBounds());
 }
 
 } // namespace gui
