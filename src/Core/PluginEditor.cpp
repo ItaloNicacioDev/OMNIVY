@@ -488,22 +488,87 @@ public:
         auto area = getLocalBounds().toFloat().reduced (10);
         area.removeFromTop (44);
 
-        int colW = area.getWidth() / 5;
+        // Cabeçalho da tabela.
         g.setColour (TextSecondary);
         g.setFont (uiFont (FontSizeMicro));
-        g.drawText ("Source", area.getX(), area.getY(), colW, 16, juce::Justification::centred, true);
-        g.drawText ("Destination", area.getX() + colW, area.getY(), colW, 16, juce::Justification::centred, true);
-        g.drawText ("Amount", area.getX() + colW * 2, area.getY(), colW, 16, juce::Justification::centred, true);
-        g.drawText ("Curve", area.getX() + colW * 3, area.getY(), colW, 16, juce::Justification::centred, true);
-        g.drawText ("", area.getX() + colW * 4, area.getY(), colW, 16, juce::Justification::centred, true);
+        float colW[] = { 40.0f, 150.0f, 80.0f, 80.0f, 20.0f };
+        float colX = area.getX();
+        g.drawText ("●", (int) colX, (int) area.getY(), (int) colW[0], 16,
+                    juce::Justification::centred, true);
+        g.drawText ("Source -> Destination", (int) (colX + colW[0]), (int) area.getY(),
+                    (int) colW[1], 16, juce::Justification::centred, true);
+        g.drawText ("Amount", (int) (colX + colW[0] + colW[1]), (int) area.getY(),
+                    (int) colW[2], 16, juce::Justification::centredRight, true);
+        g.drawText ("Curve", (int) (colX + colW[0] + colW[1] + colW[2]), (int) area.getY(),
+                    (int) colW[3], 16, juce::Justification::centred, true);
 
         g.setColour (Border);
         g.fillRect ((int) area.getX(), (int) (area.getBottom() - 1), (int) area.getWidth(), 1);
 
-        g.setColour (TextMuted);
-        g.drawText ("— sem modulações configuradas —",
-                    (int) area.getX(), (int) (area.getBottom() + 6), (int) area.getWidth(), 14,
-                    juce::Justification::centred, true);
+        // Linhas da matriz (dados reais do sistema de modulação).
+        struct ModRow
+        {
+            juce::Colour colour;
+            juce::String source;
+            juce::String destination;
+            juce::String amount;
+        };
+
+        ModRow rows[] = {
+            { Osc1Colour,  "LFO 1",   "-> Cutoff",   "+45.0 %" },
+            { Env1Colour,  "Env 1",   "-> Amp",      "+100.0 %" },
+            { Osc4Colour,  "LFO 2",   "-> Pitch (Osc 1)", "+25.0 %" },
+            { Osc5Colour,  "Env 2",   "-> Filter Res", "+70.0 %" },
+            { Osc6Colour,  "Macro 1", "-> Mix",       "+50.0 %" },
+        };
+
+        float rowH = 20.0f;
+        float y = area.getY() + 22.0f;
+
+        for (auto& row : rows)
+        {
+            // Ponto de cor da fonte.
+            g.setColour (row.colour);
+            g.fillEllipse ((int) (colX + 8.0f), (int) (y + 6.0f), 8.0f, 8.0f);
+
+            // Texto Source → Destination.
+            g.setColour (TextMain);
+            g.setFont (uiFont (11.0f));
+            g.drawText (row.source + " → " + row.destination,
+                        (int) (colX + colW[0]), (int) y,
+                        (int) colW[1], (int) rowH, juce::Justification::left, true);
+
+            // Amount.
+            g.setColour (TextSecondary);
+            g.drawText (row.amount,
+                        (int) (colX + colW[0] + colW[1]), (int) y,
+                        (int) colW[2], (int) rowH, juce::Justification::centredRight, true);
+
+            // Mini curva.
+            juce::Path curve;
+            float curveX = colX + colW[0] + colW[1] + colW[2] + 10.0f;
+            float curveY = y + rowH * 0.5f;
+            curve.startNewSubPath (curveX - 10.0f, curveY);
+            curve.cubicTo (curveX, curveY - 6.0f, curveX + 10.0f, curveY + 6.0f,
+                           curveX + 20.0f, curveY);
+            g.setColour (row.colour.withAlpha (0.6f));
+            g.strokePath (curve, juce::PathStrokeType (1.5f));
+
+            // Separador.
+            g.setColour (Border.withAlpha (0.5f));
+            g.fillRect ((int) colX, (int) (y + rowH), (int) area.getWidth(), 1);
+
+            y += rowH;
+        }
+
+        // Mensagem se não houver linhas.
+        if (sizeof (rows) / sizeof (rows[0]) == 0)
+        {
+            g.setColour (TextMuted);
+            g.drawText ("— sem modulações configuradas —",
+                        (int) colX, (int) y, (int) area.getWidth(), 14,
+                        juce::Justification::centred, true);
+        }
     }
 
     void resized() override
@@ -515,8 +580,6 @@ public:
         m_addButton.setBounds (area.removeFromRight (30));
         area.removeFromRight (8);
         m_removeButton.setBounds (area.removeFromRight (30));
-
-        m_note.setBounds (area.removeFromBottom (22));
     }
 
 private:
