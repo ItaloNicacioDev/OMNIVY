@@ -6,19 +6,20 @@ namespace omnivy {
 namespace gui {
 
 FilterPanel::FilterPanel (juce::AudioProcessorValueTreeState& apvts)
-    : PanelComponent ("Filtro & FX", false), m_apvts (apvts)
+    : PanelComponent ("Filter & FX", false), m_apvts (apvts)
 {
     setInterceptsMouseClicks (true, true);
 
-    m_enabledButton = new IconButtonComponent ("⏻", "Filtro ligar/desligar", PrimaryPurple);
+    m_enabledButton = new IconButtonComponent ("⏻", "Filter enable", PrimaryPurple);
     m_enabledButton->setToggleState (false, juce::dontSendNotification);
     m_enabledButton->onClick = [this] { repaint(); };
     addAndMakeVisible (*m_enabledButton);
 
-    m_typeCombo = new juce::ComboBox ("Tipo de filtro");
-    m_typeCombo->addItem ("Low Pass", 1);
-    m_typeCombo->addItem ("High Pass", 2);
-    m_typeCombo->addItem ("Band Pass", 3);
+    m_typeCombo = new juce::ComboBox ("Filter Type");
+    m_typeCombo->addItem ("24 dB Low Pass", 1);
+    m_typeCombo->addItem ("24 dB High Pass", 2);
+    m_typeCombo->addItem ("24 dB Band Pass", 3);
+    m_typeCombo->setSelectedId (1);
     addAndMakeVisible (*m_typeCombo);
 
     m_cutoffKnob = new KnobComponent (apvts, params::FilterCutoff, "Cutoff", "Hz",
@@ -33,6 +34,34 @@ FilterPanel::FilterPanel (juce::AudioProcessorValueTreeState& apvts)
                                         KnobComponent::Size::Small, TextSecondary);
     addAndMakeVisible (*m_keyTrackKnob);
 
+    // Segmented control FX.
+    m_fxDriveButton = new juce::TextButton ("Drive");
+    m_fxDriveButton->setClickingTogglesState (true);
+    m_fxDriveButton->setToggleState (true, juce::dontSendNotification);
+    m_fxDriveButton->setTooltip ("Drive effect");
+    addAndMakeVisible (*m_fxDriveButton);
+
+    m_fxDelayButton = new juce::TextButton ("Delay");
+    m_fxDelayButton->setClickingTogglesState (true);
+    m_fxDelayButton->setToggleState (false, juce::dontSendNotification);
+    m_fxDelayButton->setTooltip ("Delay effect");
+    addAndMakeVisible (*m_fxDelayButton);
+
+    m_fxReverbButton = new juce::TextButton ("Reverb");
+    m_fxReverbButton->setClickingTogglesState (true);
+    m_fxReverbButton->setToggleState (false, juce::dontSendNotification);
+    m_fxReverbButton->setTooltip ("Reverb effect");
+    addAndMakeVisible (*m_fxReverbButton);
+
+    // Knobs extras abaixo do gráfico.
+    m_fxDriveKnob = new KnobComponent (apvts, params::FilterCutoff, "Drive", "",
+                                      KnobComponent::Size::Small, PrimaryPurple);
+    addAndMakeVisible (*m_fxDriveKnob);
+
+    m_fxDelayKnob = new KnobComponent (apvts, params::FilterResonance, "Delay", "",
+                                      KnobComponent::Size::Small, PrimaryPurpleLight);
+    addAndMakeVisible (*m_fxDelayKnob);
+
     m_enabledAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>
         (m_apvts, params::FilterEnabled, *m_enabledButton);
 
@@ -44,11 +73,17 @@ void FilterPanel::paint (juce::Graphics& g)
 {
     PanelComponent::paint (g);
 
-    // Esboço da resposta do filtro baseado nos parâmetros reais (corte e
-    // ressonância). Não é uma medição de áudio em tempo real, mas uma
-    // representação dos valores configurados.
+    // Título do painel.
+    g.setColour (TextMain);
+    g.setFont (uiFont (FontSizePanelTitle, juce::Font::bold));
+    g.drawText ("Filter & FX", (int) getLocalBounds().getX(),
+                (int) getLocalBounds().getY() + 8,
+                (int) getLocalBounds().getWidth(), 20,
+                juce::Justification::left, true);
+
+    // Gráfico de resposta do filtro.
     auto area = getLocalBounds().toFloat().reduced (10);
-    area.removeFromTop (46);
+    area.removeFromTop (60); // espaço para título + controles superiores
 
     float cutoff = 0.0f, resonance = 0.0f;
     if (auto* p = m_apvts.getParameter (params::FilterCutoff))
@@ -87,7 +122,7 @@ void FilterPanel::paint (juce::Graphics& g)
 
     g.setColour (TextMuted);
     g.setFont (uiFont (FontSizeMicro));
-    g.drawText ("Resposta esboçada a partir dos parâmetros de corte/ressonância.",
+    g.drawText ("Response from cutoff/resonance parameters.",
                 (int) plot.getX(), (int) plot.getBottom() + 2,
                 (int) plot.getWidth(), 14, juce::Justification::centred, true);
 }
@@ -95,19 +130,34 @@ void FilterPanel::paint (juce::Graphics& g)
 void FilterPanel::resized()
 {
     auto area = getLocalBounds().reduced (10);
-    area.removeFromTop (44);
+    const int gap = 10;
+
+    area.removeFromTop (44); // espaço do título do PanelComponent
 
     m_enabledButton->setBounds (area.removeFromLeft (32));
-    area.removeFromLeft (8);
-    m_typeCombo->setBounds (area.removeFromLeft (110));
-    area.removeFromLeft (16);
+    area.removeFromLeft (gap);
+    m_typeCombo->setBounds (area.removeFromLeft (120));
+    area.removeFromLeft (gap);
 
     int knobW = 110;
     m_cutoffKnob->setBounds (area.removeFromLeft (knobW));
-    area.removeFromLeft (12);
+    area.removeFromLeft (gap);
     m_resonanceKnob->setBounds (area.removeFromLeft (knobW));
-    area.removeFromLeft (12);
+    area.removeFromLeft (gap);
     m_keyTrackKnob->setBounds (area.removeFromLeft (56));
+
+    area.removeFromTop (gap);
+    int fxBtnW = 70;
+    m_fxDriveButton->setBounds (area.removeFromLeft (fxBtnW));
+    area.removeFromLeft (gap / 2);
+    m_fxDelayButton->setBounds (area.removeFromLeft (fxBtnW));
+    area.removeFromLeft (gap / 2);
+    m_fxReverbButton->setBounds (area.removeFromLeft (fxBtnW));
+
+    area.removeFromTop (gap);
+    m_fxDriveKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+    m_fxDelayKnob->setBounds (area.removeFromLeft (knobW));
 }
 
 } // namespace gui
