@@ -14,8 +14,8 @@ void OmnivyLookAndFeel::drawPanelBackground (juce::Graphics& g,
     juce::ignoreUnused (highlighted);
 
     // Corpo do painel com gradiente muito sutil para dar profundidade.
-    juce::ColourGradient grad (PanelDark.withAlpha (0.95f), area.getTopLeft(),
-                               PanelLight.withAlpha (0.85f), area.getBottomRight(),
+    juce::ColourGradient grad (PanelDark.withAlpha (0.95f), area.getX(), area.getY(),
+                               PanelLight.withAlpha (0.85f), area.getRight(), area.getBottom(),
                                false);
     g.setGradientFill (grad);
     g.fillRoundedRectangle (area, (float) PanelCornerRadius);
