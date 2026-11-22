@@ -5,6 +5,7 @@
 
 #include "GUI/WaveformComponent.h"
 #include "GUI/PanelComponent.h"
+#include "GUI/KnobComponent.h"
 
 namespace omnivy {
 namespace gui {
@@ -31,6 +32,17 @@ private:
     juce::ComboBox* m_wavetableSelector = nullptr;
     WaveformComponent* m_waveformPreview = nullptr;
     juce::Label m_infoLabel;
+
+    // Botões de ação do cabeçalho
+    juce::TextButton* m_wavetableAddButton = nullptr;
+    juce::TextButton* m_wavetableRefreshButton = nullptr;
+    juce::TextButton* m_wavetableCopyButton = nullptr;
+    juce::TextButton* m_wavetableDeleteButton = nullptr;
+
+    // Knobs do editor de curva
+    juce::Slider* m_morphKnob = nullptr;
+    juce::Slider* m_phaseKnob = nullptr;
+    juce::Slider* m_warpKnob = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WavetablePanel)
 };
