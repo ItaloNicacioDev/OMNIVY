@@ -1,5 +1,7 @@
 #include "GUI/WavetablePanel.h"
 
+#include "Parameters/ParameterIDs.h"
+
 namespace omnivy {
 namespace gui {
 
@@ -7,22 +9,68 @@ WavetablePanel::WavetablePanel (juce::AudioProcessorValueTreeState& /*apvts*/)
 {
     setInterceptsMouseClicks (true, true);
 
+    // --- Cabeçalho: dropdown + 4 icon buttons ---------------------------------
     m_wavetableSelector = new juce::ComboBox ("Wavetable");
-    m_wavetableSelector->addItem ("Sine (built-in)", 1);
+    m_wavetableSelector->addItem ("Custom 1", 1);
     m_wavetableSelector->setSelectedId (1);
-    m_wavetableSelector->setEnabled (false); // apenas uma tabela existe no DSP
     m_wavetableSelector->setTooltip ("A wavetable é gerada pelo DSP (seno). "
                                      "Importar/editar ainda não implementado.");
     addAndMakeVisible (*m_wavetableSelector);
 
+    m_wavetableAddButton = new juce::TextButton ("+");
+    m_wavetableAddButton->setTooltip ("Adicionar wavetable");
+    m_wavetableAddButton->setEnabled (false);
+    addAndMakeVisible (*m_wavetableAddButton);
+
+    m_wavetableRefreshButton = new juce::TextButton ("↻");
+    m_wavetableRefreshButton->setTooltip ("Atualizar wavetable");
+    m_wavetableRefreshButton->setEnabled (false);
+    addAndMakeVisible (*m_wavetableRefreshButton);
+
+    m_wavetableCopyButton = new juce::TextButton ("📋");
+    m_wavetableCopyButton->setTooltip ("Copiar wavetable");
+    m_wavetableCopyButton->setEnabled (false);
+    addAndMakeVisible (*m_wavetableCopyButton);
+
+    m_wavetableDeleteButton = new juce::TextButton ("🗑");
+    m_wavetableDeleteButton->setTooltip ("Excluir wavetable");
+    m_wavetableDeleteButton->setEnabled (false);
+    addAndMakeVisible (*m_wavetableDeleteButton);
+
+    // --- Surface 3D / Wireframe (área central) --------------------------------
     m_waveformPreview = new WaveformComponent();
     m_waveformPreview->setWaveform (dsp::Waveform::Sine);
     m_waveformPreview->setColour (PrimaryPurple);
-    m_waveformPreview->setSizeHint (200, 120);
+    m_waveformPreview->setSizeHint (320, 220);
     addAndMakeVisible (*m_waveformPreview);
 
-    m_infoLabel.setText ("A wavetable compartilhada é uma tabela de seno (2048 amostras)\n"
-                         "gerada em AudioEngine::prepare().\n"
+    // --- Knobs Morph / Phase / Warp (coluna direita) --------------------------
+    m_morphKnob = new juce::Slider ("Morph");
+    m_morphKnob->setSliderStyle (juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    m_morphKnob->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
+    m_morphKnob->setRange (0.0, 1.0, 0.01);
+    m_morphKnob->setValue (0.5);
+    m_morphKnob->setColour (juce::Slider::thumbColourId, PrimaryPurple);
+    addAndMakeVisible (*m_morphKnob);
+
+    m_phaseKnob = new juce::Slider ("Phase");
+    m_phaseKnob->setSliderStyle (juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    m_phaseKnob->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
+    m_phaseKnob->setRange (0.0, 1.0, 0.01);
+    m_phaseKnob->setValue (0.5);
+    m_phaseKnob->setColour (juce::Slider::thumbColourId, PrimaryPurpleLight);
+    addAndMakeVisible (*m_phaseKnob);
+
+    m_warpKnob = new juce::Slider ("Warp");
+    m_warpKnob->setSliderStyle (juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    m_warpKnob->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
+    m_warpKnob->setRange (0.0, 1.0, 0.01);
+    m_warpKnob->setValue (0.5);
+    m_warpKnob->setColour (juce::Slider::thumbColourId, PrimaryPurpleDark);
+    addAndMakeVisible (*m_warpKnob);
+
+    // --- Nota informativa -------------------------------------------------------
+    m_infoLabel.setText ("Wavetable compartilhada gerada pelo DSP (seno, 2048 amostras). "
                          "Importar, atualizar, copiar e excluir dependem de implementação no DSP.",
                          juce::dontSendNotification);
     m_infoLabel.setFont (uiFont (FontSizeMicro));
@@ -35,26 +83,105 @@ WavetablePanel::WavetablePanel (juce::AudioProcessorValueTreeState& /*apvts*/)
 void WavetablePanel::paint (juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat();
-    g.setColour (ControlSurface);
+
+    // Fundo do painel com gradiente sutil.
+    juce::ColourGradient bgGrad (PanelDark, area.getX(), area.getY(),
+                                 BackgroundMain, area.getRight(), area.getBottom(),
+                                 false);
+    g.setGradientFill (bgGrad);
     g.fillRoundedRectangle (area, (float) ControlCornerRadius);
+
     g.setColour (Border);
     g.drawRoundedRectangle (area, (float) ControlCornerRadius, 1.0f);
+
+    // Desenha grid de perspectiva (wireframe 3D simplificado) na área central.
+    auto wireArea = getLocalBounds().reduced (20).toFloat();
+    wireArea.removeFromTop (44); // espaço do cabeçalho
+    wireArea.removeFromBottom (30); // espaço do footer
+
+    int cols = 12;
+    int rows = 6;
+    float cellW = wireArea.getWidth() / (float) cols;
+    float cellH = wireArea.getHeight() / (float) rows;
+
+    g.setColour (Border.withAlpha (0.3f));
+
+    // Linhas verticais (perspectiva leve).
+    for (int c = 0; c <= cols; ++c)
+    {
+        float x = wireArea.getX() + c * cellW;
+        float topY = wireArea.getY();
+        float bottomY = wireArea.getBottom();
+        // Leve curva para simular perspectiva 3D.
+        float curve = std::sin (juce::MathConstants<float>::pi * c / (float) cols) * 6.0f;
+        g.drawLine (x - curve * 0.5f, topY, x + curve * 0.5f, bottomY, 1.0f);
+    }
+
+    // Linhas horizontais com onda senoidal (wireframe da wavetable).
+    for (int r = 0; r <= rows; ++r)
+    {
+        float y = wireArea.getY() + r * cellH;
+        juce::Path wavePath;
+        wavePath.startNewSubPath (wireArea.getX(), y);
+        for (int c = 0; c <= cols; ++c)
+        {
+            float x = wireArea.getX() + c * cellW;
+            float waveY = y + std::sin (juce::MathConstants<float>::pi * 2.0f * c / (float) cols + r * 0.5f) * 8.0f;
+            wavePath.lineTo (x, waveY);
+        }
+        g.setColour (PrimaryPurple.withAlpha (0.6f));
+        g.strokePath (wavePath, juce::PathStrokeType (1.5f));
+    }
+
+    // Nós de controle na curva principal.
+    g.setColour (PrimaryPurpleLight);
+    for (int n = 0; n <= 4; ++n)
+    {
+        float nx = wireArea.getX() + (n / 4.0f) * wireArea.getWidth();
+        float ny = wireArea.getCentreY() + std::sin (n * juce::MathConstants<float>::pi / 2.0f) * 12.0f;
+        g.fillEllipse (nx - 4.0f, ny - 4.0f, 8.0f, 8.0f);
+        g.setColour (Border);
+        g.drawEllipse (nx - 4.0f, ny - 4.0f, 8.0f, 8.0f, 1.0f);
+        g.setColour (PrimaryPurpleLight);
+    }
 }
 
 void WavetablePanel::resized()
 {
     auto area = getLocalBounds().reduced (16);
-    area.removeFromTop (44); // título do pai (PanelComponent não é ancestral aqui;
-                             // desenhamos fundo em paint, então deixamos espaço)
+    const int gap = 10;
 
-    int selectorW = 200;
-    m_wavetableSelector->setBounds (area.removeFromLeft (selectorW));
-    area.removeFromLeft (20);
+    // Cabeçalho: dropdown + 4 icon buttons.
+    int headerH = 36;
+    auto headerArea = area.removeFromTop (headerH);
 
-    m_waveformPreview->setBounds (area.removeFromLeft (220));
-    area.removeFromLeft (20);
+    int selectorW = 150;
+    m_wavetableSelector->setBounds (headerArea.removeFromLeft (selectorW));
+    headerArea.removeFromLeft (gap);
 
-    m_infoLabel.setBounds (area.removeFromLeft (juce::jlimit (100, area.getWidth(), 300)));
+    int btnW = 32;
+    m_wavetableAddButton->setBounds (headerArea.removeFromLeft (btnW));
+    headerArea.removeFromLeft (gap / 2);
+    m_wavetableRefreshButton->setBounds (headerArea.removeFromLeft (btnW));
+    headerArea.removeFromLeft (gap / 2);
+    m_wavetableCopyButton->setBounds (headerArea.removeFromLeft (btnW));
+    headerArea.removeFromLeft (gap / 2);
+    m_wavetableDeleteButton->setBounds (headerArea.removeFromLeft (btnW));
+
+    // Área central (wireframe 3D) — ocupa o meio.
+    m_waveformPreview->setBounds (area.removeFromLeft (area.getWidth() * 0.62f));
+    area.removeFromLeft (gap);
+
+    // Coluna direita: 3 knobs Morph / Phase / Warp.
+    int knobW = 72;
+    m_morphKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+    m_phaseKnob->setBounds (area.removeFromLeft (knobW));
+    area.removeFromLeft (gap);
+    m_warpKnob->setBounds (area.removeFromLeft (knobW));
+
+    // Nota informativa no rodapé.
+    m_infoLabel.setBounds (area.removeFromBottom (22));
 }
 
 } // namespace gui
