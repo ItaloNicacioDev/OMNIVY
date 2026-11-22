@@ -819,8 +819,20 @@ public:
                                           "Volume", "", KnobComponent::Size::Medium, PrimaryPurple);
         addAndMakeVisible (*m_masterKnob);
 
-        m_vuMeter.setColour (PrimaryPurple);
-        addAndMakeVisible (m_vuMeter);
+        // --- Footer com versão e tagline -------------------------------------------
+        m_footerVersion.setText ("Omnivy 1.0.0  |  AGPL v3.0", juce::dontSendNotification);
+        m_footerVersion.setFont (uiFont (FontSizeMicro));
+        m_footerVersion.setColour (juce::Label::textColourId, TextSecondary);
+        m_footerVersion.setJustificationType (juce::Justification::left);
+        m_footerVersion.setEnabled (false);
+        addAndMakeVisible (m_footerVersion);
+
+        m_footerTagline.setText ("Create. Explore. Synthesize.", juce::dontSendNotification);
+        m_footerTagline.setFont (uiFont (FontSizeMicro, juce::Font::bold));
+        m_footerTagline.setColour (juce::Label::textColourId, PrimaryPurpleLight);
+        m_footerTagline.setJustificationType (juce::Justification::right);
+        m_footerTagline.setEnabled (false);
+        addAndMakeVisible (m_footerTagline);
 
         startTimerHz (30);
     }
@@ -872,6 +884,12 @@ public:
         m_masterLabel.setBounds (area.removeFromRight (masterW));
         m_masterKnob->setBounds (area.removeFromRight (masterW));
         m_vuMeter.setBounds (area.removeFromRight (56));
+
+        // Footer com versão e tagline na parte inferior.
+        int footerH = 14;
+        auto footerArea = area.removeFromBottom (footerH);
+        m_footerVersion.setBounds (footerArea.removeFromLeft (200));
+        m_footerTagline.setBounds (footerArea.removeFromRight (200));
     }
 
     void timerCallback() override
@@ -900,6 +918,10 @@ private:
     juce::TextButton m_legato { "Legato" };
     juce::Label m_masterLabel;
     KnobComponent* m_masterKnob = nullptr;
+
+    // Footer com versão e tagline.
+    juce::Label m_footerVersion;
+    juce::Label m_footerTagline;
 
     class VUMeter : public juce::Component
     {
