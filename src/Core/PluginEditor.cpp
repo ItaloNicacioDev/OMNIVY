@@ -631,36 +631,81 @@ public:
 private:
     juce::TabbedComponent m_tabbed { juce::TabbedButtonBar::TabsAtTop };
 
+    juce::ComboBox* m_arpMode = nullptr;
+    juce::ComboBox* m_arpOctaves = nullptr;
+    juce::ComboBox* m_arpRate = nullptr;
+    juce::TextButton* m_arpPlay = nullptr;
+    juce::Slider* m_arpGate = nullptr;
+    juce::Slider* m_arpSwing = nullptr;
+
+    juce::ComboBox* m_clipMode = nullptr;
+    juce::TextButton* m_clipPlay = nullptr;
+
     void buildArpPage()
     {
         auto* page = new juce::Component();
         page->setInterceptsMouseClicks (true, true);
 
-        auto makeLabel = [&] (const juce::String& text)
-        {
-            auto* l = new juce::Label (text, text);
-            l->setFont (uiFont (FontSizeMicro));
-            l->setColour (juce::Label::textColourId, TextSecondary);
-            l->setEnabled (false);
-            page->addAndMakeVisible (*l);
-            return l;
-        };
+        int labelW = 60;
+        int comboW = 100;
+        int gap = 10;
+        int btnW = 70;
 
+        // Dropdown Mode.
         m_arpMode = new juce::ComboBox ("Mode");
         m_arpMode->addItem ("Off", 1);
         m_arpMode->addItem ("Up", 2);
         m_arpMode->addItem ("Down", 3);
         m_arpMode->addItem ("UpDown", 4);
         m_arpMode->addItem ("Random", 5);
-        m_arpMode->setSelectedId (1);
-        m_arpMode->setEnabled (false);
+        m_arpMode->setSelectedId (2);
+        m_arpMode->setTooltip ("Arpeggiator mode");
         page->addAndMakeVisible (*m_arpMode);
 
-        m_arpPlay.setButtonText ("▶ Play");
-        m_arpPlay.setEnabled (false);
-        page->addAndMakeVisible (m_arpPlay);
+        // Dropdown Octaves.
+        m_arpOctaves = new juce::ComboBox ("Octaves");
+        m_arpOctaves->addItem ("1", 1);
+        m_arpOctaves->addItem ("2", 2);
+        m_arpOctaves->addItem ("3", 3);
+        m_arpOctaves->addItem ("4", 4);
+        m_arpOctaves->setSelectedId (1);
+        m_arpOctaves->setTooltip ("Number of octaves");
+        page->addAndMakeVisible (*m_arpOctaves);
 
-        makeLabel ("Modo");
+        // Dropdown Rate.
+        m_arpRate = new juce::ComboBox ("Rate");
+        m_arpRate->addItem ("1/4", 1);
+        m_arpRate->addItem ("1/8", 2);
+        m_arpRate->addItem ("1/16", 3);
+        m_arpRate->addItem ("1/32", 4);
+        m_arpRate->setSelectedId (2);
+        m_arpRate->setTooltip ("Arpeggiator rate");
+        page->addAndMakeVisible (*m_arpRate);
+
+        // Botão Play.
+        m_arpPlay = new juce::TextButton ("▶ Play");
+        m_arpPlay->setClickingTogglesState (true);
+        m_arpPlay->setToggleState (false, juce::dontSendNotification);
+        m_arpPlay->setTooltip ("Start/stop arpeggiator");
+        page->addAndMakeVisible (*m_arpPlay);
+
+        // Slider Gate.
+        m_arpGate = new juce::Slider ("Gate");
+        m_arpGate->setSliderStyle (juce::Slider::SliderStyle::LinearHorizontal);
+        m_arpGate->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
+        m_arpGate->setRange (0.0, 1.0, 0.01);
+        m_arpGate->setValue (0.8);
+        m_arpGate->setTooltip ("Gate length");
+        page->addAndMakeVisible (*m_arpGate);
+
+        // Slider Swing.
+        m_arpSwing = new juce::Slider ("Swing");
+        m_arpSwing->setSliderStyle (juce::Slider::SliderStyle::LinearHorizontal);
+        m_arpSwing->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
+        m_arpSwing->setRange (0.0, 1.0, 0.01);
+        m_arpSwing->setValue (0.0);
+        m_arpSwing->setTooltip ("Swing amount");
+        page->addAndMakeVisible (*m_arpSwing);
 
         m_tabbed.getTabbedButtonBar().addAndMakeVisible (*page);
     }
@@ -687,19 +732,16 @@ private:
         m_clipMode->setEnabled (false);
         page->addAndMakeVisible (*m_clipMode);
 
-        m_clipPlay.setButtonText ("▶ Play");
-        m_clipPlay.setEnabled (false);
-        page->addAndMakeVisible (m_clipPlay);
+        m_clipPlay = new juce::TextButton ("▶ Play");
+        m_clipPlay->setClickingTogglesState (true);
+        m_clipPlay->setToggleState (false, juce::dontSendNotification);
+        m_clipPlay->setTooltip ("Start/stop clip");
+        page->addAndMakeVisible (*m_clipPlay);
 
         makeLabel ("Modo de clip");
 
         m_tabbed.getTabbedButtonBar().addAndMakeVisible (*page);
     }
-
-    juce::ComboBox* m_arpMode = nullptr;
-    juce::TextButton m_arpPlay { "▶ Play" };
-    juce::ComboBox* m_clipMode = nullptr;
-    juce::TextButton m_clipPlay { "▶ Play" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ArpeggiatorPanel)
 };
@@ -722,6 +764,33 @@ public:
         m_keyboardComponent = std::make_unique<juce::MidiKeyboardComponent> (
             m_keyboardState, juce::KeyboardComponentBase::horizontalKeyboard);
         addAndMakeVisible (*m_keyboardComponent);
+
+        // --- Tabs do teclado -----------------------------------------------
+        m_keyboardTabs = new juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop);
+        m_keyboardTabs->setTabBarDepth (24);
+        m_keyboardTabs->addTab ("Keyboard", PanelDark, nullptr, true);
+        m_keyboardTabs->addTab ("Arp Keyboard", PanelDark, nullptr, false);
+        m_keyboardTabs->addTab ("Clip Keyboard", PanelDark, nullptr, false);
+        addAndMakeVisible (*m_keyboardTabs);
+
+        // --- Rodas Pitch Bend e Mod Wheel ----------------------------------
+        m_pitchBend = new juce::Slider ("Pitch Bend");
+        m_pitchBend->setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
+        m_pitchBend->setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+        m_pitchBend->setRange (-1.0, 1.0, 0.01);
+        m_pitchBend->setValue (0.0);
+        m_pitchBend->setTooltip ("Pitch Bend");
+        m_pitchBend->setColour (juce::Slider::thumbColourId, PrimaryPurple);
+        addAndMakeVisible (*m_pitchBend);
+
+        m_modWheel = new juce::Slider ("Mod Wheel");
+        m_modWheel->setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
+        m_modWheel->setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+        m_modWheel->setRange (0.0, 1.0, 0.01);
+        m_modWheel->setValue (0.0);
+        m_modWheel->setTooltip ("Mod Wheel");
+        m_modWheel->setColour (juce::Slider::thumbColourId, PrimaryPurpleLight);
+        addAndMakeVisible (*m_modWheel);
 
         // --- Controles globais ---------------------------------------------
         m_hold.setButtonText ("Hold");
@@ -772,9 +841,20 @@ public:
         auto area = getLocalBounds().reduced (10);
         const int gap = 10;
 
-        // Teclado MIDI ocupa a maior parte da largura, na metade inferior da faixa.
+        // Tabs do teclado no topo.
+        m_keyboardTabs->setBounds (area.removeFromTop (24));
+        area.removeFromTop (gap);
+
+        // Teclado MIDI ocupa a maior parte da largura, na parte inferior.
         int keyboardH = 76;
         auto keyboardArea = area.removeFromBottom (keyboardH);
+
+        // Pitch Bend à esquerda do teclado, Mod Wheel à direita.
+        int wheelW = 30;
+        m_pitchBend->setBounds (keyboardArea.removeFromLeft (wheelW));
+        keyboardArea.removeFromLeft (gap / 2);
+        m_modWheel->setBounds (keyboardArea.removeFromRight (wheelW));
+        keyboardArea.removeFromRight (gap / 2);
         m_keyboardComponent->setBounds (keyboardArea);
 
         // Controles acima do teclado.
@@ -807,6 +887,13 @@ private:
     OmnivyAudioProcessor& m_processor;
     juce::MidiKeyboardState m_keyboardState;
     std::unique_ptr<juce::MidiKeyboardComponent> m_keyboardComponent;
+
+    // Tabs do teclado.
+    juce::TabbedComponent* m_keyboardTabs = nullptr;
+
+    // Rodas Pitch Bend e Mod Wheel.
+    juce::Slider* m_pitchBend = nullptr;
+    juce::Slider* m_modWheel = nullptr;
 
     juce::TextButton m_hold { "Hold" };
     juce::TextButton m_mono { "Mono" };
