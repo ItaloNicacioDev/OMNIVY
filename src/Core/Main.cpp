@@ -80,35 +80,10 @@ public:
                 configButton.onClick = [this] { showAudioDeviceDialog(); };
 
                 setContentOwned (container, true);
-                                setSize (1648, 920);
+                setSize (1648, 920);
 
-                                                centreWithSize (getWidth(), getHeight());
-
-                                                // >>> PROBE TEMPORÁRIO DE LAYOUT (será removido) >>>
-                                                runLayoutSnapshotProbe();
-                                                // <<< FIM DO PROBE TEMPORÁRIO <<<
-                                            }
-
-                                        // Gera snapshots do editor em tres tamanhos de janela para auditoria visual.
-                                        void runLayoutSnapshotProbe()
-                                        {
-                                            using namespace juce;
-                                            const String dir = "C:/Users/eufra/AppData/Local/hermes/cache/scratch";
-                                            auto shot = [this, dir] (const char* name)
-                                            {
-                                                Image img = editor->createComponentSnapshot (editor->getLocalBounds(), false, 1.0f);
-                                                File f (dir + File::getSeparatorString() + name);
-                                                f.deleteFile();
-                                                FileOutputStream os (f);
-                                                PNGImageFormat fmt;
-                                                fmt.writeImageToStream (img, os);
-                                                Logger::writeToLog ("PROBE snapshot: " + f.getFullPathName());
-                                            };
-                                            Timer::callAfterDelay (2500, [this, shot] { shot ("probe_design.png"); setSize (1000, 600); });
-                                            Timer::callAfterDelay (4500, [this, shot] { shot ("probe_1000x600.png"); setSize (1300, 760); });
-                                            Timer::callAfterDelay (6500, [this, shot] { shot ("probe_1300x760.png");
-                                                                                     JUCEApplication::getInstance()->systemRequestedQuit(); });
-                                        }
+                centreWithSize (getWidth(), getHeight());
+            }
 
         ~OmnivyStandaloneWindow()
         {
