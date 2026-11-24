@@ -94,7 +94,7 @@ public:
                                         {
                                             using namespace juce;
                                             const String dir = "C:/Users/eufra/AppData/Local/hermes/cache/scratch";
-                                            auto shot = [this, &dir] (const char* name)
+                                            auto shot = [this, dir] (const char* name)
                                             {
                                                 Image img = editor->createComponentSnapshot (editor->getLocalBounds(), false, 1.0f);
                                                 File f (dir + File::getSeparatorString() + name);
