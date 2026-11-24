@@ -107,7 +107,7 @@ public:
                                             Timer::callAfterDelay (2500, [this, shot] { shot ("probe_design.png"); setSize (1000, 600); });
                                             Timer::callAfterDelay (4500, [this, shot] { shot ("probe_1000x600.png"); setSize (1300, 760); });
                                             Timer::callAfterDelay (6500, [this, shot] { shot ("probe_1300x760.png");
-                                                                                     JUCEApplication::systemRequestedQuit(); });
+                                                                                     JUCEApplication::getInstance()->systemRequestedQuit(); });
                                         }
 
         ~OmnivyStandaloneWindow()
